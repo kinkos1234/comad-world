@@ -1,0 +1,191 @@
+# ============================================================================
+# Preset: AI / Machine Learning
+# ============================================================================
+# For researchers, engineers, and enthusiasts in artificial intelligence.
+# Covers LLMs, deep learning, computer vision, robotics, and AI safety.
+#
+# Usage: cp presets/ai-ml.yaml comad.config.yaml
+# ============================================================================
+
+profile:
+  name: "Comad AI Lab"
+  language: "en"
+  description: "AI/ML knowledge system — papers, repos, and industry trends"
+
+interests:
+  high:
+    - name: "LLM / Foundation Models"
+      keywords: ["llm", "gpt", "claude", "gemini", "transformer", "language model", "foundation model"]
+      examples: ["GPT-4, Claude, Gemini, LLaMA, Mistral"]
+    - name: "Deep Learning"
+      keywords: ["deep learning", "neural network", "pytorch", "tensorflow", "training", "fine-tuning"]
+      examples: ["PyTorch, TensorFlow, JAX, training techniques"]
+    - name: "AI Agents / Tooling"
+      keywords: ["ai agent", "mcp", "langchain", "llamaindex", "rag", "prompt engineering", "code agent"]
+      examples: ["LangChain, LlamaIndex, AutoGPT, Claude Code"]
+    - name: "Computer Vision"
+      keywords: ["computer vision", "image", "diffusion", "stable diffusion", "midjourney", "segmentation"]
+    - name: "Research Papers"
+      keywords: ["arxiv", "paper", "benchmark", "evaluation", "scaling law"]
+    - name: "MLOps / Infra"
+      keywords: ["mlops", "gpu", "inference", "quantization", "deployment", "serving"]
+
+  medium:
+    - name: "Robotics / Embodied AI"
+      keywords: ["robotics", "embodied", "manipulation", "navigation", "simulation"]
+    - name: "AI Safety / Alignment"
+      keywords: ["alignment", "safety", "rlhf", "constitutional ai", "adversarial"]
+    - name: "Speech / Audio"
+      keywords: ["speech", "tts", "asr", "voice", "audio", "music generation"]
+    - name: "Data Engineering"
+      keywords: ["data pipeline", "dataset", "annotation", "synthetic data"]
+    - name: "AI Business / Startups"
+      keywords: ["ai startup", "funding", "acquisition", "ai product"]
+
+  low:
+    - name: "Marketing AI"
+      keywords: ["marketing ai", "ad tech", "seo ai"]
+    - name: "Non-technical AI news"
+      keywords: ["ai regulation", "ai ethics debate", "ai hype"]
+
+categories:
+  - "LLM"
+  - "Deep Learning"
+  - "Computer Vision"
+  - "NLP"
+  - "AI Agents"
+  - "MLOps"
+  - "Research"
+  - "Robotics"
+  - "Safety"
+  - "Audio"
+  - "Data"
+  - "Startup"
+
+sources:
+  rss_feeds:
+    - { name: "OpenAI Blog",           url: "https://openai.com/blog/rss.xml" }
+    - { name: "Anthropic Blog",        url: "https://www.anthropic.com/rss.xml" }
+    - { name: "Google AI Blog",        url: "https://blog.google/technology/ai/rss/" }
+    - { name: "Meta AI Blog",          url: "https://ai.meta.com/blog/rss/" }
+    - { name: "xAI Blog",              url: "https://x.ai/blog/rss.xml" }
+    - { name: "DeepSeek Blog",         url: "https://api-docs.deepseek.com/blog/rss.xml" }
+    - { name: "Mistral AI Blog",       url: "https://mistral.ai/feed.xml" }
+    - { name: "Hugging Face Blog",     url: "https://huggingface.co/blog/feed.xml" }
+    - { name: "LangChain Blog",        url: "https://blog.langchain.dev/rss/" }
+    - { name: "LlamaIndex Blog",       url: "https://www.llamaindex.ai/blog/rss.xml" }
+    - { name: "Simon Willison",        url: "https://simonwillison.net/atom/everything/" }
+    - { name: "Lilian Weng",           url: "https://lilianweng.github.io/index.xml" }
+    - { name: "Sebastian Raschka",     url: "https://sebastianraschka.com/rss_feed.xml" }
+    - { name: "Chip Huyen",            url: "https://huyenchip.com/feed.xml" }
+    - { name: "Eugene Yan",            url: "https://eugeneyan.com/rss/" }
+    - { name: "Jay Alammar",           url: "https://jalammar.github.io/feed.xml" }
+    - { name: "The Gradient",          url: "https://thegradient.pub/rss/" }
+    - { name: "Latent.Space",          url: "https://www.latent.space/feed" }
+    - { name: "a16z AI",               url: "https://a16z.com/category/ai/feed/" }
+    - { name: "DeepLearning.AI",       url: "https://www.deeplearning.ai/blog/feed/" }
+    - { name: "Microsoft Research",    url: "https://www.microsoft.com/en-us/research/feed/" }
+    - { name: "NVIDIA AI Blog",        url: "https://blogs.nvidia.com/feed/" }
+
+  hn_queries:
+    - "LLM"
+    - "GPT"
+    - "Claude AI"
+    - "transformer neural"
+    - "RAG retrieval"
+    - "AI agent"
+    - "deep learning"
+    - "diffusion model"
+
+  arxiv:
+    - { category: "cs.CL", keywords: ["language model", "transformer", "attention", "NLP", "LLM", "BERT", "GPT"], max_results: 800 }
+    - { category: "cs.AI", keywords: ["artificial intelligence", "reasoning", "planning", "agent", "reinforcement learning"], max_results: 600 }
+    - { category: "cs.LG", keywords: ["deep learning", "neural network", "optimization", "representation learning"], max_results: 500 }
+    - { category: "cs.CV", keywords: ["image", "object detection", "vision transformer", "diffusion", "generative"], max_results: 400 }
+    - { category: "cs.IR", keywords: ["information retrieval", "search", "recommendation", "embedding", "RAG"], max_results: 200 }
+    - { category: "cs.SE", keywords: ["software engineering", "code generation", "program synthesis"], max_results: 150 }
+    - { category: "cs.RO", keywords: ["robotics", "manipulation", "navigation", "embodied"], max_results: 100 }
+    - { category: "cs.CR", keywords: ["security", "adversarial", "privacy", "alignment", "safety"], max_results: 100 }
+    - { category: "cs.SD", keywords: ["speech", "audio", "voice", "TTS", "ASR"], max_results: 100 }
+    - { category: "stat.ML", keywords: ["Bayesian", "probabilistic", "causal", "statistical learning"], max_results: 50 }
+
+  github:
+    topics:
+      - "machine-learning"
+      - "deep-learning"
+      - "llm"
+      - "large-language-model"
+      - "natural-language-processing"
+      - "computer-vision"
+      - "reinforcement-learning"
+      - "transformer"
+      - "diffusion-model"
+      - "rag"
+      - "knowledge-graph"
+      - "ai-agents"
+      - "prompt-engineering"
+      - "fine-tuning"
+      - "neural-network"
+      - "generative-ai"
+      - "langchain"
+      - "llama"
+      - "gpt"
+      - "stable-diffusion"
+    search_queries:
+      - "language model"
+      - "machine learning"
+      - "deep learning"
+      - "artificial intelligence"
+      - "neural network"
+      - "transformer model"
+      - "diffusion model"
+      - "RAG retrieval augmented"
+      - "knowledge graph"
+      - "AI agent"
+      - "prompt engineering"
+      - "fine-tuning LLM"
+      - "code generation AI"
+
+  news:
+    - { name: "GeekNews", pattern: "news.hada.io", type: "link_detect" }
+    - { name: "Hacker News", pattern: "news.ycombinator.com", type: "link_detect" }
+
+must_read_stack:
+  - "PyTorch"
+  - "Hugging Face"
+  - "LangChain"
+  - "Claude"
+  - "GPT"
+  - "CUDA"
+
+brain:
+  neo4j:
+    uri: "bolt://localhost:7688"
+    user: "neo4j"
+  entity_extraction:
+    domain_hint: "AI/ML research papers, technical articles, and open source repositories"
+    relationship_types:
+      - "USES_TECHNOLOGY"
+      - "BUILT_ON"
+      - "ALTERNATIVE_TO"
+      - "DEVELOPED_BY"
+      - "TRAINED_ON"
+      - "OUTPERFORMS"
+      - "EXTENDS"
+      - "INFLUENCES"
+
+eye:
+  neo4j:
+    uri: "bolt://localhost:7687"
+    user: "neo4j"
+  llm:
+    base_url: "http://localhost:11434/v1"
+    model: "llama3.1:8b"
+  embeddings:
+    model: "BAAI/bge-m3"
+    device: "mps"
+
+ear:
+  must_read_ratio: 0.15
+  recommended_ratio: 0.65
+  reference_ratio: 0.20

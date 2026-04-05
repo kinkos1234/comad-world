@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+
+# Environment
+.env
+.env.local
+
+# Data (generated at runtime)
+brain/data/
+ear/archive/
+ear/digests/
+eye/data/
+
+# OS
+.DS_Store
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code session data
+.claude/
+.omc/
+.comad/
+
+# Build
+.next/
+dist/
+*.pyc
+.coverage
+.pytest_cache/
+
+# Docker volumes
+neo4j_data/
+ollama_data/

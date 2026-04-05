@@ -1,0 +1,159 @@
+# ============================================================================
+# Preset: Web Development
+# ============================================================================
+# For full-stack web developers. Frontend frameworks, backend APIs,
+# databases, DevOps, and the JS/TS ecosystem.
+#
+# Usage: cp presets/web-dev.yaml comad.config.yaml
+# ============================================================================
+
+profile:
+  name: "Comad Web Dev"
+  language: "en"
+  description: "Full-stack web development knowledge system"
+
+interests:
+  high:
+    - name: "Frontend Frameworks"
+      keywords: ["react", "next.js", "vue", "svelte", "angular", "astro", "remix", "solid"]
+      examples: ["React 19, Next.js 15, Vue 3, Svelte 5"]
+    - name: "TypeScript / JavaScript"
+      keywords: ["typescript", "javascript", "ecmascript", "node.js", "bun", "deno"]
+    - name: "CSS / Design Systems"
+      keywords: ["css", "tailwind", "shadcn", "radix", "design system", "animation", "responsive"]
+    - name: "Backend / API"
+      keywords: ["api", "rest", "graphql", "trpc", "fastapi", "express", "hono", "server"]
+    - name: "Database"
+      keywords: ["postgres", "prisma", "drizzle", "supabase", "planetscale", "redis", "mongodb"]
+    - name: "DevOps / Deploy"
+      keywords: ["vercel", "netlify", "docker", "ci/cd", "github actions", "cloudflare"]
+
+  medium:
+    - name: "Testing"
+      keywords: ["vitest", "playwright", "cypress", "jest", "testing library"]
+    - name: "Performance"
+      keywords: ["web vitals", "lighthouse", "bundle size", "caching", "edge", "cdn"]
+    - name: "Auth / Security"
+      keywords: ["auth", "oauth", "jwt", "session", "cors", "csrf", "xss"]
+    - name: "Mobile / Cross-platform"
+      keywords: ["react native", "expo", "capacitor", "pwa", "tauri", "electron"]
+    - name: "AI in Web"
+      keywords: ["ai sdk", "vercel ai", "openai api", "llm", "chatbot"]
+
+  low:
+    - name: "Enterprise Java/.NET"
+      keywords: ["spring boot", "asp.net", "enterprise", "j2ee"]
+    - name: "Hardware"
+      keywords: ["hardware", "chip", "processor"]
+
+categories:
+  - "Frontend"
+  - "Backend"
+  - "TypeScript"
+  - "CSS"
+  - "Database"
+  - "DevOps"
+  - "Testing"
+  - "Performance"
+  - "Auth"
+  - "Mobile"
+  - "Tool"
+  - "Trend"
+
+sources:
+  rss_feeds:
+    - { name: "Vercel Blog",           url: "https://vercel.com/blog/rss.xml" }
+    - { name: "Next.js Blog",          url: "https://nextjs.org/blog/rss.xml" }
+    - { name: "React Blog",            url: "https://react.dev/blog/rss.xml" }
+    - { name: "Svelte Blog",           url: "https://svelte.dev/blog/rss.xml" }
+    - { name: "CSS Tricks",            url: "https://css-tricks.com/feed/" }
+    - { name: "Smashing Magazine",     url: "https://www.smashingmagazine.com/feed/" }
+    - { name: "web.dev",               url: "https://web.dev/feed.xml" }
+    - { name: "Kent C. Dodds",         url: "https://kentcdodds.com/blog/rss.xml" }
+    - { name: "Josh W Comeau",         url: "https://www.joshwcomeau.com/rss.xml" }
+    - { name: "Dan Abramov",           url: "https://overreacted.io/rss.xml" }
+    - { name: "Supabase Blog",         url: "https://supabase.com/blog/rss.xml" }
+    - { name: "Tailwind Blog",         url: "https://tailwindcss.com/feeds/feed.xml" }
+    - { name: "Cloudflare Blog",       url: "https://blog.cloudflare.com/rss/" }
+    - { name: "Deno Blog",             url: "https://deno.com/blog/rss.xml" }
+    - { name: "Bun Blog",              url: "https://bun.sh/blog/rss.xml" }
+
+  hn_queries:
+    - "React"
+    - "Next.js"
+    - "TypeScript"
+    - "Tailwind CSS"
+    - "web framework"
+    - "JavaScript runtime"
+    - "frontend"
+
+  arxiv: []  # Not typically needed for web dev
+
+  github:
+    topics:
+      - "react"
+      - "nextjs"
+      - "typescript"
+      - "vue"
+      - "svelte"
+      - "tailwindcss"
+      - "nodejs"
+      - "bun"
+      - "deno"
+      - "graphql"
+      - "prisma"
+      - "supabase"
+      - "web-components"
+      - "css-framework"
+      - "javascript-framework"
+    search_queries:
+      - "React component library"
+      - "Next.js template"
+      - "TypeScript utility"
+      - "CSS framework"
+      - "Node.js framework"
+      - "full stack starter"
+      - "design system"
+
+  news:
+    - { name: "GeekNews", pattern: "news.hada.io", type: "link_detect" }
+    - { name: "Hacker News", pattern: "news.ycombinator.com", type: "link_detect" }
+
+must_read_stack:
+  - "React"
+  - "Next.js"
+  - "TypeScript"
+  - "Tailwind"
+  - "Vercel"
+  - "Prisma"
+
+brain:
+  neo4j:
+    uri: "bolt://localhost:7688"
+    user: "neo4j"
+  entity_extraction:
+    domain_hint: "web development articles, framework documentation, and JavaScript/TypeScript ecosystem"
+    relationship_types:
+      - "USES_TECHNOLOGY"
+      - "BUILT_ON"
+      - "ALTERNATIVE_TO"
+      - "DEVELOPED_BY"
+      - "DEPENDS_ON"
+      - "REPLACES"
+      - "EXTENDS"
+
+eye:
+  neo4j:
+    uri: "bolt://localhost:7687"
+    user: "neo4j"
+  llm:
+    base_url: "http://localhost:11434/v1"
+    model: "llama3.1:8b"
+  embeddings:
+    model: "BAAI/bge-m3"
+    device: "mps"
+
+ear:
+  must_read_ratio: 0.15
+  recommended_ratio: 0.65
+  reference_ratio: 0.20

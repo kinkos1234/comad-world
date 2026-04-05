@@ -1,0 +1,26 @@
+{
+  "name": "comad-brain",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "setup": "bun run packages/core/src/setup-schema.ts",
+    "ingest": "bun run packages/ingester/src/geeknews-importer.ts",
+    "mcp": "bun run packages/mcp-server/src/server.ts",
+    "crawl:hn": "bun run --smol packages/crawler/src/hn-crawler.ts",
+    "crawl:arxiv": "bun run --smol packages/crawler/src/arxiv-crawler.ts",
+    "crawl:github": "bun run --smol packages/crawler/src/github-crawler.ts",
+    "crawl:ingest": "bun run --smol packages/crawler/src/ingest-crawl-results.ts",
+    "crawl:resume": "bun run --smol packages/crawler/src/resume-ingest.ts",
+    "crawl:enrich": "bun run --smol packages/crawler/src/enrich-papers.ts",
+    "test": "bun test",
+    "test:core": "bun test packages/core/"
+  },
+  "dependencies": {
+    "yaml": "^2.7.0",
+    "playwright": "^1.58.2"
+  },
+  "devDependencies": {
+    "bun-types": "^1.3.11",
+    "typescript": "^6.0.2"
+  }
+}

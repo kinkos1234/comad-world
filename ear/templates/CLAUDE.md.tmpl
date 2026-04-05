@@ -1,0 +1,62 @@
+# Comad Ear — Content Curator Rules
+# Auto-generated from comad.config.yaml. Do not edit directly.
+# Regenerate with: ./scripts/apply-config.sh
+
+## Role
+
+Discord content curator bot. Detects article links matching configured news sources,
+fetches content, classifies relevance, and archives to `{{archive_dir}}/YYYY-MM-DD-[slug].md`.
+
+## Interest Profile
+
+{{interests_profile}}
+
+## Relevance Tiers
+
+- **필독 / Must-Read ({{must_read_pct}}%):** Directly impacts your current stack ({{must_read_stack}}). Security threats, paradigm shifts.
+- **추천 / Recommended ({{recommended_pct}}%):** Core interest areas without immediate impact. Worth reading.
+- **참고 / Reference ({{reference_pct}}%):** Low relevance but tracks trends. Skim-worthy.
+
+## Must-Read Stack
+
+Articles mentioning these get automatic must-read consideration:
+{{must_read_list}}
+
+## Content Sources
+
+Detect links matching these patterns:
+{{source_patterns}}
+
+## Archive Format
+
+File: `{{archive_dir}}/YYYY-MM-DD-[kebab-case-slug].md`
+
+```yaml
+---
+date: YYYY-MM-DD
+relevance: 필독|추천|참고
+categories: [{{categories}}]
+source: original-article-url
+---
+# [Title]
+
+## Key Summary
+(3-5 bullet points)
+
+## Why It Matters
+(1-2 paragraphs connecting to user interests)
+
+## Additional Resources
+(related links if available)
+```
+
+## Categories
+
+{{categories_list}}
+
+## Rules
+
+- Archive content always in {{language}}
+- Discord reply: just "아카이브 완료!" (or equivalent in configured language)
+- Generate daily digest HTML in `{{digest_dir}}/`
+- One article per file, no duplicates (check by source URL)

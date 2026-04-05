@@ -1,0 +1,150 @@
+# ============================================================================
+# Preset: Biotech / Life Sciences
+# ============================================================================
+# For researchers, bioinformaticians, and biotech professionals.
+# Covers genomics, drug discovery, computational biology, and health AI.
+#
+# Usage: cp presets/biotech.yaml comad.config.yaml
+# ============================================================================
+
+profile:
+  name: "Comad Biotech"
+  language: "en"
+  description: "Biotech and life sciences knowledge system"
+
+interests:
+  high:
+    - name: "Genomics / Bioinformatics"
+      keywords: ["genomics", "sequencing", "bioinformatics", "gene", "crispr", "single cell", "rna-seq"]
+      examples: ["CRISPR, scRNA-seq, Whole Genome Sequencing"]
+    - name: "Drug Discovery"
+      keywords: ["drug discovery", "clinical trial", "pharma", "molecule", "docking", "target"]
+    - name: "Protein / Structure"
+      keywords: ["protein", "alphafold", "structure prediction", "folding", "pdb"]
+    - name: "AI in Biology"
+      keywords: ["bioml", "protein language model", "drug ai", "medical ai", "pathology"]
+    - name: "Computational Biology"
+      keywords: ["systems biology", "pathway", "network biology", "metabolomics", "proteomics"]
+    - name: "Tools / Pipelines"
+      keywords: ["nextflow", "snakemake", "galaxy", "bioconductor", "scanpy", "seurat"]
+
+  medium:
+    - name: "Clinical / Health"
+      keywords: ["clinical", "ehr", "health data", "precision medicine", "biomarker"]
+    - name: "Neuroscience"
+      keywords: ["neuroscience", "brain", "connectome", "neural", "cognitive"]
+    - name: "Synthetic Biology"
+      keywords: ["synthetic biology", "dna synthesis", "bioengineering"]
+    - name: "Regulatory / Compliance"
+      keywords: ["fda", "ema", "regulatory", "gmp", "clinical trial design"]
+
+  low:
+    - name: "Wellness / Supplements"
+      keywords: ["supplement", "wellness", "diet", "fitness"]
+    - name: "Non-technical Health News"
+      keywords: ["health tips", "lifestyle", "weight loss"]
+
+categories:
+  - "Genomics"
+  - "Drug Discovery"
+  - "Protein"
+  - "AI/ML"
+  - "Bioinformatics"
+  - "Clinical"
+  - "Neuroscience"
+  - "SynBio"
+  - "Tool"
+  - "Regulatory"
+  - "Data"
+  - "Trend"
+
+sources:
+  rss_feeds:
+    - { name: "Nature Biotech",         url: "https://www.nature.com/nbt.rss" }
+    - { name: "Nature Methods",         url: "https://www.nature.com/nmeth.rss" }
+    - { name: "Cell",                   url: "https://www.cell.com/cell/rss" }
+    - { name: "Science (AAAS)",         url: "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science" }
+    - { name: "STAT News",             url: "https://www.statnews.com/feed/" }
+    - { name: "Derek Lowe (Pipeline)", url: "https://www.science.org/blogs/pipeline/feed" }
+    - { name: "Nucleate Blog",         url: "https://nucleate.xyz/blog/feed/" }
+    - { name: "BioSpace",              url: "https://www.biospace.com/rss" }
+
+  hn_queries:
+    - "genomics"
+    - "CRISPR"
+    - "drug discovery"
+    - "AlphaFold"
+    - "bioinformatics"
+    - "protein structure"
+    - "clinical trial"
+
+  arxiv:
+    - { category: "q-bio.GN", keywords: ["genomics", "sequencing", "variant", "gene expression"], max_results: 300 }
+    - { category: "q-bio.BM", keywords: ["protein", "structure", "folding", "docking"], max_results: 300 }
+    - { category: "q-bio.QM", keywords: ["systems biology", "network", "pathway", "modeling"], max_results: 200 }
+    - { category: "cs.AI", keywords: ["drug discovery", "molecular", "biomedical", "clinical"], max_results: 200 }
+    - { category: "q-bio.NC", keywords: ["neuroscience", "brain", "neural", "cognitive"], max_results: 100 }
+
+  github:
+    topics:
+      - "bioinformatics"
+      - "genomics"
+      - "drug-discovery"
+      - "computational-biology"
+      - "protein-structure"
+      - "single-cell"
+      - "crispr"
+      - "alphafold"
+      - "medical-imaging"
+      - "nextflow"
+    search_queries:
+      - "bioinformatics pipeline"
+      - "protein language model"
+      - "drug discovery AI"
+      - "genomics tool"
+      - "single cell analysis"
+      - "molecular docking"
+
+  news:
+    - { name: "GeekNews", pattern: "news.hada.io", type: "link_detect" }
+    - { name: "Hacker News", pattern: "news.ycombinator.com", type: "link_detect" }
+
+must_read_stack:
+  - "Python"
+  - "R"
+  - "Nextflow"
+  - "scanpy"
+  - "PyMOL"
+  - "BioPython"
+
+brain:
+  neo4j:
+    uri: "bolt://localhost:7688"
+    user: "neo4j"
+  entity_extraction:
+    domain_hint: "biotech research papers, genomics data, drug discovery pipelines, and life science tools"
+    relationship_types:
+      - "TARGETS"
+      - "INHIBITS"
+      - "ACTIVATES"
+      - "EXPRESSED_IN"
+      - "ASSOCIATED_WITH"
+      - "DEVELOPED_BY"
+      - "ALTERNATIVE_TO"
+      - "BUILT_ON"
+
+eye:
+  neo4j:
+    uri: "bolt://localhost:7687"
+    user: "neo4j"
+  llm:
+    base_url: "http://localhost:11434/v1"
+    model: "llama3.1:8b"
+  embeddings:
+    model: "BAAI/bge-m3"
+    device: "mps"
+
+ear:
+  must_read_ratio: 0.20
+  recommended_ratio: 0.55
+  reference_ratio: 0.25

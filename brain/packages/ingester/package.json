@@ -1,0 +1,9 @@
+{
+  "name": "@comad-brain/ingester",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@comad-brain/core": "workspace:*",
+    "gray-matter": "^4.0.3"
+  }
+}

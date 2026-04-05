@@ -1,0 +1,153 @@
+# ============================================================================
+# Preset: Finance / Fintech
+# ============================================================================
+# For quants, fintech engineers, and financial analysts.
+# Covers algorithmic trading, DeFi, risk modeling, and market analysis.
+#
+# Usage: cp presets/finance.yaml comad.config.yaml
+# ============================================================================
+
+profile:
+  name: "Comad Finance"
+  language: "en"
+  description: "Financial technology and market intelligence system"
+
+interests:
+  high:
+    - name: "Quantitative Finance"
+      keywords: ["quant", "algorithmic trading", "backtesting", "alpha", "factor model", "portfolio"]
+      examples: ["QuantConnect, Zipline, Backtrader"]
+    - name: "Market Data / Analysis"
+      keywords: ["market data", "technical analysis", "fundamental analysis", "financial modeling"]
+    - name: "DeFi / Crypto"
+      keywords: ["defi", "blockchain", "ethereum", "solana", "smart contract", "dex", "yield"]
+    - name: "Risk Management"
+      keywords: ["risk", "var", "hedging", "compliance", "regulation", "stress test"]
+    - name: "Fintech Infrastructure"
+      keywords: ["payment", "banking api", "plaid", "stripe", "neobank", "embedded finance"]
+    - name: "AI in Finance"
+      keywords: ["ml trading", "nlp finance", "sentiment analysis", "fraud detection", "credit scoring"]
+
+  medium:
+    - name: "Macroeconomics"
+      keywords: ["gdp", "inflation", "fed", "central bank", "monetary policy", "fiscal"]
+    - name: "Data Engineering"
+      keywords: ["data pipeline", "real-time", "kafka", "time series", "database"]
+    - name: "RegTech / Compliance"
+      keywords: ["kyc", "aml", "regulation", "mifid", "sec", "compliance automation"]
+    - name: "Insurance / Insurtech"
+      keywords: ["insurance", "actuarial", "insurtech", "underwriting"]
+
+  low:
+    - name: "Personal Finance Advice"
+      keywords: ["budget", "savings tips", "retirement planning"]
+    - name: "Crypto Speculation"
+      keywords: ["moon", "pump", "meme coin", "nft art"]
+
+categories:
+  - "Quant"
+  - "Trading"
+  - "DeFi"
+  - "Risk"
+  - "Fintech"
+  - "AI/ML"
+  - "Data"
+  - "RegTech"
+  - "Macro"
+  - "Crypto"
+  - "Infrastructure"
+  - "Trend"
+
+sources:
+  rss_feeds:
+    - { name: "Matt Levine (Bloomberg)", url: "https://www.bloomberg.com/opinion/authors/ARbTQlRLRjE/matthew-s-levine.rss" }
+    - { name: "Quantocracy",            url: "https://quantocracy.com/feed/" }
+    - { name: "QuantStart",             url: "https://www.quantstart.com/feed/" }
+    - { name: "Risk.net",               url: "https://www.risk.net/rss" }
+    - { name: "Finextra",               url: "https://www.finextra.com/rss/headlines.aspx" }
+    - { name: "CoinDesk",               url: "https://www.coindesk.com/arc/outboundfeeds/rss/" }
+    - { name: "The Block",              url: "https://www.theblock.co/rss.xml" }
+    - { name: "a16z Crypto",            url: "https://a16zcrypto.com/feed/" }
+    - { name: "Stripe Blog",            url: "https://stripe.com/blog/feed.rss" }
+    - { name: "Plaid Blog",             url: "https://plaid.com/blog/feed/" }
+
+  hn_queries:
+    - "quantitative trading"
+    - "algorithmic trading"
+    - "DeFi"
+    - "fintech"
+    - "financial modeling"
+    - "blockchain"
+    - "payment API"
+
+  arxiv:
+    - { category: "q-fin.TR", keywords: ["trading", "market microstructure", "execution"], max_results: 200 }
+    - { category: "q-fin.PM", keywords: ["portfolio", "asset allocation", "optimization"], max_results: 200 }
+    - { category: "q-fin.RM", keywords: ["risk", "var", "hedging", "stress test"], max_results: 150 }
+    - { category: "q-fin.CP", keywords: ["derivative", "pricing", "monte carlo"], max_results: 100 }
+    - { category: "q-fin.ST", keywords: ["time series", "volatility", "prediction"], max_results: 150 }
+    - { category: "cs.CE", keywords: ["finance", "computational", "simulation"], max_results: 100 }
+
+  github:
+    topics:
+      - "quantitative-finance"
+      - "algorithmic-trading"
+      - "backtesting"
+      - "defi"
+      - "smart-contracts"
+      - "blockchain"
+      - "fintech"
+      - "payment"
+      - "time-series"
+      - "trading-bot"
+    search_queries:
+      - "quantitative trading"
+      - "backtesting framework"
+      - "DeFi protocol"
+      - "financial data"
+      - "trading strategy"
+      - "market data API"
+      - "risk management"
+
+  news:
+    - { name: "GeekNews", pattern: "news.hada.io", type: "link_detect" }
+    - { name: "Hacker News", pattern: "news.ycombinator.com", type: "link_detect" }
+
+must_read_stack:
+  - "Python"
+  - "pandas"
+  - "numpy"
+  - "Solidity"
+  - "PostgreSQL"
+  - "Kafka"
+
+brain:
+  neo4j:
+    uri: "bolt://localhost:7688"
+    user: "neo4j"
+  entity_extraction:
+    domain_hint: "financial technology articles, quantitative research papers, and trading systems"
+    relationship_types:
+      - "USES_TECHNOLOGY"
+      - "REGULATES"
+      - "COMPETES_WITH"
+      - "ACQUIRES"
+      - "PARTNERS_WITH"
+      - "INFLUENCES"
+      - "BUILT_ON"
+
+eye:
+  neo4j:
+    uri: "bolt://localhost:7687"
+    user: "neo4j"
+  llm:
+    base_url: "http://localhost:11434/v1"
+    model: "llama3.1:8b"
+  embeddings:
+    model: "BAAI/bge-m3"
+    device: "mps"
+
+ear:
+  must_read_ratio: 0.15
+  recommended_ratio: 0.60
+  reference_ratio: 0.25
