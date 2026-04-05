@@ -8,7 +8,11 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "declaration": true,
-    "types": ["bun-types"]
+    "types": ["bun-types"],
+    "paths": {
+      "@comad-brain/core": ["./packages/core/src/index.ts"],
+      "@comad-brain/graphrag": ["./packages/graphrag/src/index.ts"]
+    }
   },
   "include": ["packages/*/src/**/*.ts"]
 }

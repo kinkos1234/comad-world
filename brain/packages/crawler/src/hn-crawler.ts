@@ -121,7 +121,7 @@ async function fetchRssFeeds(): Promise<ArticleItem[]> {
               item.match(/<title[^>]*>([\s\S]*?)<\/title>/)?.[1] || ""
             ).trim();
             const link =
-              item.match(/<link[^>]*href="([^"]*)"/)? [1] ||
+              item.match(/<link[^>]*href="([^"]*)"/)?.[ 1] ||
               extractCdata(
                 item.match(/<link[^>]*>([\s\S]*?)<\/link>/)?.[1] || ""
               ).trim();
@@ -203,7 +203,7 @@ async function main() {
     await Promise.all(
       batch.map(async (item) => {
         try {
-          item.full_content = await fetchContent(item.url);
+          item.full_content = await fetchContent(item.url) ?? undefined;
         } catch {}
       })
     );

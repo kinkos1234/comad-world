@@ -46,8 +46,7 @@ jobs:
 
       - name: Type check
         working-directory: brain
-        run: |
-          npx tsc --noEmit --skipLibCheck 2>/dev/null || echo "Type check completed (some packages may not be present yet)"
+        run: npx tsc --noEmit --skipLibCheck
 
   markdown-lint:
     name: Markdown Lint
