@@ -45,7 +45,7 @@ photo (edit)    sleep (remember)    voice (automate)
 - [Python 3.13+](https://python.org/) (for eye module)
 
 ```bash
-git clone https://github.com/comad-world/comad-world.git
+git clone https://github.com/kinkos1234/comad-world.git
 cd comad-world
 cp presets/ai-ml.yaml comad.config.yaml   # or: web-dev, finance, biotech
 ./install.sh
@@ -58,6 +58,50 @@ cd brain && docker compose up -d && bun install && bun run setup
 bun run crawl:hn && bun run crawl:ingest   # crawl & ingest
 bun run mcp                                 # start MCP server
 ```
+
+---
+
+## Demo: Swap a Preset, Change Everything
+
+```bash
+# Start with AI/ML preset
+$ head -5 comad.config.yaml
+profile:
+  name: "Comad AI Lab"
+  language: "en"
+  description: "AI/ML knowledge system"
+
+# Crawl AI sources (22 RSS feeds, 10 arXiv categories)
+$ cd brain && bun run crawl:hn
+[hn-crawler] Keywords: 48, RSS feeds: 22, HN queries: 8
+[hn-crawler] HN stories: 347
+[hn-crawler] RSS results: 412
+[hn-crawler] Wrote 583 articles to data/articles-crawl.json
+
+# Now switch to Finance
+$ cp presets/finance.yaml comad.config.yaml
+$ ./scripts/apply-config.sh
+  ✓ ear/interests.md
+  ✓ ear/CLAUDE.md
+
+# Same crawl command, completely different sources
+$ bun run crawl:hn
+[hn-crawler] Keywords: 31, RSS feeds: 10, HN queries: 7
+[hn-crawler] HN stories: 89
+[hn-crawler] RSS results: 156
+[hn-crawler] Wrote 201 articles to data/articles-crawl.json
+
+# ear/interests.md automatically updated:
+$ head -6 ear/interests.md
+# User Interest Profile
+## High Priority (Core Focus)
+- Quantitative Finance (QuantConnect, Zipline, Backtrader)
+- Market Data / Analysis
+- DeFi / Crypto
+- Risk Management
+```
+
+One YAML change. Different feeds, different keywords, different categories, different relevance criteria.
 
 ---
 
