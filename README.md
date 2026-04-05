@@ -153,7 +153,7 @@ One YAML change. Different feeds, different keywords, different categories, diff
 ### Data Flow
 
 1. **Ear** detects articles in Discord, classifies relevance using your interests, archives to markdown
-2. **Brain** crawls RSS/arXiv/GitHub filtered by your keywords, builds a Neo4j knowledge graph with entities and relationships
+2. **Brain** crawls RSS/arXiv/GitHub filtered by your keywords, builds a Neo4j knowledge graph with entities and relationships. JS-heavy pages automatically rendered via **Browse**
 3. **Eye** takes any text, converts to ontology, runs multi-round simulations, generates analysis through 10 strategic lenses
 4. **Photo** corrects images via Photoshop MCP (domain-agnostic)
 5. **Sleep** consolidates Claude Code memory across all projects (domain-agnostic)
@@ -242,12 +242,29 @@ cp sleep/comad-sleep.md ~/.claude/agents/
 Claude Code harness with auto-triggered workflows.
 
 - **6 triggers**: onboarding, review, full-cycle, parallel detection, repo polish, session save
+- **Review Army**: 5 parallel specialist reviewers with adaptive gating
+- **Browser QA**: headless testing for navigation, forms, responsive, performance
 - **Zero dependencies** — pure markdown/bash
 - **Non-developer friendly** — "just say what you want"
 
 ```bash
 # Install
 cd voice && ./install.sh
+```
+
+### Browse — Headless Browser
+
+Standalone browser automation for AI agents. Anti-bot stealth, 16 commands.
+
+- **Auto-fallback**: brain/ear use it when native HTTP fetch returns insufficient content
+- **Anti-bot stealth**: UA masking, WebDriver flag removal
+- **Snapshot @refs**: `@e3 [button] "Submit"` → `click @e3`
+- **Minimal**: 787 LOC, Playwright only dependency
+
+```bash
+cd browse && bun install
+bun run src/cli.ts goto https://example.com
+bun run src/cli.ts text  # rendered text extraction
 ```
 
 ---
