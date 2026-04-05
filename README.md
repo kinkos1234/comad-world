@@ -19,6 +19,10 @@
   <a href="#quickstart">Quickstart</a> · <a href="#architecture">Architecture</a> · <a href="#modules">Modules</a> · <a href="#customization">Customization</a> · <a href="#presets">Presets</a>
 </p>
 
+<p align="center">
+  <img src="docs/demo.gif" alt="Comad World Demo" width="720">
+</p>
+
 ---
 
 ## 🌍 What is Comad World?
