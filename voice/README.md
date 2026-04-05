@@ -29,6 +29,12 @@ cd voice && ./install.sh
 
 This appends workflow triggers to `~/.claude/CLAUDE.md`.
 
+## Review Army
+
+Multi-specialist code review with adaptive gating. See [review-army.md](review-army.md) for details.
+
+5 parallel reviewers (security, performance, correctness, maintainability, compatibility) with auto-skip for quiet specialists and cross-review dedup.
+
 ## Requirements
 
 - Claude Code (Claude Max recommended)
