@@ -14,6 +14,7 @@ Claude Code harness with auto-triggered workflows. **Domain-agnostic** — works
 | Multi-subtask detected | Auto-classifies dependencies, parallelizes independent work |
 | "광택" / "repo polish" | README, badges, LICENSE, CI, templates — GitHub-ready |
 | "저장해줘" / "save session" | Session summary + handoff notes for next time |
+| "QA해줘" / "qa" / "테스트해봐" | Browser-based QA: navigation, forms, responsive, console errors |
 
 ## Before vs After
 
