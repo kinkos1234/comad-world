@@ -1,0 +1,17 @@
+{
+  "name": "comad-browse",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "comad-browse": "src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "playwright": "^1.58.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
