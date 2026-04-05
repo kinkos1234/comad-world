@@ -1,7 +1,7 @@
 <h1 align="center">Comad World</h1>
 
 <p align="center">
-  <strong>Your interests, your agents, your knowledge graph.</strong>
+  <strong>Personal knowledge system that crawls RSS, papers & GitHub —<br>then builds a searchable knowledge graph, updated daily.</strong>
 </p>
 
 <p align="center">
@@ -22,6 +22,28 @@
 <p align="center">
   <img src="docs/demo.gif" alt="Comad World Demo" width="720">
 </p>
+
+---
+
+## What You Get
+
+| | Without Comad World | With Comad World |
+|---|---|---|
+| **Collecting** | Manually check 20+ sites, forget half | `ear` auto-detects and archives from RSS, HN, arXiv, GitHub |
+| **Organizing** | Bookmarks pile up, no connections | `brain` builds a knowledge graph — 3,000+ nodes, searchable via GraphRAG |
+| **Analyzing** | Read each article, form opinions alone | `eye` runs simulations through 10 strategic lenses, outputs 800-line reports |
+| **Remembering** | Context lost between sessions | `sleep` consolidates memory, `voice` automates recurring workflows |
+
+<details>
+<summary><b>Key numbers from a real deployment</b></summary>
+
+- **3,070** graph nodes, **4,147** relationships from 2 weeks of crawling
+- **22** RSS feeds monitored (OpenAI, Anthropic, Google, Meta, arXiv, researcher blogs)
+- **15** MCP tools for querying your knowledge graph from Claude Code
+- **$0.60/day** operating cost (down from $4.50 after optimization)
+- **1,422** tests across all modules
+
+</details>
 
 ---
 
