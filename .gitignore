@@ -37,4 +37,3 @@ dist/
 # Docker volumes
 neo4j_data/
 ollama_data/
-docs/
