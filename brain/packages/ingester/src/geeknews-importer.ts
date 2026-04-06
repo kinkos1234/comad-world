@@ -95,7 +95,7 @@ async function mergeArticle(article: ParsedArticle, entities: ExtractedEntities)
 
   const now = new Date().toISOString();
 
-  // 2. MERGE Technology nodes + DISCUSSES relationships (with EdgeMetadata)
+  // 2. MERGE Technology nodes + DISCUSSES relationships (with EdgeMetadata + temporal)
   for (const tech of entities.technologies) {
     const tUid = techUid(tech.name);
     await write(
@@ -104,8 +104,9 @@ async function mergeArticle(article: ParsedArticle, entities: ExtractedEntities)
        WITH t
        MATCH (a:Article {uid: $articleUid})
        MERGE (a)-[r:DISCUSSES]->(t)
-       ON CREATE SET r.confidence = 0.8, r.source = 'extractor', r.extracted_at = $now, r.analysis_space = 'structural'`,
-      { uid: tUid, name: tech.name, type: tech.type, articleUid: uid, now }
+       ON CREATE SET r.confidence = 0.8, r.source = 'extractor', r.extracted_at = $now,
+                     r.analysis_space = 'structural', r.observed_at = $observed_at, r.weight = 1.0`,
+      { uid: tUid, name: tech.name, type: tech.type, articleUid: uid, now, observed_at: article.date || now }
     );
   }
 
@@ -172,7 +173,8 @@ async function mergeArticle(article: ParsedArticle, entities: ExtractedEntities)
          MERGE (a)-[r:${rel.type}]->(b)
          ON CREATE SET r.confidence = $confidence, r.source = 'extractor',
                        r.extracted_at = $now, r.context = $context,
-                       r.analysis_space = $analysis_space`,
+                       r.analysis_space = $analysis_space,
+                       r.observed_at = $observed_at, r.weight = 1.0`,
         {
           from: fromUid,
           to: toUid,
@@ -180,25 +182,31 @@ async function mergeArticle(article: ParsedArticle, entities: ExtractedEntities)
           now,
           context: rel.context ?? null,
           analysis_space: rel.analysis_space ?? null,
+          observed_at: article.date || now,
         }
       );
     }
   }
 
-  // 7. MERGE Claim nodes + CLAIMS relationships (v2)
+  // 7. MERGE Claim nodes + CLAIMS relationships (v2 + temporal)
   if (entities.claims) {
     for (let i = 0; i < entities.claims.length; i++) {
       const claim = entities.claims[i];
       const cUid = claimUid(uid, i);
+      const validFrom = article.date || now.split("T")[0];
       await write(
         `MERGE (c:Claim {uid: $uid})
          SET c.content = $content, c.claim_type = $claim_type,
              c.confidence = $confidence, c.source_uid = $source_uid,
-             c.verified = false, c.related_entities = $related_entities
+             c.verified = false, c.related_entities = $related_entities,
+             c.valid_from = coalesce(c.valid_from, $valid_from),
+             c.confidence_decay = coalesce(c.confidence_decay, 0.1),
+             c.last_verified = coalesce(c.last_verified, $valid_from)
          WITH c
          MATCH (a:Article {uid: $articleUid})
          MERGE (a)-[r:CLAIMS]->(c)
-         ON CREATE SET r.confidence = 1.0, r.source = 'extractor', r.extracted_at = $now`,
+         ON CREATE SET r.confidence = 1.0, r.source = 'extractor',
+                       r.extracted_at = $now, r.observed_at = $valid_from`,
         {
           uid: cUid,
           content: claim.content,
@@ -208,6 +216,29 @@ async function mergeArticle(article: ParsedArticle, entities: ExtractedEntities)
           related_entities: claim.related_entities,
           articleUid: uid,
           now,
+          valid_from: validFrom,
+        }
+      );
+
+      // Check for conflicting existing claims and invalidate them
+      await write(
+        `MATCH (existing:Claim)
+         WHERE existing.uid <> $uid
+           AND existing.valid_until IS NULL
+           AND any(e1 IN existing.related_entities
+               WHERE any(e2 IN $related_entities WHERE toLower(e1) = toLower(e2)))
+           AND existing.claim_type = $claim_type
+           AND existing.content <> $content
+         WITH existing
+         MATCH (new:Claim {uid: $uid})
+         WHERE existing.confidence < new.confidence
+         SET existing.valid_until = $valid_from`,
+        {
+          uid: cUid,
+          related_entities: claim.related_entities,
+          claim_type: claim.claim_type,
+          content: claim.content,
+          valid_from: validFrom,
         }
       );
     }

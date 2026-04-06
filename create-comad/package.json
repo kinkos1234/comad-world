@@ -1,0 +1,37 @@
+{
+  "name": "create-comad",
+  "version": "0.1.0",
+  "description": "Create a Comad World knowledge system in seconds",
+  "type": "module",
+  "bin": {
+    "create-comad": "./src/index.mjs"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
+  "files": [
+    "src",
+    "templates"
+  ],
+  "keywords": [
+    "comad",
+    "knowledge-graph",
+    "neo4j",
+    "mcp",
+    "ai",
+    "cli"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kinkos1234/comad-world.git",
+    "directory": "create-comad"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "prompts": "^2.4.2",
+    "picocolors": "^1.1.1"
+  }
+}

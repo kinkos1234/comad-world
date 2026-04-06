@@ -1,0 +1,57 @@
+# ============================================================================
+# Comad World — Custom Configuration
+# ============================================================================
+# Define your interests and sources below.
+# Docs: https://github.com/kinkos1234/comad-world#configuration
+# ============================================================================
+
+profile:
+  name: "My Comad"
+  language: "en"
+  description: "My personal knowledge system"
+
+interests:
+  high:
+    - name: "Your Primary Interest"
+      keywords: ["keyword1", "keyword2", "keyword3"]
+      examples: ["Example tool, framework, or topic"]
+
+  medium:
+    - name: "Secondary Interest"
+      keywords: ["keyword4", "keyword5"]
+
+  low: []
+
+categories:
+  - "General"
+
+sources:
+  rss_feeds: []
+    # - { name: "Example Blog", url: "https://example.com/rss" }
+
+  hn_queries:
+    - "your topic"
+
+  arxiv: []
+    # - { category: "cs.AI", keywords: ["artificial intelligence"], max_results: 100 }
+
+  github:
+    topics: []
+    search_queries: []
+
+brain:
+  neo4j:
+    uri: "bolt://localhost:7688"
+    user: "neo4j"
+  entity_extraction:
+    domain_hint: "Your domain description"
+    relationship_types:
+      - "USES_TECHNOLOGY"
+      - "BUILT_ON"
+      - "ALTERNATIVE_TO"
+      - "DEVELOPED_BY"
+
+ear:
+  must_read_ratio: 0.15
+  recommended_ratio: 0.65
+  reference_ratio: 0.20

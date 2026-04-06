@@ -1,0 +1,9 @@
+{
+  "name": "@comad/explorer",
+  "version": "0.1.0",
+  "description": "Interactive knowledge graph explorer for comad-brain",
+  "scripts": {
+    "serve": "npx serve -p 3333 .",
+    "dev": "npx serve -p 3333 --cors ."
+  }
+}

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>comad-brain explorer</title>
+<script src="https://cdn.jsdelivr.net/npm/d3-force@3/dist/d3-force.min.js" integrity="sha384-RM+ykRJc5/xPC56TVMOAYbZeVThoKXqcRlmRHZZc3YDHDCvFJrsEH2dpLMqL50K8" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-quadtree@3/dist/d3-quadtree.min.js" integrity="sha384-JzQQZeN94rbeGRpksNSu8TCkRWLlzTHev53JZngDT0faxrmd9bApgXS5pZWShqJb" crossorigin="anonymous"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0a;--surface:#111;--border:#222;--text:#e0e0e0;--dim:#888;
+  --blue:#4a9eff;--green:#4ae09a;--orange:#e0a040;--purple:#b060e0;--red:#e05050;
+  --font:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;overflow:hidden;height:100vh}
+canvas{display:block;position:absolute;top:0;left:0}
+#left-panel{position:fixed;top:0;left:0;width:260px;height:100vh;background:var(--surface);border-right:1px solid var(--border);z-index:10;display:flex;flex-direction:column;overflow-y:auto}
+#left-panel h1{font-size:14px;padding:16px;border-bottom:1px solid var(--border);letter-spacing:1px;color:var(--dim)}
+#left-panel h1 span{color:var(--blue)}
+#search-box{width:100%;padding:10px 16px;background:var(--bg);border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:13px;outline:none}
+#search-box::placeholder{color:#555}
+#search-results{max-height:160px;overflow-y:auto;border-bottom:1px solid var(--border)}
+.search-item{padding:6px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px}
+.search-item:hover{background:var(--bg)}
+.search-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.section-title{padding:12px 16px 6px;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+#type-filters{padding:4px 16px}
+.type-toggle{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12px;user-select:none}
+.type-toggle input{display:none}
+.type-toggle .swatch{width:12px;height:12px;border-radius:3px;opacity:1;transition:opacity .2s}
+.type-toggle input:not(:checked)~.swatch{opacity:.2}
+.type-toggle .count{margin-left:auto;color:var(--dim);font-size:11px}
+#stats{padding:12px 16px;border-top:1px solid var(--border);margin-top:auto;font-size:11px;color:var(--dim);line-height:1.8}
+#stats b{color:var(--text)}
+#time-filter{padding:8px 16px;border-top:1px solid var(--border)}
+#time-slider{width:100%;accent-color:var(--blue);cursor:pointer}
+#time-label{font-size:11px;color:var(--dim);text-align:center;margin-top:4px}
+#right-panel{position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:10;transform:translateX(100%);transition:transform .25s ease;overflow-y:auto}
+#right-panel.open{transform:translateX(0)}
+#right-panel .close-btn{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--dim);cursor:pointer;font-size:18px;font-family:var(--font)}
+#right-panel .close-btn:hover{color:var(--text)}
+#node-header{padding:20px;border-bottom:1px solid var(--border)}
+#node-type-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;margin-bottom:8px;color:#fff}
+#node-title{font-size:16px;font-weight:600;word-break:break-word}
+#node-props{padding:16px 20px}
+.prop{margin-bottom:12px}
+.prop-key{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.prop-val{font-size:12px;line-height:1.6;word-break:break-word}
+#node-neighbors{padding:0 20px 20px}
+#node-neighbors h3{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.neighbor-item{padding:4px 0;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.neighbor-item:hover{color:var(--blue)}
+.neighbor-item .rel{color:var(--dim);font-size:10px}
+#expand-btn{display:block;width:calc(100% - 40px);margin:0 20px 20px;padding:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;border-radius:4px;text-align:center}
+#expand-btn:hover{border-color:var(--blue);color:var(--blue)}
+#loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;color:var(--dim);font-size:14px}
+#tooltip{position:fixed;padding:6px 10px;background:#1a1a1a;border:1px solid var(--border);border-radius:4px;font-size:11px;pointer-events:none;z-index:20;display:none;max-width:240px;word-break:break-word}
+#auth-form{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;display:none;min-width:320px}
+#auth-form h2{font-size:14px;margin-bottom:16px;color:var(--text)}
+#auth-form input{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:13px;border-radius:4px;margin-bottom:8px;outline:none}
+#auth-form button{padding:8px 16px;background:var(--blue);border:none;color:#fff;font-family:var(--font);font-size:13px;border-radius:4px;cursor:pointer;width:100%}
+#auth-form .error{color:var(--red);font-size:11px;margin-top:8px;display:none}
+@media(max-width:768px){
+  #left-panel{width:200px;font-size:11px}
+  #right-panel{width:100vw}
+}
+</style>
+</head>
+<body>
+<div id="loading">connecting to neo4j...</div>
+<div id="tooltip"></div>
+
+<div id="auth-form">
+  <h2>Neo4j Authentication</h2>
+  <input id="auth-user" type="text" placeholder="username (e.g. neo4j)" value="neo4j">
+  <input id="auth-pass" type="password" placeholder="password">
+  <button id="auth-submit">Connect</button>
+  <div class="error" id="auth-error"></div>
+</div>
+
+<div id="left-panel">
+  <h1><span>comad</span>-brain explorer</h1>
+  <input id="search-box" type="text" placeholder="search nodes..." autocomplete="off">
+  <div id="search-results"></div>
+  <div class="section-title">Node Types</div>
+  <div id="type-filters"></div>
+  <div class="section-title">Time Filter</div>
+  <div id="time-filter">
+    <input type="range" id="time-slider" min="0" max="100" value="100">
+    <div id="time-label">all time</div>
+  </div>
+  <div id="stats"></div>
+</div>
+
+<div id="right-panel">
+  <button class="close-btn" id="close-panel-btn">&times;</button>
+  <div id="node-header">
+    <div id="node-type-badge"></div>
+    <div id="node-title"></div>
+  </div>
+  <div id="node-props"></div>
+  <div id="node-neighbors"><h3>Connections</h3></div>
+  <button id="expand-btn">expand neighbors</button>
+</div>
+
+<canvas id="graph"></canvas>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// ═══ CONFIG ═══
+// ═══════════════════════════════════════════════════════════════
+
+/** @type {{ neo4jUrl: string, initialLimit: number, defaultColor: string, typeColors: Record<string, string>, writePattern: RegExp }} */
+const CONFIG = {
+  neo4jUrl: 'http://localhost:7475',
+  initialLimit: 500,
+  defaultColor: '#666',
+  typeColors: {
+    Article: '#4a9eff', Claim: '#4ae09a', Technology: '#e0a040',
+    Person: '#b060e0', Topic: '#e05050'
+  },
+  writePattern: /\b(CREATE|DELETE|SET|REMOVE|MERGE|DROP|DETACH)\b/i
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ STATE ═══
+// ═══════════════════════════════════════════════════════════════
+
+const state = {
+  nodes: new Map(),      // uid -> node
+  edges: [],             // {sid, tid, type, source, target}
+  edgeKeySet: new Set(), // dedup keys: "srcId-tgtId-type"
+  simNodes: [],          // d3 simulation array
+  simLinks: [],
+  simulation: null,
+  selectedNode: null,
+  hoveredNode: null,
+  hoveredNeighborSet: new Set(),  // precomputed neighbor ids of hovered node
+  typeVisible: {},
+  timeMax: Date.now(),
+  timeMin: Date.now() - 365 * 24 * 3600 * 1000,
+  timeCutoff: Date.now(),
+  dragNode: null,
+  dragOffX: 0,
+  dragOffY: 0,
+  dragStartX: 0,        // for drag-vs-click detection
+  dragStartY: 0,
+  visibleSet: new Set(),
+  visibleSetDirty: true
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ AUTH ═══
+// ═══════════════════════════════════════════════════════════════
+
+let neo4jAuth = '';
+
+function getStoredAuth() {
+  try {
+    const stored = localStorage.getItem('neo4j_auth');
+    if (stored) return stored;
+    const params = new URLSearchParams(window.location.search);
+    const authParam = params.get('auth');
+    if (authParam) {
+      // Strip auth from URL to prevent leaking via referrer/history
+      params.delete('auth');
+      const clean = params.toString();
+      history.replaceState(null, '', location.pathname + (clean ? '?' + clean : ''));
+      return authParam;
+    }
+  } catch (_) { /* ignore */ }
+  return '';
+}
+
+function setStoredAuth(authHeader) {
+  try { localStorage.setItem('neo4j_auth', authHeader); } catch (_) { /* ignore */ }
+}
+
+function showAuthForm(errorMsg) {
+  const form = document.getElementById('auth-form');
+  form.style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+  if (errorMsg) {
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = errorMsg;
+    errEl.style.display = 'block';
+  }
+}
+
+document.getElementById('auth-submit').addEventListener('click', async () => {
+  const user = document.getElementById('auth-user').value.trim();
+  const pass = document.getElementById('auth-pass').value;
+  neo4jAuth = 'Basic ' + btoa(user + ':' + pass);
+  setStoredAuth(neo4jAuth);
+  document.getElementById('auth-form').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('loading').textContent = 'connecting to neo4j...';
+  await initApp();
+});
+
+document.getElementById('auth-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('auth-submit').click();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ CANVAS ═══
+// ═══════════════════════════════════════════════════════════════
+
+const canvas = document.getElementById('graph');
+const ctx = canvas.getContext('2d');
+let W, H, cx, cy;
+let camX = 0, camY = 0, zoom = 1;
+
+/** Cached font family string (avoid repeated getComputedStyle calls) */
+let cachedFontFamily = '';
+
+function resize() {
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W * devicePixelRatio;
+  canvas.height = H * devicePixelRatio;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  cx = W / 2; cy = H / 2;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ NEO4J ═══
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Execute a read-only Cypher query against Neo4j.
+ * Write queries (CREATE, DELETE, SET, REMOVE, MERGE, DROP, DETACH) are rejected.
+ * @param {string} query - Cypher query string
+ * @param {Object} params - Query parameters
+ * @returns {Promise<Object>} Query result
+ * @throws {Error} If query contains write operations or Neo4j returns errors
+ */
+async function cypher(query, params = {}) {
+  if (CONFIG.writePattern.test(query)) {
+    throw new Error('Write operations are not allowed in the explorer (read-only mode).');
+  }
+  const headers = { 'Content-Type': 'application/json' };
+  if (neo4jAuth) headers['Authorization'] = neo4jAuth;
+  const res = await fetch(CONFIG.neo4jUrl + '/db/neo4j/tx/commit', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ statements: [{ statement: query, parameters: params }] })
+  });
+  const json = await res.json();
+  if (json.errors && json.errors.length) throw new Error(json.errors[0].message);
+  return json.results[0];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ GRAPH DATA ═══
+// ═══════════════════════════════════════════════════════════════
+
+function nodeType(labels) {
+  for (const t of ['Article', 'Claim', 'Technology', 'Person', 'Topic']) {
+    if (labels.includes(t)) return t;
+  }
+  return labels[0] || 'Unknown';
+}
+
+function nodeColor(type) { return CONFIG.typeColors[type] || CONFIG.defaultColor; }
+
+function addNodeData(id, labels, props) {
+  if (state.nodes.has(id)) return state.nodes.get(id);
+  const type = nodeType(labels);
+  const name = props.name || props.title || props.content?.slice(0, 60) || `node-${id}`;
+  const ts = props.valid_from ? new Date(props.valid_from).getTime()
+           : props.date ? new Date(props.date).getTime()
+           : props.created_at ? new Date(props.created_at).getTime() : null;
+  const n = { id, type, name, props, labels, ts, x: cx + (Math.random() - 0.5) * 200, y: cy + (Math.random() - 0.5) * 200, degree: 0 };
+  state.nodes.set(id, n);
+  state.visibleSetDirty = true;
+  return n;
+}
+
+function addEdge(srcId, tgtId, type) {
+  const key = `${srcId}-${tgtId}-${type}`;
+  if (state.edgeKeySet.has(key)) return;
+  state.edgeKeySet.add(key);
+  state.edges.push({ sid: srcId, tid: tgtId, type, source: srcId, target: tgtId });
+  const s = state.nodes.get(srcId);
+  if (s) s.degree++;
+  const t = state.nodes.get(tgtId);
+  if (t) t.degree++;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ DATA LOADING ═══
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Load initial graph data — top nodes by degree with their outgoing edges.
+ * @returns {Promise<void>}
+ */
+async function loadInitial() {
+  const r = await cypher(`
+    MATCH (n)-[r]->(m)
+    WITH n, count(r) as deg ORDER BY deg DESC LIMIT $lim
+    WITH collect(n) as topNodes
+    UNWIND topNodes as n
+    MATCH (n)-[r]->(m)
+    RETURN id(n) as sid, labels(n) as sl, properties(n) as sp,
+           type(r) as rt,
+           id(m) as tid, labels(m) as tl, properties(m) as tp
+    LIMIT 3000
+  `, { lim: CONFIG.initialLimit });
+
+  for (const row of r.data) {
+    const [sid, sl, sp, rt, tid, tl, tp] = row.row;
+    addNodeData(sid, sl, sp);
+    addNodeData(tid, tl, tp);
+    addEdge(sid, tid, rt);
+  }
+}
+
+/**
+ * Expand a node's neighbors (both directions) and add them to the graph.
+ * Uses directional queries to correctly assign edge source/target.
+ * @param {number|string} uid - Node id to expand
+ * @returns {Promise<number>} Number of newly added nodes
+ */
+async function expandNode(uid) {
+  const id = typeof uid === 'number' ? uid : parseInt(uid);
+  const r = await cypher(`
+    MATCH (n)-[r]->(m) WHERE id(n) = $nid
+    RETURN id(n) as sid, labels(n) as sl, properties(n) as sp,
+           type(r) as rt,
+           id(m) as tid, labels(m) as tl, properties(m) as tp
+    UNION
+    MATCH (n)<-[r]-(m) WHERE id(n) = $nid
+    RETURN id(m) as sid, labels(m) as sl, properties(m) as sp,
+           type(r) as rt,
+           id(n) as tid, labels(n) as tl, properties(n) as tp
+  `, { nid: id });
+
+  let added = 0;
+  const base = state.nodes.get(id);
+  for (const row of r.data) {
+    const [sid, sl, sp, rt, tid, tl, tp] = row.row;
+    const existed = state.nodes.has(tid);
+    addNodeData(sid, sl, sp);
+    const m = addNodeData(tid, tl, tp);
+    if (!existed && base) { m.x = base.x + (Math.random() - 0.5) * 80; m.y = base.y + (Math.random() - 0.5) * 80; added++; }
+    addEdge(sid, tid, rt);
+  }
+  if (added) rebuildSimulation();
+  return added;
+}
+
+async function searchNodes(query) {
+  const r = await cypher(`
+    MATCH (n) WHERE toLower(n.name) CONTAINS toLower($q)
+       OR toLower(n.title) CONTAINS toLower($q)
+       OR toLower(n.content) CONTAINS toLower($q)
+    RETURN id(n) as nid, labels(n) as nl, properties(n) as np LIMIT 15
+  `, { q: query });
+
+  return r.data.map(row => {
+    const [nid, nl, np] = row.row;
+    return { id: nid, type: nodeType(nl), name: np.name || np.title || np.content?.slice(0, 50) || `node-${nid}`, labels: nl, props: np };
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ SIMULATION ═══
+// ═══════════════════════════════════════════════════════════════
+
+function rebuildSimulation() {
+  state.simNodes = [...state.nodes.values()];
+  state.simLinks = state.edges.map(e => ({ source: state.nodes.get(e.sid), target: state.nodes.get(e.tid), type: e.type })).filter(l => l.source && l.target);
+
+  if (state.simulation) state.simulation.stop();
+  state.simulation = d3.forceSimulation(state.simNodes)
+    .force('link', d3.forceLink(state.simLinks).id(d => d.id).distance(60).strength(0.3))
+    .force('charge', d3.forceManyBody().strength(-120).distanceMax(400))
+    .force('center', d3.forceCenter(cx, cy).strength(0.05))
+    .force('collide', d3.forceCollide().radius(d => nodeRadius(d) + 2))
+    .alphaDecay(0.02)
+    .on('tick', () => { state.visibleSetDirty = true; draw(); });
+
+  state.visibleSetDirty = true;
+  updateStats();
+  updateTypeFilters();
+  updateTimeRange();
+}
+
+function nodeRadius(n) { return Math.max(3, Math.min(18, 3 + (n.degree || 0) * 0.8)); }
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ RENDERING ═══
+// ═══════════════════════════════════════════════════════════════
+
+function isVisible(n) {
+  if (!CONFIG.typeColors[n.type] && state.typeVisible['Other'] === false) return false;
+  if (CONFIG.typeColors[n.type] && state.typeVisible[n.type] === false) return false;
+  if (n.ts && n.ts > state.timeCutoff) return false;
+  return true;
+}
+
+function screenX(x) { return (x - camX) * zoom + cx; }
+function screenY(y) { return (y - camY) * zoom + cy; }
+function worldX(sx) { return (sx - cx) / zoom + camX; }
+function worldY(sy) { return (sy - cy) / zoom + camY; }
+
+function recomputeVisibleSet() {
+  if (!state.visibleSetDirty) return;
+  state.visibleSet.clear();
+  for (const n of state.simNodes) { if (isVisible(n)) state.visibleSet.add(n.id); }
+  state.visibleSetDirty = false;
+}
+
+/**
+ * Precompute the set of neighbor node ids for the currently hovered node.
+ * Called when hoveredNode changes. Enables O(1) neighbor lookup in render.
+ */
+function recomputeHoveredNeighbors() {
+  state.hoveredNeighborSet.clear();
+  if (!state.hoveredNode) return;
+  const hid = state.hoveredNode.id;
+  for (const l of state.simLinks) {
+    if (l.source.id === hid) state.hoveredNeighborSet.add(l.target.id);
+    else if (l.target.id === hid) state.hoveredNeighborSet.add(l.source.id);
+  }
+}
+
+/**
+ * Main render function — draws edges, nodes, and labels to the canvas.
+ * Uses cached visibleSet and hoveredNeighborSet for performance.
+ */
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+
+  recomputeVisibleSet();
+  const vs = state.visibleSet;
+  const hovered = state.hoveredNode;
+  const hNeighbors = state.hoveredNeighborSet;
+
+  // edges
+  ctx.lineWidth = 0.5 / Math.sqrt(zoom);
+  for (const l of state.simLinks) {
+    if (!vs.has(l.source.id) || !vs.has(l.target.id)) continue;
+    const highlight = hovered && (l.source.id === hovered.id || l.target.id === hovered.id);
+    ctx.strokeStyle = highlight ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = highlight ? 1.5 : 0.5;
+    ctx.beginPath();
+    ctx.moveTo(screenX(l.source.x), screenY(l.source.y));
+    ctx.lineTo(screenX(l.target.x), screenY(l.target.y));
+    ctx.stroke();
+  }
+
+  // cache font family once
+  if (!cachedFontFamily) {
+    cachedFontFamily = getComputedStyle(document.body).fontFamily;
+  }
+
+  // nodes
+  for (const n of state.simNodes) {
+    if (!vs.has(n.id)) continue;
+    const sx = screenX(n.x), sy = screenY(n.y);
+    if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) continue;
+    const r = nodeRadius(n) * zoom;
+    const isHovered = hovered && hovered.id === n.id;
+    const isNeighbor = hovered && hNeighbors.has(n.id);
+    const sel = state.selectedNode && state.selectedNode.id === n.id;
+    const dim = hovered && !isHovered && !isNeighbor;
+
+    ctx.globalAlpha = dim ? 0.15 : 1;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    ctx.fillStyle = nodeColor(n.type);
+    ctx.fill();
+    if (sel) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); }
+
+    // labels
+    if (zoom > 0.6 && r > 4) {
+      const fontSize = Math.max(9, Math.min(13, r * 1.2));
+      ctx.font = `${fontSize}px ${cachedFontFamily}`;
+      ctx.fillStyle = dim ? 'rgba(224,224,224,0.15)' : 'rgba(224,224,224,0.9)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const label = n.name.length > 24 ? n.name.slice(0, 22) + '..' : n.name;
+      ctx.fillText(label, sx, sy + r + 3);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ INTERACTION ═══
+// ═══════════════════════════════════════════════════════════════
+
+function findNodeAt(mx, my) {
+  const wx = worldX(mx), wy = worldY(my);
+  let best = null, bestD = Infinity;
+  for (const n of state.simNodes) {
+    if (!isVisible(n)) continue;
+    const dx = n.x - wx, dy = n.y - wy;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    const r = nodeRadius(n) + 4 / zoom;
+    if (d < r && d < bestD) { best = n; bestD = d; }
+  }
+  return best;
+}
+
+canvas.addEventListener('mousedown', e => {
+  state.dragStartX = e.clientX;
+  state.dragStartY = e.clientY;
+  const n = findNodeAt(e.clientX, e.clientY);
+  if (n) {
+    state.dragNode = n;
+    state.dragOffX = n.x - worldX(e.clientX);
+    state.dragOffY = n.y - worldY(e.clientY);
+    n.fx = n.x; n.fy = n.y;
+    state.simulation.alphaTarget(0.1).restart();
+  } else {
+    state.dragNode = null;
+    canvas._panStart = { x: e.clientX, y: e.clientY, cx: camX, cy: camY };
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (state.dragNode) {
+    state.dragNode.fx = worldX(e.clientX) + state.dragOffX;
+    state.dragNode.fy = worldY(e.clientY) + state.dragOffY;
+    state.dragNode.x = state.dragNode.fx; state.dragNode.y = state.dragNode.fy;
+    draw();
+  } else if (canvas._panStart) {
+    const s = canvas._panStart;
+    camX = s.cx - (e.clientX - s.x) / zoom;
+    camY = s.cy - (e.clientY - s.y) / zoom;
+    draw();
+  } else {
+    const n = findNodeAt(e.clientX, e.clientY);
+    if (n !== state.hoveredNode) {
+      state.hoveredNode = n;
+      recomputeHoveredNeighbors();
+      canvas.style.cursor = n ? 'pointer' : 'default';
+      const tip = document.getElementById('tooltip');
+      if (n) {
+        tip.textContent = `${n.type}: ${n.name}`;
+        tip.style.left = (e.clientX + 12) + 'px';
+        tip.style.top = (e.clientY - 8) + 'px';
+        tip.style.display = 'block';
+      } else {
+        tip.style.display = 'none';
+      }
+      draw();
+    } else if (n) {
+      const tip = document.getElementById('tooltip');
+      tip.style.left = (e.clientX + 12) + 'px';
+      tip.style.top = (e.clientY - 8) + 'px';
+    }
+  }
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (state.dragNode) {
+    const dx = e.clientX - state.dragStartX;
+    const dy = e.clientY - state.dragStartY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 5) selectNode(state.dragNode);
+    state.dragNode.fx = null; state.dragNode.fy = null;
+    state.simulation.alphaTarget(0);
+    state.dragNode = null;
+  } else if (canvas._panStart) {
+    canvas._panStart = null;
+  }
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 0.92 : 1.08;
+  const wx = worldX(e.clientX), wy = worldY(e.clientY);
+  zoom = Math.max(0.05, Math.min(8, zoom * factor));
+  camX = wx - (e.clientX - cx) / zoom;
+  camY = wy - (e.clientY - cy) / zoom;
+  draw();
+}, { passive: false });
+
+// touch support
+let lastTouchDist = 0;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    const t = e.touches[0];
+    state.dragStartX = t.clientX;
+    state.dragStartY = t.clientY;
+    const n = findNodeAt(t.clientX, t.clientY);
+    if (n) { selectNode(n); }
+    canvas._panStart = { x: t.clientX, y: t.clientY, cx: camX, cy: camY };
+  } else if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lastTouchDist = Math.sqrt(dx * dx + dy * dy);
+  }
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 1 && canvas._panStart) {
+    const t = e.touches[0], s = canvas._panStart;
+    camX = s.cx - (t.clientX - s.x) / zoom;
+    camY = s.cy - (t.clientY - s.y) / zoom;
+    draw();
+  } else if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (lastTouchDist > 0) {
+      zoom = Math.max(0.05, Math.min(8, zoom * (dist / lastTouchDist)));
+      draw();
+    }
+    lastTouchDist = dist;
+  }
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => { canvas._panStart = null; lastTouchDist = 0; });
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ UI ═══
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Select a node and display its details in the right panel.
+ * @param {Object} n - The node object to select
+ */
+function selectNode(n) {
+  state.selectedNode = n;
+  const panel = document.getElementById('right-panel');
+  panel.classList.add('open');
+
+  document.getElementById('node-type-badge').textContent = n.type;
+  document.getElementById('node-type-badge').style.background = nodeColor(n.type);
+  document.getElementById('node-title').textContent = n.name;
+
+  const propsEl = document.getElementById('node-props');
+  propsEl.innerHTML = '';
+  const skip = new Set(['name', 'title', 'embedding']);
+  for (const [k, v] of Object.entries(n.props)) {
+    if (skip.has(k) || v === null || v === undefined) continue;
+    const div = document.createElement('div');
+    div.className = 'prop';
+    const val = typeof v === 'object' ? JSON.stringify(v) : String(v);
+    div.innerHTML = `<div class="prop-key">${escHtml(k)}</div><div class="prop-val">${escHtml(val)}</div>`;
+    propsEl.appendChild(div);
+  }
+
+  // neighbors
+  const neighborsEl = document.getElementById('node-neighbors');
+  neighborsEl.innerHTML = '<h3>Connections</h3>';
+  const conns = state.simLinks.filter(l => l.source.id === n.id || l.target.id === n.id);
+  const seen = new Set();
+  for (const l of conns.slice(0, 30)) {
+    const other = l.source.id === n.id ? l.target : l.source;
+    if (seen.has(other.id)) continue;
+    seen.add(other.id);
+    const div = document.createElement('div');
+    div.className = 'neighbor-item';
+    div.innerHTML = `<span class="dot" style="background:${nodeColor(other.type)};width:6px;height:6px;border-radius:50%;display:inline-block"></span>${escHtml(other.name.slice(0, 40))} <span class="rel">${escHtml(l.type)}</span>`;
+    div.addEventListener('click', () => { selectNode(other); focusNode(other); });
+    neighborsEl.appendChild(div);
+  }
+
+  draw();
+}
+
+function closePanel() {
+  document.getElementById('right-panel').classList.remove('open');
+  state.selectedNode = null;
+  draw();
+}
+
+function focusNode(n) {
+  camX = n.x; camY = n.y;
+  zoom = 1.5;
+  draw();
+}
+
+async function expandSelected() {
+  if (!state.selectedNode) return;
+  const btn = document.getElementById('expand-btn');
+  btn.textContent = 'loading...';
+  const added = await expandNode(state.selectedNode.id);
+  btn.textContent = `expand neighbors (+${added} loaded)`;
+  setTimeout(() => { btn.textContent = 'expand neighbors'; }, 2000);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// --- Event listeners for inline-onclick replacements ---
+document.getElementById('close-panel-btn').addEventListener('click', closePanel);
+document.getElementById('expand-btn').addEventListener('click', expandSelected);
+
+// --- Search ---
+let searchTimeout;
+document.getElementById('search-box').addEventListener('input', e => {
+  clearTimeout(searchTimeout);
+  const q = e.target.value.trim();
+  if (!q) { document.getElementById('search-results').innerHTML = ''; return; }
+  searchTimeout = setTimeout(async () => {
+    try {
+      const results = await searchNodes(q);
+      const el = document.getElementById('search-results');
+      el.innerHTML = '';
+      for (const r of results) {
+        const div = document.createElement('div');
+        div.className = 'search-item';
+        div.innerHTML = `<span class="dot" style="background:${nodeColor(r.type)}"></span>${escHtml(r.name.slice(0, 40))}`;
+        div.addEventListener('click', async () => {
+          let n = state.nodes.get(r.id);
+          if (!n) {
+            n = addNodeData(r.id, r.labels, r.props);
+            await expandNode(r.id);
+          }
+          selectNode(n);
+          focusNode(n);
+          document.getElementById('search-results').innerHTML = '';
+          document.getElementById('search-box').value = '';
+        });
+        el.appendChild(div);
+      }
+    } catch (err) { console.error('search error', err); }
+  }, 300);
+});
+
+// --- Type Filters ---
+function updateTypeFilters() {
+  const counts = {};
+  for (const n of state.nodes.values()) counts[n.type] = (counts[n.type] || 0) + 1;
+  const el = document.getElementById('type-filters');
+  el.innerHTML = '';
+  for (const type of Object.keys(CONFIG.typeColors)) {
+    if (state.typeVisible[type] === undefined) state.typeVisible[type] = true;
+    const label = document.createElement('label');
+    label.className = 'type-toggle';
+    label.innerHTML = `<input type="checkbox" ${state.typeVisible[type] ? 'checked' : ''}><span class="swatch" style="background:${CONFIG.typeColors[type]}"></span>${escHtml(type)}<span class="count">${counts[type] || 0}</span>`;
+    label.querySelector('input').addEventListener('change', e => {
+      state.typeVisible[type] = e.target.checked;
+      state.visibleSetDirty = true;
+      draw();
+    });
+    el.appendChild(label);
+  }
+  // add "Other" if any unknown types
+  const otherCount = [...state.nodes.values()].filter(n => !CONFIG.typeColors[n.type]).length;
+  if (otherCount) {
+    if (state.typeVisible['Other'] === undefined) state.typeVisible['Other'] = true;
+    const label = document.createElement('label');
+    label.className = 'type-toggle';
+    label.innerHTML = `<input type="checkbox" ${state.typeVisible['Other'] ? 'checked' : ''}><span class="swatch" style="background:${CONFIG.defaultColor}"></span>Other<span class="count">${otherCount}</span>`;
+    label.querySelector('input').addEventListener('change', e => {
+      state.typeVisible['Other'] = e.target.checked;
+      state.visibleSetDirty = true;
+      draw();
+    });
+    el.appendChild(label);
+  }
+}
+
+// --- Time Filter ---
+function updateTimeRange() {
+  let tMin = Infinity, tMax = -Infinity;
+  for (const n of state.nodes.values()) {
+    if (n.ts) { tMin = Math.min(tMin, n.ts); tMax = Math.max(tMax, n.ts); }
+  }
+  if (tMin === Infinity) return;
+  state.timeMin = tMin; state.timeMax = tMax;
+  state.timeCutoff = tMax;
+  document.getElementById('time-slider').value = 100;
+  document.getElementById('time-label').textContent = 'all time';
+}
+
+document.getElementById('time-slider').addEventListener('input', e => {
+  const pct = parseInt(e.target.value);
+  if (pct >= 100) {
+    state.timeCutoff = Infinity;
+    document.getElementById('time-label').textContent = 'all time';
+  } else {
+    state.timeCutoff = state.timeMin + (state.timeMax - state.timeMin) * pct / 100;
+    document.getElementById('time-label').textContent = new Date(state.timeCutoff).toLocaleDateString();
+  }
+  state.visibleSetDirty = true;
+  draw();
+});
+
+// --- Stats ---
+function updateStats() {
+  const el = document.getElementById('stats');
+  const typeCounts = {};
+  for (const n of state.nodes.values()) typeCounts[n.type] = (typeCounts[n.type] || 0) + 1;
+  el.innerHTML = `<b>${state.nodes.size}</b> nodes &middot; <b>${state.edges.length}</b> edges<br>` +
+    Object.entries(typeCounts).map(([t, c]) => `${escHtml(t)}: ${c}`).join('<br>');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ═══ INIT ═══
+// ═══════════════════════════════════════════════════════════════
+
+async function initApp() {
+  try {
+    await loadInitial();
+    document.getElementById('loading').style.display = 'none';
+    cachedFontFamily = getComputedStyle(document.body).fontFamily;
+    rebuildSimulation();
+  } catch (err) {
+    if (err.message && (err.message.includes('401') || err.message.includes('auth') || err.message.includes('Unauthorized') || err.message.includes('Failed to fetch'))) {
+      showAuthForm('Connection failed. Please check credentials and try again.');
+    } else {
+      document.getElementById('loading').textContent = `connection failed: ${err.message}\n\nensure neo4j is running at ${CONFIG.neo4jUrl}`;
+      document.getElementById('loading').style.whiteSpace = 'pre-wrap';
+      showAuthForm(err.message);
+    }
+    console.error(err);
+  }
+}
+
+(async () => {
+  neo4jAuth = getStoredAuth();
+  if (neo4jAuth) {
+    await initApp();
+  } else {
+    showAuthForm();
+  }
+})();
+</script>
+</body>
+</html>

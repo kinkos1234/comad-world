@@ -96,6 +96,10 @@ const INDEXES = [
   // Ontology indexes (v2)
   "CREATE INDEX claim_confidence IF NOT EXISTS FOR (n:Claim) ON (n.confidence)",
   "CREATE INDEX claim_type IF NOT EXISTS FOR (n:Claim) ON (n.claim_type)",
+  // Temporal indexes
+  "CREATE INDEX claim_valid_from IF NOT EXISTS FOR (n:Claim) ON (n.valid_from)",
+  "CREATE INDEX claim_valid_until IF NOT EXISTS FOR (n:Claim) ON (n.valid_until)",
+  "CREATE INDEX claim_last_verified IF NOT EXISTS FOR (n:Claim) ON (n.last_verified)",
   "CREATE INDEX community_level IF NOT EXISTS FOR (n:Community) ON (n.level)",
   // Fulltext indexes
   "CREATE FULLTEXT INDEX comad_brain_search IF NOT EXISTS FOR (n:Paper|Article|Repo) ON EACH [n.title, n.summary, n.abstract, n.description]",

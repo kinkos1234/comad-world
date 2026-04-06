@@ -90,6 +90,11 @@ export interface Claim {
   source_uid: string;
   verified: boolean;
   related_entities: string[];
+  // Temporal fields (bi-temporal model)
+  valid_from?: string; // ISO date — when this claim became valid (article publish date)
+  valid_until?: string | null; // ISO date — when invalidated (null = still valid)
+  confidence_decay?: number; // decay rate per year (default 0.1)
+  last_verified?: string; // ISO date — last verification timestamp
 }
 
 export interface Community {
@@ -164,6 +169,9 @@ export interface EdgeMetadata {
   extracted_at: string; // ISO timestamp
   context?: string; // source text snippet
   analysis_space?: AnalysisSpace;
+  // Temporal fields
+  observed_at?: string; // ISO date — when this relationship was observed
+  weight?: number; // usage-frequency weight (default 1.0)
 }
 
 // ============================================
@@ -251,6 +259,35 @@ export interface ExtractedEntities {
   topics: Array<Pick<Topic, "name">>;
   claims: ExtractedClaim[];
   relationships: ExtractedRelationship[];
+}
+
+// ============================================
+// Temporal Query Types
+// ============================================
+
+export interface TimelineEntry {
+  date: string;
+  claim_uid: string;
+  content: string;
+  claim_type: ClaimType;
+  confidence: number;
+  event: "created" | "invalidated" | "updated";
+}
+
+export interface ConflictPair {
+  claim1_uid: string;
+  claim1_content: string;
+  claim2_uid: string;
+  claim2_content: string;
+  shared_entities: string[];
+}
+
+export interface PruneCandidate {
+  uid: string;
+  content: string;
+  confidence: number;
+  days_since_verified: number;
+  reason: string;
 }
 
 // ============================================
