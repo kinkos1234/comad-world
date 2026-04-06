@@ -32,7 +32,7 @@ describe("graph-refiner", () => {
       expect(result.updated).toBe(5);
       expect(mockWrite).toHaveBeenCalledTimes(1);
 
-      const cypher = mockWrite.mock.calls[0][0] as string;
+      const cypher = (mockWrite.mock.calls[0] as unknown as [string, any])[0];
       expect(cypher).toContain("r.weight");
       expect(cypher).toContain("cooccurrences");
     });
@@ -79,7 +79,7 @@ describe("graph-refiner", () => {
       expect(result.updated).toBe(1);
       expect(mockWrite).toHaveBeenCalledTimes(1);
 
-      const [cypher, params] = mockWrite.mock.calls[0] as [string, any];
+      const [cypher, params] = mockWrite.mock.calls[0] as unknown as [string, any];
       expect(cypher).toContain("UNWIND");
       expect(params.updates).toHaveLength(1);
       expect(params.updates[0].uid).toBe("claim:old-1");
@@ -157,7 +157,7 @@ describe("graph-refiner", () => {
       expect(conflicts[0].shared_entities).toContain("LLM");
 
       // Verify query uses entity-based grouping instead of cartesian product
-      const cypher = mockQuery.mock.calls[0][0] as string;
+      const cypher = (mockQuery.mock.calls[0] as unknown as [string, any])[0];
       expect(cypher).toContain("UNWIND c.related_entities");
       expect(cypher).toContain("c1.claim_type = c2.claim_type");
     });

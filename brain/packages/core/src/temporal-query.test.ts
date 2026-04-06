@@ -35,7 +35,7 @@ describe("temporal-query", () => {
       expect(claims[0].content).toBe("GPT-4 is the best LLM");
       expect(mockQuery).toHaveBeenCalledTimes(1);
 
-      const cypher = mockQuery.mock.calls[0][0] as string;
+      const cypher = (mockQuery.mock.calls[0] as unknown as [string, any])[0];
       expect(cypher).toContain("valid_from <= $date");
       expect(cypher).toContain("c.valid_until IS NULL OR c.valid_until > $date");
     });
@@ -45,7 +45,7 @@ describe("temporal-query", () => {
 
       await getClaimsAt(new Date("2024-06-01"), "GPT-4");
 
-      const [cypher, params] = mockQuery.mock.calls[0] as [string, any];
+      const [cypher, params] = mockQuery.mock.calls[0] as unknown as [string, any];
       expect(cypher).toContain("toLower($topic)");
       expect(params.topic).toBe("GPT-4");
     });
@@ -60,7 +60,7 @@ describe("temporal-query", () => {
       mockQuery.mockResolvedValue([]);
       await getClaimsAt(new Date("2024-06-01"), undefined, 50);
 
-      const [cypher, params] = mockQuery.mock.calls[0] as [string, any];
+      const [cypher, params] = mockQuery.mock.calls[0] as unknown as [string, any];
       expect(cypher).toContain("LIMIT");
       expect(params.limit).toBe(50);
     });
@@ -69,7 +69,7 @@ describe("temporal-query", () => {
       mockQuery.mockResolvedValue([]);
       await getClaimsAt(new Date("2024-06-01"));
 
-      const [, params] = mockQuery.mock.calls[0] as [string, any];
+      const [, params] = mockQuery.mock.calls[0] as unknown as [string, any];
       expect(params.limit).toBe(100);
     });
   });
@@ -132,7 +132,7 @@ describe("temporal-query", () => {
       expect(stale).toHaveLength(1);
       expect(stale[0].uid).toBe("claim:old-1");
 
-      const [cypher, params] = mockQuery.mock.calls[0] as [string, any];
+      const [cypher, params] = mockQuery.mock.calls[0] as unknown as [string, any];
       expect(cypher).toContain("valid_from < $cutoff");
       expect(cypher).toContain("last_verified IS NULL OR c.last_verified < $cutoff");
       expect(params.cutoff).toBeDefined();
