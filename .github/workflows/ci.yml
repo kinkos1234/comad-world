@@ -57,4 +57,5 @@ jobs:
       - name: Lint markdown
         uses: DavidAnson/markdownlint-cli2-action@v19
         with:
+          config: ".markdownlint-cli2.jsonc"
           globs: "**/*.md"
