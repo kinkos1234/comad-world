@@ -1,0 +1,36 @@
+{# Q&A 답변 생성 프롬프트 템플릿 #}
+질문: {{ question }}
+
+{% if conversation_history %}
+## 이전 대화
+
+{% for turn in conversation_history %}
+{{ turn.role }}: {{ turn.content }}
+{% endfor %}
+{% endif %}
+
+## 그래프 탐색 결과
+
+{{ graph_result }}
+
+{% if relevant_chunks %}
+## 관련 원문 청크
+
+{% for chunk in relevant_chunks %}
+---
+{{ chunk.text }}
+---
+{% endfor %}
+{% endif %}
+
+## 분석 결과
+
+{{ analysis_data }}
+
+## 답변 규칙
+
+1. 제공된 데이터에 근거한 답변만 작성
+2. 수치 인용 시 출처(분석공간명) 명시
+3. 인과 관계: A → B → C 형식
+4. 불확실한 내용: "시뮬레이션 데이터에서 확인되지 않음"
+5. 간결하되 구조적 근거 포함

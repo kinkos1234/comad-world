@@ -1,41 +1,19 @@
-import { writeFileSync, unlinkSync, readFileSync } from "fs";
+import { writeFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
-import { join, resolve } from "path";
+import { join } from "path";
 import type { ExtractedEntities } from "./types.js";
-
-/**
- * Load domain hint from comad.config.yaml if available.
- * Falls back to generic "articles and documents" if not found.
- */
-function getDomainHint(): string {
-  try {
-    const configPaths = [
-      resolve(__dirname, "../../../../comad.config.yaml"),
-      resolve(process.cwd(), "comad.config.yaml"),
-    ];
-    for (const p of configPaths) {
-      try {
-        const text = readFileSync(p, "utf-8");
-        const match = text.match(/domain_hint:\s*"([^"]+)"/);
-        if (match) return match[1];
-      } catch {}
-    }
-  } catch {}
-  return "articles and documents";
-}
 
 /**
  * Extract entities, claims, and relationships from article content using Claude Code -p mode (OAuth).
  * No API key needed — uses the same auth as Claude Code CLI.
  *
- * The extraction prompt adapts to the domain_hint in comad.config.yaml.
+ * v2: Enhanced with Claim extraction, confidence scoring, context snippets, and analysis space tagging.
  */
 export async function extractEntities(
   title: string,
   content: string
 ): Promise<ExtractedEntities> {
-  const domainHint = getDomainHint();
-  const prompt = `다음 ${domainHint}에서 엔티티, 관계, 그리고 핵심 주장(Claim)을 추출하여 JSON으로만 응답해라. 마크다운 코드블록 없이 순수 JSON만 출력해라.
+  const prompt = `다음 기술 기사에서 엔티티, 관계, 그리고 핵심 주장(Claim)을 추출하여 JSON으로만 응답해라. 마크다운 코드블록 없이 순수 JSON만 출력해라.
 
 제목: ${title}
 

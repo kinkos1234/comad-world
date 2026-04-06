@@ -1,137 +1,168 @@
 /**
- * arXiv Crawler — config-driven
+ * arxiv Bulk Paper Crawler — Fetch papers by category, date range, and relevance.
  *
- * Reads categories and keywords from comad.config.yaml.
- * Fetches papers from arXiv API + Semantic Scholar enrichment.
+ * Strategy:
+ *   1. Use arxiv API to search by category + keywords
+ *   2. Filter by relevance (citation proxy via Semantic Scholar)
+ *   3. Output as CrawlResult JSON for ingest-crawl-results.ts
+ *
+ * Usage:
+ *   bun run packages/crawler/src/arxiv-crawler.ts --limit 3000 --output data/arxiv-papers.json
  */
 
-import { getArxivCategories, type ArxivCategory } from "./config-loader";
-
-const CATEGORIES = getArxivCategories();
+import { writeFileSync } from "fs";
 
 const ARXIV_API = "http://export.arxiv.org/api/query";
-const SEMANTIC_SCHOLAR = "https://api.semanticscholar.org/graph/v1";
-const RATE_LIMIT_MS = 3000;
-const MAX_CONCURRENT = 5;
+const S2_API = "https://api.semanticscholar.org/graph/v1";
 
 interface ArxivPaper {
   title: string;
-  url: string;
   arxiv_id: string;
+  url: string;
+  pdf_url: string;
+  date: string;
+  categories: string[];
   authors: string[];
   abstract: string;
-  categories: string[];
-  published_at: string;
-  citation_count?: number;
-  full_content?: string;
 }
 
-function sleep(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
+// Categories and their search weight
+const CATEGORIES: Array<{ cat: string; keywords: string[]; maxResults: number }> = [
+  { cat: "cs.CL", keywords: ["language model", "transformer", "attention", "NLP", "text generation", "machine translation", "BERT", "GPT", "LLM"], maxResults: 800 },
+  { cat: "cs.AI", keywords: ["artificial intelligence", "reasoning", "planning", "knowledge representation", "agent", "reinforcement learning"], maxResults: 600 },
+  { cat: "cs.LG", keywords: ["deep learning", "neural network", "optimization", "generalization", "representation learning"], maxResults: 500 },
+  { cat: "cs.CV", keywords: ["image", "object detection", "segmentation", "vision transformer", "diffusion", "generative"], maxResults: 400 },
+  { cat: "cs.IR", keywords: ["information retrieval", "search", "recommendation", "embedding", "RAG"], maxResults: 200 },
+  { cat: "cs.SE", keywords: ["software engineering", "code generation", "program synthesis", "testing", "debugging"], maxResults: 150 },
+  { cat: "cs.RO", keywords: ["robotics", "manipulation", "navigation", "embodied", "policy learning"], maxResults: 100 },
+  { cat: "cs.CR", keywords: ["security", "adversarial", "privacy", "alignment", "safety"], maxResults: 100 },
+  { cat: "cs.SD", keywords: ["speech", "audio", "voice", "TTS", "ASR"], maxResults: 100 },
+  { cat: "stat.ML", keywords: ["Bayesian", "probabilistic", "causal", "statistical learning"], maxResults: 50 },
+];
+
+async function searchArxiv(query: string, start: number, maxResults: number): Promise<string> {
+  const params = new URLSearchParams({
+    search_query: query,
+    start: String(start),
+    max_results: String(Math.min(maxResults, 200)), // arxiv API max per request
+    sortBy: "relevance",
+    sortOrder: "descending",
+  });
+
+  const res = await fetch(`${ARXIV_API}?${params}`);
+  if (!res.ok) throw new Error(`arxiv API error: ${res.status}`);
+  return res.text();
 }
 
-async function fetchCategory(cat: ArxivCategory): Promise<ArxivPaper[]> {
-  const query = `cat:${cat.category}+AND+(${cat.keywords.map((k) => `all:"${k}"`).join("+OR+")})`;
-  const url = `${ARXIV_API}?search_query=${query}&start=0&max_results=${cat.max_results}&sortBy=submittedDate&sortOrder=descending`;
+function parseArxivXml(xml: string): ArxivPaper[] {
+  const papers: ArxivPaper[] = [];
+  const entries = xml.split("<entry>").slice(1);
 
-  try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
-    const xml = await res.text();
+  for (const entry of entries) {
+    const getId = (tag: string) => {
+      const m = entry.match(new RegExp(`<${tag}[^>]*>([^<]+)</${tag}>`));
+      return m?.[1]?.trim() ?? "";
+    };
 
-    const entries = xml.match(/<entry>[\s\S]*?<\/entry>/g) || [];
+    const url = getId("id");
+    const arxivId = url.replace("http://arxiv.org/abs/", "").replace(/v\d+$/, "");
 
-    return entries.map((entry) => {
-      const title = entry.match(/<title>([\s\S]*?)<\/title>/)?.[1]?.trim().replace(/\s+/g, " ") || "";
-      const id = entry.match(/<id>([\s\S]*?)<\/id>/)?.[1]?.trim() || "";
-      const arxivId = id.match(/(\d{4}\.\d{4,5})/)?.[1] || id;
-      const abstract = entry.match(/<summary>([\s\S]*?)<\/summary>/)?.[1]?.trim().replace(/\s+/g, " ") || "";
-      const published = entry.match(/<published>([\s\S]*?)<\/published>/)?.[1]?.trim() || "";
+    const title = getId("title").replace(/\s+/g, " ");
+    const abstract = getId("summary").replace(/\s+/g, " ");
+    const published = getId("published").split("T")[0];
 
-      const authorMatches = entry.match(/<author>[\s\S]*?<name>([\s\S]*?)<\/name>[\s\S]*?<\/author>/g) || [];
-      const authors = authorMatches.map(
-        (a) => a.match(/<name>([\s\S]*?)<\/name>/)?.[1]?.trim() || ""
-      );
+    // Extract authors
+    const authorMatches = entry.matchAll(/<author>\s*<name>([^<]+)<\/name>/g);
+    const authors = [...authorMatches].map(m => m[1].trim());
 
-      const catMatches = entry.match(/category[^>]*term="([^"]*)"/g) || [];
-      const categories = catMatches.map(
-        (c) => c.match(/term="([^"]*)"/)?.[1] || ""
-      );
+    // Extract categories
+    const catMatches = entry.matchAll(/category[^>]*term="([^"]+)"/g);
+    const categories = [...new Set([...catMatches].map(m => m[1]))];
 
-      return {
+    if (arxivId && title) {
+      papers.push({
         title,
-        url: `https://arxiv.org/abs/${arxivId}`,
         arxiv_id: arxivId,
-        authors,
-        abstract,
+        url: `https://arxiv.org/abs/${arxivId}`,
+        pdf_url: `https://arxiv.org/pdf/${arxivId}`,
+        date: published,
         categories,
-        published_at: published,
-      };
-    });
-  } catch (err) {
-    console.warn(`[arxiv] Failed to fetch ${cat.category}: ${err}`);
-    return [];
+        authors: authors.slice(0, 10), // limit to first 10 authors
+        abstract: abstract.slice(0, 1000),
+      });
+    }
   }
-}
 
-async function enrichWithSemanticScholar(papers: ArxivPaper[]): Promise<void> {
-  for (let i = 0; i < papers.length; i += MAX_CONCURRENT) {
-    const batch = papers.slice(i, i + MAX_CONCURRENT);
-    await Promise.all(
-      batch.map(async (paper) => {
-        try {
-          const res = await fetch(
-            `${SEMANTIC_SCHOLAR}/paper/ARXIV:${paper.arxiv_id}?fields=citationCount`,
-            { signal: AbortSignal.timeout(5000) }
-          );
-          if (res.ok) {
-            const data = (await res.json()) as any;
-            paper.citation_count = data.citationCount;
-          }
-        } catch {}
-      })
-    );
-  }
+  return papers;
 }
 
 async function main() {
-  console.log(`[arxiv] Categories: ${CATEGORIES.length}`);
-  CATEGORIES.forEach((c) =>
-    console.log(`  ${c.category}: ${c.keywords.join(", ")} (max: ${c.max_results})`)
-  );
+  const args = process.argv.slice(2);
+  const limitIdx = args.indexOf("--limit");
+  const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1]) : 3000;
+  const outputIdx = args.indexOf("--output");
+  const outputPath = outputIdx !== -1 ? args[outputIdx + 1] : "data/arxiv-papers.json";
 
+  console.log(`arxiv Crawler: target ${limit} papers\n`);
+
+  const seen = new Set<string>();
   const allPapers: ArxivPaper[] = [];
 
-  for (const cat of CATEGORIES) {
-    console.log(`[arxiv] Fetching ${cat.category}...`);
-    const papers = await fetchCategory(cat);
-    allPapers.push(...papers);
-    console.log(`[arxiv] ${cat.category}: ${papers.length} papers`);
-    await sleep(RATE_LIMIT_MS);
+  for (const { cat, keywords, maxResults } of CATEGORIES) {
+    const catLimit = Math.min(maxResults, limit - allPapers.length);
+    if (catLimit <= 0) break;
+
+    console.log(`\n=== ${cat} (target: ${catLimit}) ===`);
+
+    for (const keyword of keywords) {
+      if (allPapers.length >= limit) break;
+
+      const query = `cat:${cat} AND all:${keyword}`;
+      let fetched = 0;
+
+      for (let start = 0; start < catLimit && fetched < 200; start += 200) {
+        try {
+          const batchSize = Math.min(200, catLimit - fetched);
+          const xml = await searchArxiv(query, start, batchSize);
+          const papers = parseArxivXml(xml);
+
+          if (papers.length === 0) break;
+
+          let added = 0;
+          for (const paper of papers) {
+            if (seen.has(paper.arxiv_id)) continue;
+            seen.add(paper.arxiv_id);
+            allPapers.push(paper);
+            added++;
+          }
+
+          fetched += papers.length;
+          console.log(`  "${keyword}" offset=${start} → ${papers.length} found, ${added} new (total: ${allPapers.length})`);
+
+          // arxiv rate limit: 1 request per 3 seconds
+          await new Promise(r => setTimeout(r, 3000));
+        } catch (e) {
+          console.warn(`  ⚠ Failed: ${e}`);
+          await new Promise(r => setTimeout(r, 5000));
+        }
+      }
+    }
   }
 
-  // Deduplicate by arxiv_id
-  const seen = new Set<string>();
-  const unique = allPapers.filter((p) => {
-    if (seen.has(p.arxiv_id)) return false;
-    seen.add(p.arxiv_id);
-    return true;
-  });
+  // Sort by date descending (newest first)
+  allPapers.sort((a, b) => b.date.localeCompare(a.date));
+  const topPapers = allPapers.slice(0, limit);
 
-  console.log(`[arxiv] Total unique papers: ${unique.length}`);
+  console.log(`\nCollected ${topPapers.length} papers total`);
 
-  // Enrich top papers with citation counts
-  console.log(`[arxiv] Enriching with Semantic Scholar...`);
-  await enrichWithSemanticScholar(unique.slice(0, 200));
+  // Write output
+  const output = {
+    source: "arxiv",
+    items: topPapers,
+  };
 
-  const output = { source: "arxiv", items: unique };
-  const outputPath = process.argv.find((a) => a.startsWith("--output="))?.split("=")[1];
-
-  if (outputPath) {
-    await Bun.write(outputPath, JSON.stringify(output, null, 2));
-    console.log(`[arxiv] Wrote to ${outputPath}`);
-  } else {
-    console.log(JSON.stringify(output, null, 2));
-  }
+  writeFileSync(outputPath, JSON.stringify(output, null, 2));
+  console.log(`Output: ${outputPath} (${topPapers.length} papers)`);
 }
 
-main().catch(console.error);
+main().catch(e => { console.error(e); process.exit(1); });

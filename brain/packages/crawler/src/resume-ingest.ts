@@ -1,0 +1,451 @@
+/**
+ * Resume ingest — skips items already in DB to avoid redundant LLM calls.
+ * Processes in small batches with progress reporting.
+ *
+ * Usage:
+ *   bun run packages/crawler/src/resume-ingest.ts --source blogs --file data/articles-crawl-bulk.json --batch 50
+ *   bun run packages/crawler/src/resume-ingest.ts --source arxiv --file data/arxiv-papers-bulk.json --batch 30
+ *   bun run packages/crawler/src/resume-ingest.ts --source github --file data/github-repos-bulk.json --batch 50
+ */
+import { readFileSync } from "fs";
+import {
+  query, write, close,
+  articleUid, paperUid, repoUid, techUid, personUid, orgUid, topicUid,
+  claimUid, extractEntities,
+  fetchContent, fetchPaperContent,
+} from "@comad-brain/core";
+import type { ExtractedEntities } from "@comad-brain/core";
+
+interface CrawlItem {
+  title: string;
+  url: string;
+  summary?: string;
+  date?: string;
+  full_content?: string;
+  arxiv_id?: string;
+  abstract?: string;
+  authors?: string[];
+  pdf_url?: string;
+  categories?: string[];
+  full_name?: string;
+  stars?: number;
+  language?: string;
+  topics?: string[];
+  owner?: string;
+  source_name?: string;
+  author?: string;
+}
+
+const SKIP_FETCH = process.argv.includes("--skip-fetch");
+
+async function main() {
+  const args = process.argv.slice(2);
+  const source = getArg(args, "--source") as "arxiv" | "github" | "blogs";
+  const filePath = getArg(args, "--file");
+  const batchSize = parseInt(getArg(args, "--batch") ?? "50", 10);
+  const offset = parseInt(getArg(args, "--offset") ?? "0", 10);
+
+  if (!source || !filePath) {
+    console.error("Usage: bun run resume-ingest.ts --source arxiv|github|blogs --file <path> [--batch 50] [--offset 0] [--skip-fetch]");
+    process.exit(1);
+  }
+
+  const raw = readFileSync(filePath, "utf-8");
+  const data = JSON.parse(raw);
+  const items: CrawlItem[] = data.items ?? data;
+
+  console.log(`Total items in file: ${items.length}`);
+  console.log(`Source: ${source}, Batch size: ${batchSize}, Offset: ${offset}`);
+
+  // Phase 0: Get existing UIDs from DB to skip already-ingested items
+  console.log("\nChecking existing items in DB...");
+  const existingUids = await getExistingUids(source);
+  console.log(`Already in DB: ${existingUids.size}`);
+
+  // Filter to only pending items
+  const pending = items.filter((item, idx) => {
+    if (idx < offset) return false;
+    const uid = getItemUid(item, source);
+    return !existingUids.has(uid);
+  });
+
+  console.log(`Pending: ${pending.length} items\n`);
+
+  if (pending.length === 0) {
+    console.log("Nothing to ingest. All items already in DB!");
+    await close();
+    return;
+  }
+
+  // Phase 1: Fetch full content in parallel (no LLM cost)
+  if (!SKIP_FETCH && (source === "blogs" || source === "arxiv")) {
+    const needFetch = pending.filter(item => !item.full_content);
+    if (needFetch.length > 0) {
+      console.log(`Fetching full content for ${needFetch.length} items (5 workers)...`);
+      let fetched = 0;
+      const queue = [...needFetch];
+
+      async function fetchWorker() {
+        while (queue.length > 0) {
+          const item = queue.shift()!;
+          try {
+            if (source === "arxiv" && (item.pdf_url || item.arxiv_id)) {
+              const pdfUrl = item.pdf_url || `https://arxiv.org/pdf/${item.arxiv_id}`;
+              const content = await fetchPaperContent(pdfUrl, item.arxiv_id);
+              if (content && content.length > (item.abstract?.length ?? 0)) {
+                item.full_content = content;
+                fetched++;
+              }
+            } else if (source === "blogs") {
+              const content = await fetchContent(item.url);
+              if (content && content.length > (item.summary?.length ?? 0)) {
+                item.full_content = content;
+                fetched++;
+              }
+            }
+          } catch {}
+        }
+      }
+
+      const CONCURRENCY = 5;
+      await Promise.all(Array.from({ length: Math.min(CONCURRENCY, needFetch.length) }, () => fetchWorker()));
+      console.log(`Fetched ${fetched}/${needFetch.length} full articles\n`);
+    }
+  }
+
+  // Phase 2: Ingest in batches
+  const totalBatches = Math.ceil(pending.length / batchSize);
+  let totalDone = 0;
+  let totalFailed = 0;
+
+  for (let batch = 0; batch < totalBatches; batch++) {
+    const start = batch * batchSize;
+    const end = Math.min(start + batchSize, pending.length);
+    const batchItems = pending.slice(start, end);
+
+    console.log(`\n=== Batch ${batch + 1}/${totalBatches} (items ${start + 1}-${end}/${pending.length}) ===`);
+
+    for (const item of batchItems) {
+      try {
+        // Fetch content if needed
+        if (!SKIP_FETCH && !item.full_content) {
+          if (source === "arxiv" && (item.pdf_url || item.arxiv_id)) {
+            const pdfUrl = item.pdf_url || `https://arxiv.org/pdf/${item.arxiv_id}`;
+            const content = await fetchPaperContent(pdfUrl, item.arxiv_id);
+            if (content && content.length > (item.abstract?.length ?? 0)) {
+              item.full_content = content;
+            }
+          } else if (source === "blogs") {
+            const content = await fetchContent(item.url);
+            if (content && content.length > (item.summary?.length ?? 0)) {
+              item.full_content = content;
+            }
+          }
+        }
+
+        // Ingest
+        if (source === "arxiv") {
+          await ingestPaper(item);
+        } else if (source === "github") {
+          await ingestRepo(item);
+        } else {
+          await ingestArticle(item, source);
+        }
+        totalDone++;
+        const pct = ((totalDone / pending.length) * 100).toFixed(1);
+        console.log(`  [${totalDone}/${pending.length}] (${pct}%) ${item.title.slice(0, 55)}`);
+      } catch (e: any) {
+        totalFailed++;
+        console.warn(`  ⚠ Failed: "${item.title.slice(0, 50)}": ${e.message?.slice(0, 100)}`);
+      }
+    }
+
+    console.log(`Batch ${batch + 1} done. Total: ${totalDone} ok, ${totalFailed} failed`);
+
+    // Brief pause between batches to avoid overloading
+    if (batch < totalBatches - 1) {
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+
+  console.log(`\n=== COMPLETE ===`);
+  console.log(`Ingested: ${totalDone}, Failed: ${totalFailed}, Skipped (already in DB): ${existingUids.size}`);
+  await close();
+}
+
+// ============================================
+// Helpers
+// ============================================
+
+function getArg(args: string[], flag: string): string | undefined {
+  const idx = args.indexOf(flag);
+  return idx !== -1 ? args[idx + 1] : undefined;
+}
+
+function getItemUid(item: CrawlItem, source: string): string {
+  if (source === "arxiv") return paperUid(item.arxiv_id ?? item.url);
+  if (source === "github") return repoUid(item.full_name ?? item.title);
+  const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60);
+  const date = item.date ?? new Date().toISOString().split("T")[0];
+  return articleUid(date, slug);
+}
+
+async function getExistingUids(source: string): Promise<Set<string>> {
+  let label: string;
+  if (source === "arxiv") label = "Paper";
+  else if (source === "github") label = "Repo";
+  else label = "Article";
+
+  const records = await query(`MATCH (n:${label}) RETURN n.uid AS uid`);
+  return new Set(records.map(r => r.get("uid") as string));
+}
+
+// ============================================
+// Ingest functions (same as ingest-crawl-results.ts)
+// ============================================
+
+async function ingestPaper(item: CrawlItem) {
+  const uid = paperUid(item.arxiv_id ?? item.url);
+  const now = new Date().toISOString();
+  const textForExtraction = item.full_content ?? item.abstract ?? item.summary ?? "";
+
+  await write(
+    `MERGE (p:Paper {uid: $uid})
+     SET p.title = $title, p.abstract = $abstract, p.arxiv_id = $arxiv_id,
+         p.url = $url, p.pdf_url = $pdf_url, p.published_date = $date,
+         p.categories = $categories, p.relevance = '참고'`,
+    {
+      uid, title: item.title,
+      abstract: item.abstract ?? item.summary ?? "",
+      arxiv_id: item.arxiv_id ?? "", url: item.url,
+      pdf_url: item.pdf_url ?? "", date: item.date ?? "",
+      categories: item.categories ?? [],
+    }
+  );
+
+  if (item.full_content) {
+    await write(
+      `MATCH (p:Paper {uid: $uid}) SET p.full_content = $content, p.content_source = $source`,
+      {
+        uid,
+        content: item.full_content.slice(0, 50000),
+        source: item.full_content.length > 10000 ? "pdf-parsed" : "html-fetched",
+      }
+    );
+  }
+
+  for (const author of item.authors ?? []) {
+    const pUid = personUid(author);
+    await write(
+      `MERGE (person:Person {uid: $uid}) SET person.name = $name
+       WITH person MATCH (paper:Paper {uid: $paperUid})
+       MERGE (paper)-[r:AUTHORED_BY]->(person)
+       ON CREATE SET r.confidence = 0.95, r.source = 'extractor', r.extracted_at = $now, r.analysis_space = 'temporal'`,
+      { uid: pUid, name: author, paperUid: uid, now }
+    );
+  }
+
+  const entities = await extractEntities(item.title, textForExtraction);
+  await mergeExtractedEntities(uid, entities, now);
+}
+
+async function ingestRepo(item: CrawlItem) {
+  const uid = repoUid(item.full_name ?? item.title);
+  const now = new Date().toISOString();
+
+  await write(
+    `MERGE (r:Repo {uid: $uid})
+     SET r.full_name = $full_name, r.name = $name, r.description = $description,
+         r.url = $url, r.stars = $stars, r.language = $language,
+         r.topics = $topics, r.relevance = '참고'`,
+    {
+      uid, full_name: item.full_name ?? item.title,
+      name: item.title, description: item.summary ?? "",
+      url: item.url, stars: item.stars ?? 0,
+      language: item.language ?? "", topics: item.topics ?? [],
+    }
+  );
+
+  if (item.full_content) {
+    await write(
+      `MATCH (r:Repo {uid: $uid}) SET r.full_content = $content`,
+      { uid, content: item.full_content.slice(0, 50000) }
+    );
+  }
+
+  if (item.owner) {
+    const oUid = orgUid(item.owner);
+    await write(
+      `MERGE (o:Organization {uid: $uid}) SET o.name = $name, o.type = 'open_source_org'
+       WITH o MATCH (r:Repo {uid: $repoUid})
+       MERGE (r)-[rel:OWNED_BY]->(o)
+       ON CREATE SET rel.confidence = 0.95, rel.source = 'extractor', rel.extracted_at = $now, rel.analysis_space = 'structural'`,
+      { uid: oUid, name: item.owner, repoUid: uid, now }
+    );
+  }
+
+  if (item.language) {
+    const tUid = techUid(item.language);
+    await write(
+      `MERGE (t:Technology {uid: $uid}) SET t.name = $name, t.type = 'language'
+       WITH t MATCH (r:Repo {uid: $repoUid})
+       MERGE (r)-[rel:USES_TECHNOLOGY]->(t)
+       ON CREATE SET rel.confidence = 0.9, rel.source = 'extractor', rel.extracted_at = $now, rel.analysis_space = 'structural'`,
+      { uid: tUid, name: item.language, repoUid: uid, now }
+    );
+  }
+
+  const entities = await extractEntities(item.title, item.summary ?? "");
+  await mergeExtractedEntities(uid, entities, now);
+}
+
+async function ingestArticle(item: CrawlItem, sourceName: string) {
+  const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60);
+  const date = item.date ?? new Date().toISOString().split("T")[0];
+  const uid = articleUid(date, slug);
+  const now = new Date().toISOString();
+  const textForExtraction = item.full_content ?? item.summary ?? "";
+
+  await write(
+    `MERGE (a:Article {uid: $uid})
+     SET a.title = $title, a.summary = $summary, a.url = $url,
+         a.source_name = $source_name, a.published_date = $date,
+         a.categories = $categories, a.relevance = '참고'`,
+    {
+      uid, title: item.title, summary: item.summary ?? "",
+      url: item.url, source_name: item.source_name ?? sourceName,
+      date, categories: item.categories ?? [],
+    }
+  );
+
+  if (item.full_content) {
+    await write(
+      `MATCH (a:Article {uid: $uid}) SET a.full_content = $content`,
+      { uid, content: item.full_content.slice(0, 10000) }
+    );
+  }
+
+  if (item.author) {
+    const pUid = personUid(item.author);
+    await write(
+      `MERGE (p:Person {uid: $uid}) SET p.name = $name
+       WITH p MATCH (a:Article {uid: $articleUid})
+       MERGE (a)-[r:WRITTEN_BY]->(p)
+       ON CREATE SET r.confidence = 0.9, r.source = 'extractor', r.extracted_at = $now, r.analysis_space = 'temporal'`,
+      { uid: pUid, name: item.author, articleUid: uid, now }
+    );
+  }
+
+  const entities = await extractEntities(item.title, textForExtraction);
+  await mergeExtractedEntities(uid, entities, now);
+
+  if (entities.claims && entities.claims.length > 0) {
+    for (let i = 0; i < entities.claims.length; i++) {
+      const claim = entities.claims[i];
+      const cUid = claimUid(uid, i);
+      await write(
+        `MERGE (c:Claim {uid: $uid})
+         SET c.content = $content, c.claim_type = $claim_type,
+             c.confidence = $confidence, c.source_uid = $source_uid,
+             c.verified = false, c.related_entities = $related_entities
+         WITH c
+         MATCH (a:Article {uid: $articleUid})
+         MERGE (a)-[r:CLAIMS]->(c)
+         ON CREATE SET r.confidence = 1.0, r.source = 'extractor', r.extracted_at = $now`,
+        {
+          uid: cUid, content: claim.content, claim_type: claim.claim_type,
+          confidence: claim.confidence, source_uid: uid,
+          related_entities: claim.related_entities, articleUid: uid, now,
+        }
+      );
+    }
+  }
+}
+
+async function mergeExtractedEntities(
+  parentUid: string,
+  entities: ExtractedEntities,
+  now: string
+) {
+  for (const tech of entities.technologies) {
+    const tUid = techUid(tech.name);
+    await write(
+      `MERGE (t:Technology {uid: $uid}) SET t.name = $name, t.type = $type
+       WITH t MATCH (parent {uid: $parentUid})
+       MERGE (parent)-[r:DISCUSSES]->(t)
+       ON CREATE SET r.confidence = 0.8, r.source = 'extractor', r.extracted_at = $now, r.analysis_space = 'structural'`,
+      { uid: tUid, name: tech.name, type: tech.type, parentUid, now }
+    );
+  }
+
+  for (const topic of entities.topics) {
+    const tUid = topicUid(topic.name);
+    await write(
+      `MERGE (t:Topic {uid: $uid}) SET t.name = $name
+       WITH t MATCH (parent {uid: $parentUid})
+       MERGE (parent)-[r:TAGGED_WITH]->(t)
+       ON CREATE SET r.confidence = 0.7, r.source = 'extractor', r.extracted_at = $now, r.analysis_space = 'cross'`,
+      { uid: tUid, name: topic.name, parentUid, now }
+    );
+  }
+
+  for (const org of entities.organizations) {
+    const oUid = orgUid(org.name);
+    await write(
+      `MERGE (o:Organization {uid: $uid}) SET o.name = $name, o.type = $type
+       WITH o MATCH (parent {uid: $parentUid})
+       MERGE (parent)-[r:MENTIONS]->(o)
+       ON CREATE SET r.confidence = 0.7, r.source = 'extractor', r.extracted_at = $now, r.analysis_space = 'cross'`,
+      { uid: oUid, name: org.name, type: org.type, parentUid, now }
+    );
+  }
+
+  for (const person of entities.people) {
+    const pUid = personUid(person.name);
+    await write(
+      `MERGE (p:Person {uid: $uid}) SET p.name = $name
+       WITH p MATCH (parent {uid: $parentUid})
+       MERGE (parent)-[r:MENTIONS]->(p)
+       ON CREATE SET r.confidence = 0.7, r.source = 'extractor', r.extracted_at = $now, r.analysis_space = 'cross'`,
+      { uid: pUid, name: person.name, parentUid, now }
+    );
+  }
+
+  for (const rel of entities.relationships) {
+    const fromUid = findEntityUid(rel.from, entities);
+    const toUid = findEntityUid(rel.to, entities);
+    if (fromUid && toUid) {
+      await write(
+        `MATCH (a {uid: $from}), (b {uid: $to})
+         MERGE (a)-[r:${rel.type}]->(b)
+         ON CREATE SET r.confidence = $confidence, r.source = 'extractor',
+                       r.extracted_at = $now, r.context = $context,
+                       r.analysis_space = $analysis_space`,
+        {
+          from: fromUid, to: toUid,
+          confidence: rel.confidence ?? 0.5, now,
+          context: rel.context ?? null,
+          analysis_space: rel.analysis_space ?? null,
+        }
+      );
+    }
+  }
+}
+
+function findEntityUid(name: string, entities: ExtractedEntities): string | null {
+  const lower = name.toLowerCase();
+  const tech = entities.technologies.find((t) => t.name.toLowerCase() === lower);
+  if (tech) return techUid(tech.name);
+  const person = entities.people.find((p) => p.name.toLowerCase() === lower);
+  if (person) return personUid(person.name);
+  const org = entities.organizations.find((o) => o.name.toLowerCase() === lower);
+  if (org) return orgUid(org.name);
+  const topic = entities.topics.find((t) => t.name.toLowerCase() === lower);
+  if (topic) return topicUid(topic.name);
+  return null;
+}
+
+main().catch((e) => {
+  console.error("Resume ingest failed:", e);
+  process.exit(1);
+});

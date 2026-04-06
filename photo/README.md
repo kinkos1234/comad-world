@@ -1,35 +1,43 @@
-# Photo — AI Photo Correction Agent
+# Comad Photo
 
-Claude Code agent for AI-powered photo correction via Photoshop MCP.
+> 사진 보정, 말만 해.
 
-**Domain-agnostic** — works with any photo subject.
+Claude Code + Photoshop MCP로 사진 보정을 자동화하는 에이전트.
 
-## Principles
+## 작동 방식
 
-- **Naturalness first** — if it looks corrected, it's a failure
-- **Non-destructive** — backup mandatory
-- **Conservative on portraits** — extremely light touch
-- **Respect intent** — moody/artistic photos get minimal correction
+1. 이미지를 보고 분석
+2. 보정 방향을 카드로 제안
+3. 선택하면 Photoshop에서 실행 (조정 레이어)
+4. 결과 확인 → "더 따뜻하게" 같은 피드백 → 반복
+5. "좋아" 하면 끝
 
-## Engine Priority
+## 설치
 
-1. **PIL** — Basic corrections (exposure, white balance, color). Over-correction guard: MAE > 20 triggers reduction.
-2. **Camera Raw** (via Computer Use) — Texture, clarity, dehaze, vignette. Used when PIL can't achieve the desired effect.
-3. **Advanced** (Generative Fill, Neural Filters) — Only when explicitly requested by user.
+```bash
+./install.sh
+```
+
+## 사용
+
+```
+"이 사진 보정해줘"
+"더 밝게"
+"좋아"
+```
+
+## 원칙
+
+- **비파괴**: 조정 레이어만 사용, 원본 보존
+- **최소 개입**: 필요한 보정만
+- **사람이 판단**: AI는 제안, 미적 결정은 사용자
 
 ## Requirements
 
-- Adobe Photoshop (running instance)
-- Claude Code with Computer Use + Photoshop MCP
+- Adobe Photoshop (running)
+- Claude Code
+- Node.js
 
-## Install
+## License
 
-```bash
-cp photo/core/comad-photo.md ~/.claude/agents/
-```
-
-## Usage
-
-Open a photo directory in Claude Code, then say:
-- "이 사진 보정해줘" / "correct this photo"
-- "사진 보정" / "photo correction"
+MIT

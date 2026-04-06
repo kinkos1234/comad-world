@@ -1,188 +1,230 @@
 /**
- * GitHub Crawler — config-driven
+ * GitHub Repo Crawler — Stars 1000+ AI/ML repos, sorted by stars desc.
  *
- * Reads topics and search queries from comad.config.yaml.
- * Fetches trending repos, READMEs, and metadata.
+ * Strategy:
+ *   1. Search GitHub API for repos with 1000+ stars in AI/ML topics
+ *   2. Fetch README.md as full_content
+ *   3. Output as CrawlResult JSON for ingest-crawl-results.ts
+ *
+ * Usage:
+ *   bun run packages/crawler/src/github-crawler.ts --limit 3000 --output data/github-repos.json
  */
 
-import { getGitHubConfig } from "./config-loader";
+import { writeFileSync } from "fs";
 
-const { topics: TOPICS, search_queries: SEARCH_QUERIES } = getGitHubConfig();
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN ?? "";
+const TOPICS = [
+  "machine-learning", "deep-learning", "llm", "large-language-model",
+  "natural-language-processing", "computer-vision", "reinforcement-learning",
+  "transformer", "diffusion-model", "rag", "knowledge-graph",
+  "ai-agents", "prompt-engineering", "fine-tuning", "neural-network",
+  "generative-ai", "langchain", "llama", "gpt", "stable-diffusion",
+];
 
-const GITHUB_API = "https://api.github.com";
-const MAX_CONCURRENT = 5;
-const README_MAX_SIZE = 50 * 1024; // 50KB
+const SEARCH_QUERIES = [
+  "language model stars:>1000",
+  "machine learning stars:>1000",
+  "deep learning stars:>1000",
+  "artificial intelligence stars:>1000",
+  "neural network stars:>1000",
+  "transformer model stars:>1000",
+  "diffusion model stars:>1000",
+  "reinforcement learning stars:>1000",
+  "computer vision stars:>1000",
+  "natural language processing stars:>1000",
+  "RAG retrieval augmented stars:>1000",
+  "knowledge graph stars:>1000",
+  "AI agent stars:>1000",
+  "prompt engineering stars:>1000",
+  "fine-tuning LLM stars:>1000",
+  "embedding vector stars:>1000",
+  "chatbot LLM stars:>1000",
+  "code generation AI stars:>1000",
+  "text-to-image stars:>1000",
+  "speech recognition AI stars:>1000",
+];
 
 interface RepoItem {
   title: string;
   url: string;
-  source: string;
-  description: string;
+  summary: string;
+  full_name: string;
   stars: number;
-  language: string | null;
+  language: string;
   topics: string[];
+  owner: string;
   full_content?: string;
-  published_at: string;
-  updated_at: string;
 }
 
-function getHeaders(): Record<string, string> {
+async function githubApi(path: string, params: Record<string, string> = {}): Promise<any> {
+  const url = new URL(`https://api.github.com${path}`);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+
   const headers: Record<string, string> = {
-    Accept: "application/vnd.github.v3+json",
-    "User-Agent": "comad-world-crawler",
+    "Accept": "application/vnd.github.v3+json",
+    "User-Agent": "KnowledgeOntologyBot/1.0",
   };
-  if (process.env.GITHUB_TOKEN) {
-    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
-  }
-  return headers;
-}
+  if (GITHUB_TOKEN) headers["Authorization"] = `Bearer ${GITHUB_TOKEN}`;
 
-async function searchByTopic(topic: string): Promise<RepoItem[]> {
-  const results: RepoItem[] = [];
-  const maxPages = 10;
-
-  for (let page = 1; page <= maxPages; page++) {
-    try {
-      const res = await fetch(
-        `${GITHUB_API}/search/repositories?q=topic:${topic}&sort=stars&order=desc&per_page=30&page=${page}`,
-        { headers: getHeaders(), signal: AbortSignal.timeout(10000) }
-      );
-
-      if (!res.ok) break;
-      const data = (await res.json()) as any;
-      if (!data.items?.length) break;
-
-      results.push(
-        ...data.items.map((r: any) => ({
-          title: r.full_name,
-          url: r.html_url,
-          source: "github",
-          description: r.description || "",
-          stars: r.stargazers_count,
-          language: r.language,
-          topics: r.topics || [],
-          published_at: r.created_at,
-          updated_at: r.updated_at,
-        }))
-      );
-    } catch {
-      break;
+  const res = await fetch(url.toString(), { headers });
+  if (!res.ok) {
+    if (res.status === 403) {
+      const reset = res.headers.get("x-ratelimit-reset");
+      const waitSec = reset ? Math.max(0, parseInt(reset) - Math.floor(Date.now() / 1000)) : 60;
+      console.log(`  Rate limited. Waiting ${waitSec}s...`);
+      await new Promise(r => setTimeout(r, waitSec * 1000 + 1000));
+      return githubApi(path, params); // retry
     }
+    throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
   }
-
-  return results;
+  return res.json();
 }
 
-async function searchByQuery(query: string): Promise<RepoItem[]> {
-  const results: RepoItem[] = [];
-  const maxPages = 5;
-
-  for (let page = 1; page <= maxPages; page++) {
-    try {
-      const res = await fetch(
-        `${GITHUB_API}/search/repositories?q=${encodeURIComponent(query)}+stars:>1000&sort=stars&order=desc&per_page=30&page=${page}`,
-        { headers: getHeaders(), signal: AbortSignal.timeout(10000) }
-      );
-
-      if (!res.ok) break;
-      const data = (await res.json()) as any;
-      if (!data.items?.length) break;
-
-      results.push(
-        ...data.items.map((r: any) => ({
-          title: r.full_name,
-          url: r.html_url,
-          source: "github",
-          description: r.description || "",
-          stars: r.stargazers_count,
-          language: r.language,
-          topics: r.topics || [],
-          published_at: r.created_at,
-          updated_at: r.updated_at,
-        }))
-      );
-    } catch {
-      break;
-    }
-  }
-
-  return results;
+async function searchRepos(query: string, perPage = 100, page = 1): Promise<any> {
+  return githubApi("/search/repositories", {
+    q: query,
+    sort: "stars",
+    order: "desc",
+    per_page: String(perPage),
+    page: String(page),
+  });
 }
 
-async function fetchReadme(repo: RepoItem): Promise<string | undefined> {
+async function fetchReadme(fullName: string): Promise<string | null> {
   try {
-    const [owner, name] = repo.title.split("/");
-    const res = await fetch(
-      `${GITHUB_API}/repos/${owner}/${name}/readme`,
-      {
-        headers: { ...getHeaders(), Accept: "application/vnd.github.raw" },
-        signal: AbortSignal.timeout(10000),
-      }
-    );
-    if (!res.ok) return undefined;
-    const text = await res.text();
-    return text.slice(0, README_MAX_SIZE);
+    const data = await githubApi(`/repos/${fullName}/readme`);
+    if (data.content && data.encoding === "base64") {
+      const decoded = Buffer.from(data.content, "base64").toString("utf-8");
+      return decoded.slice(0, 50000); // 50KB limit
+    }
   } catch {
-    return undefined;
+    // No README
   }
+  return null;
 }
 
 async function main() {
-  console.log(`[github] Topics: ${TOPICS.length}, Search queries: ${SEARCH_QUERIES.length}`);
+  const args = process.argv.slice(2);
+  const limitIdx = args.indexOf("--limit");
+  const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1]) : 3000;
+  const outputIdx = args.indexOf("--output");
+  const outputPath = outputIdx !== -1 ? args[outputIdx + 1] : "data/github-repos.json";
+
+  console.log(`GitHub Crawler: target ${limit} repos (stars 1000+)\n`);
+
+  if (!GITHUB_TOKEN) {
+    console.warn("⚠ No GITHUB_TOKEN set. Rate limit will be 10 requests/min (vs 30/min with token).\n");
+  }
+
+  const seen = new Set<string>();
+  const repos: RepoItem[] = [];
 
   // Phase 1: Topic-based search
-  console.log("[github] Phase 1: Topic search...");
-  const topicResults: RepoItem[] = [];
   for (const topic of TOPICS) {
-    const repos = await searchByTopic(topic);
-    topicResults.push(...repos);
-    console.log(`  ${topic}: ${repos.length} repos`);
+    if (repos.length >= limit) break;
+
+    try {
+      for (let page = 1; page <= 10; page++) {
+        if (repos.length >= limit) break;
+
+        const data = await searchRepos(`topic:${topic} stars:>1000`, 100, page);
+        if (!data.items || data.items.length === 0) break;
+
+        for (const item of data.items) {
+          if (seen.has(item.full_name) || repos.length >= limit) continue;
+          seen.add(item.full_name);
+
+          repos.push({
+            title: item.name,
+            url: item.html_url,
+            summary: item.description ?? "",
+            full_name: item.full_name,
+            stars: item.stargazers_count,
+            language: item.language ?? "",
+            topics: item.topics ?? [],
+            owner: item.owner?.login ?? "",
+          });
+        }
+
+        console.log(`  topic:${topic} page ${page} → ${data.items.length} repos (total: ${repos.length})`);
+
+        // Rate limit courtesy
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    } catch (e) {
+      console.warn(`  ⚠ topic:${topic} failed: ${e}`);
+    }
   }
 
   // Phase 2: Query-based search for remaining
-  console.log("[github] Phase 2: Query search...");
-  const queryResults: RepoItem[] = [];
   for (const query of SEARCH_QUERIES) {
-    const repos = await searchByQuery(query);
-    queryResults.push(...repos);
-    console.log(`  "${query}": ${repos.length} repos`);
+    if (repos.length >= limit) break;
+
+    try {
+      for (let page = 1; page <= 5; page++) {
+        if (repos.length >= limit) break;
+
+        const data = await searchRepos(query, 100, page);
+        if (!data.items || data.items.length === 0) break;
+
+        for (const item of data.items) {
+          if (seen.has(item.full_name) || repos.length >= limit) continue;
+          seen.add(item.full_name);
+
+          repos.push({
+            title: item.name,
+            url: item.html_url,
+            summary: item.description ?? "",
+            full_name: item.full_name,
+            stars: item.stargazers_count,
+            language: item.language ?? "",
+            topics: item.topics ?? [],
+            owner: item.owner?.login ?? "",
+          });
+        }
+
+        console.log(`  "${query}" page ${page} → ${data.items.length} (total: ${repos.length})`);
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    } catch (e) {
+      console.warn(`  ⚠ query "${query}" failed: ${e}`);
+    }
   }
 
-  // Deduplicate by URL, sort by stars
-  const seen = new Set<string>();
-  const all = [...topicResults, ...queryResults]
-    .filter((r) => {
-      if (seen.has(r.url)) return false;
-      seen.add(r.url);
-      return true;
-    })
-    .sort((a, b) => b.stars - a.stars);
+  // Sort by stars descending and take top N
+  repos.sort((a, b) => b.stars - a.stars);
+  const topRepos = repos.slice(0, limit);
 
-  console.log(`[github] Total unique repos: ${all.length}`);
+  console.log(`\nCollected ${topRepos.length} repos. Fetching READMEs...\n`);
 
-  // Phase 3: Fetch READMEs as full_content
-  console.log("[github] Phase 3: Fetching READMEs...");
-  for (let i = 0; i < all.length; i += MAX_CONCURRENT) {
-    const batch = all.slice(i, i + MAX_CONCURRENT);
-    await Promise.all(
-      batch.map(async (repo) => {
-        repo.full_content = await fetchReadme(repo);
-      })
-    );
+  // Phase 3: Fetch README for each repo (full_content)
+  let fetched = 0;
+  for (let i = 0; i < topRepos.length; i++) {
+    const repo = topRepos[i];
+    const readme = await fetchReadme(repo.full_name);
+    if (readme) {
+      repo.full_content = readme;
+      fetched++;
+    }
+
+    if ((i + 1) % 50 === 0) {
+      console.log(`  README fetched: ${fetched}/${i + 1} (${topRepos.length} total)`);
+    }
+
+    // Rate limit
+    await new Promise(r => setTimeout(r, 500));
   }
 
-  const withReadme = all.filter((r) => r.full_content).length;
-  console.log(`[github] READMEs fetched: ${withReadme}/${all.length}`);
+  console.log(`  README fetched: ${fetched}/${topRepos.length}\n`);
 
-  const output = { source: "github", items: all };
-  const outputPath = process.argv.find((a) => a.startsWith("--output="))?.split("=")[1];
+  // Write output
+  const output = {
+    source: "github",
+    items: topRepos,
+  };
 
-  if (outputPath) {
-    await Bun.write(outputPath, JSON.stringify(output, null, 2));
-    console.log(`[github] Wrote to ${outputPath}`);
-  } else {
-    console.log(JSON.stringify(output, null, 2));
-  }
+  writeFileSync(outputPath, JSON.stringify(output, null, 2));
+  console.log(`Output: ${outputPath} (${topRepos.length} repos, ${fetched} with README)`);
 }
 
-main().catch(console.error);
+main().catch(e => { console.error(e); process.exit(1); });

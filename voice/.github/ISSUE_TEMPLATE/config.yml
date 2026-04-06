@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 질문 & 토론
+    url: https://github.com/kinkos1234/comad-voice/discussions
+    about: 버그나 기능 요청이 아닌 일반적인 질문은 Discussions에서 해주세요.

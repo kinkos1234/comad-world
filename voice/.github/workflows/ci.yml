@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Markdown lint
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: "**/*.md"
+
+      - name: Check install script syntax
+        run: bash -n install.sh
+
+      - name: Verify required files exist
+        run: |
+          for f in README.md LICENSE CHANGELOG.md CONTRIBUTING.md CODE_OF_CONDUCT.md SECURITY.md install.sh core/comad-voice.md; do
+            if [ ! -f "$f" ]; then
+              echo "Missing required file: $f"
+              exit 1
+            fi
+          done
+          echo "All required files present"
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats
+
+      - name: Run file structure tests
+        run: |
+          bats tests/test_install.bats --filter "core/comad-voice.md exists"
+          bats tests/test_install.bats --filter "trigger modules exist"
+          bats tests/test_install.bats --filter "memory templates exist"
+          bats tests/test_install.bats --filter "install.sh is executable"

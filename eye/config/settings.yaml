@@ -1,0 +1,59 @@
+neo4j:
+  uri: "bolt://localhost:7688"
+  user: "neo4j"
+  # password: set via NEO4J_PASSWORD env var (see .env.example)
+  database: "neo4j"
+
+llm:
+  base_url: "http://localhost:11434/v1"
+  model: "llama3.1:8b"
+  temperature: 0.1
+  max_tokens: 1024
+  timeout: 600   # 로컬 LLM은 추론 시간이 길 수 있음 (초)
+  num_ctx: 4096  # Ollama 컨텍스트 윈도우 (thinking 비활성화 시 4096이면 충분)
+
+embeddings:
+  model: "BAAI/bge-m3"
+  device: "mps"
+  dimension: 1024
+  batch_size: 32
+
+ingestion:
+  chunk_size: 500
+  chunk_overlap: 80
+  max_entity_types: 15
+  max_relationship_types: 12
+  max_retries: 3
+
+simulation:
+  max_rounds: 10
+  community_refresh_interval: 3
+  propagation_decay: 0.6
+  propagation_max_hops: 3
+  volatility_decay: 0.1
+  convergence_threshold: 0.01
+  max_actions_per_entity: 1
+
+analysis:
+  enabled_spaces:
+    - hierarchy
+    - temporal
+    - recursive
+    - structural
+    - causal
+    - cross_space
+
+report:
+  include_interviews: true
+  max_interview_quotes: 3
+  max_sections: 5
+
+qa:
+  max_conversation_history: 10
+  vector_search_top_k: 3
+  cypher_max_hops: 5
+
+logging:
+  level: "INFO"
+  log_llm_calls: true
+  log_dir: "data/logs"

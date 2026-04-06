@@ -1,0 +1,45 @@
+{# 리포트 아웃라인 생성 프롬프트 템플릿 #}
+아래 시뮬레이션 분석 결과를 바탕으로 보고서 아웃라인을 작성하세요.
+
+## 시드 데이터 발췌
+
+{{ seed_excerpt }}
+
+## 핵심 발견 (Key Findings)
+
+{% for finding in key_findings %}
+{{ finding.rank }}. [신뢰도 {{ "%.0f"|format(finding.confidence * 100) }}%] {{ finding.finding }}
+   - 근거 공간: {{ finding.supporting_spaces | join(", ") }}
+{% endfor %}
+
+## 분석공간별 요약
+
+{% for space_name, space_data in spaces.items() %}
+- **{{ space_name }}**: {{ space_data.summary }}
+{% endfor %}
+
+## 아웃라인 작성 규칙
+
+1. 보고서 제목: 시뮬레이션 주제를 반영한 제목
+2. 부제목: 1~2문장으로 핵심 발견 요약
+3. 3~5개 섹션으로 구성
+4. 각 섹션은 하나 이상의 분석공간에서 도출
+5. key_findings를 rank 순으로 섹션에 배정
+6. 각 섹션에 인터뷰 후보 엔티티 2~3개 지정
+
+## 출력 형식 (JSON)
+
+```json
+{
+  "title": "보고서 제목",
+  "subtitle": "부제목",
+  "sections": [
+    {
+      "title": "섹션 제목",
+      "source_spaces": ["causal", "temporal"],
+      "key_finding_ranks": [1],
+      "interview_candidates": ["entity_uid_1", "entity_uid_2"]
+    }
+  ]
+}
+```

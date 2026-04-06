@@ -11,26 +11,24 @@ import { join } from "path";
 const FETCH_TIMEOUT = 10_000; // 10 seconds
 const PDF_TIMEOUT = 120_000; // 2 minutes for PDF parsing
 const MAX_CONTENT_LENGTH = 50_000; // 50KB text limit
-const MIN_USEFUL_CONTENT = 500; // below this, try browser rendering
+const MIN_USEFUL_CONTENT = 500;
 const BROWSE_CLI = join(import.meta.dir, "../../../../browse/src/cli.ts");
+const BROWSE_CLI_WORLD = join(import.meta.dir, "../../../comad-world/browse/src/cli.ts");
 
 /**
  * Fetch a URL and extract readable text content.
- * Falls back to browser rendering if native fetch returns insufficient content.
- * Set useBrowse=false to skip browser fallback.
+ * Returns null if the URL is unreachable or content is empty.
  */
 export async function fetchContent(url: string, useBrowse = true): Promise<string | null> {
-  // 1. Try native HTTP fetch first (fast)
   const native = await fetchContentNative(url);
   if (native && native.length >= MIN_USEFUL_CONTENT) return native;
 
-  // 2. Fall back to browser rendering for JS-heavy pages
   if (useBrowse) {
     const rendered = await fetchContentViaBrowse(url);
     if (rendered && rendered.length >= MIN_USEFUL_CONTENT) return rendered;
   }
 
-  return native; // return whatever we got, even if short
+  return native;
 }
 
 async function fetchContentNative(url: string): Promise<string | null> {
@@ -64,45 +62,28 @@ async function fetchContentNative(url: string): Promise<string | null> {
   }
 }
 
-/**
- * Fetch content using comad-browse headless browser.
- * Renders JS, waits for content, extracts text.
- */
 async function fetchContentViaBrowse(url: string): Promise<string | null> {
   try {
-    if (!existsSync(BROWSE_CLI)) return null;
+    const cli = existsSync(BROWSE_CLI) ? BROWSE_CLI : existsSync(BROWSE_CLI_WORLD) ? BROWSE_CLI_WORLD : null;
+    if (!cli) return null;
 
-    // goto page
-    const gotoProc = Bun.spawn(["bun", "run", BROWSE_CLI, "goto", url], {
-      stdout: "pipe", stderr: "pipe",
-    });
+    const gotoProc = Bun.spawn(["bun", "run", cli, "goto", url], { stdout: "pipe", stderr: "pipe" });
     const gotoExit = await Promise.race([
       gotoProc.exited,
-      new Promise<number>((_, reject) =>
-        setTimeout(() => { gotoProc.kill(); reject(new Error("timeout")); }, 15_000)
-      ),
+      new Promise<number>((_, reject) => setTimeout(() => { gotoProc.kill(); reject(new Error("timeout")); }, 15_000)),
     ]);
     if (gotoExit !== 0) return null;
 
-    // extract text
-    const textProc = Bun.spawn(["bun", "run", BROWSE_CLI, "text"], {
-      stdout: "pipe", stderr: "pipe",
-    });
+    const textProc = Bun.spawn(["bun", "run", cli, "text"], { stdout: "pipe", stderr: "pipe" });
     const textExit = await Promise.race([
       textProc.exited,
-      new Promise<number>((_, reject) =>
-        setTimeout(() => { textProc.kill(); reject(new Error("timeout")); }, 10_000)
-      ),
+      new Promise<number>((_, reject) => setTimeout(() => { textProc.kill(); reject(new Error("timeout")); }, 10_000)),
     ]);
     if (textExit !== 0) return null;
 
     let text = await new Response(textProc.stdout).text();
-
-    // Strip untrusted content markers
-    text = text
-      .replace(/--- BEGIN UNTRUSTED EXTERNAL CONTENT ---\n?/g, "")
-      .replace(/--- END UNTRUSTED EXTERNAL CONTENT ---\n?/g, "")
-      .trim();
+    text = text.replace(/--- BEGIN UNTRUSTED EXTERNAL CONTENT ---\n?/g, "")
+      .replace(/--- END UNTRUSTED EXTERNAL CONTENT ---\n?/g, "").trim();
 
     return text.slice(0, MAX_CONTENT_LENGTH) || null;
   } catch {

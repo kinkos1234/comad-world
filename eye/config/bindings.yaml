@@ -1,0 +1,101 @@
+# Layer 8: Binding — GraphRAG + ReBAC 연결 정의
+
+data_flow:
+  # Ingestion pipeline
+  - source: text_chunking
+    target: entity_extraction
+    channel: "data/extraction/chunks.jsonl"
+    type: "file"
+
+  - source: entity_extraction
+    target: deduplication
+    channel: "data/extraction/triples.jsonl"
+    type: "file"
+
+  - source: entity_extraction
+    target: domain_ontology_builder
+    channel: "data/extraction/ontology.json"
+    type: "file"
+
+  - source: deduplication
+    target: neo4j_client
+    channel: "data/extraction/triples_deduped.jsonl"
+    type: "file"
+
+  - source: entity_extraction
+    target: vector_enrichment
+    channel: "data/extraction/entities.json"
+    type: "file"
+
+  - source: vector_enrichment
+    target: embeddings
+    channel: "data/extraction/embeddings.npy"
+    type: "file"
+
+  # Graph construction
+  - source: neo4j_client
+    target: leiden_community_detection
+    channel: "neo4j://graph"
+    type: "database"
+
+  - source: leiden_community_detection
+    target: community_refresher
+    channel: "data/communities/communities.json"
+    type: "file"
+
+  # Simulation pipeline
+  - source: snapshot_writer
+    target: [space_hierarchy, space_temporal, space_recursive, space_structural, space_causal]
+    channel: "data/snapshots/"
+    type: "directory"
+
+  # Analysis pipeline
+  - source: [space_hierarchy, space_temporal, space_recursive, space_structural, space_causal, space_cross]
+    target: aggregator
+    channel: "data/analysis/"
+    type: "directory"
+
+  - source: aggregator
+    target: report_outline_generator
+    channel: "data/analysis/aggregated.json"
+    type: "file"
+
+  # Narration pipeline
+  - source: report_section_writer
+    target: null
+    channel: "data/reports/"
+    type: "directory"
+
+change_propagation:
+  - when: "config/meta_edges.yaml modified"
+    propagate_to:
+      - meta_edge_engine
+      - state_transition_engine
+      - impact_analyzer
+    active_metadata:
+      action: "invalidate_downstream"
+      message: "메타엣지 규칙 변경 → 시뮬레이션 결과 무효화"
+
+  - when: "config/action_types.yaml modified"
+    propagate_to:
+      - action_registry
+      - action_resolver
+    active_metadata:
+      action: "invalidate_downstream"
+      message: "Action Type 변경 → 시뮬레이션 결과 무효화"
+
+  - when: "config/propagation_rules.yaml modified"
+    propagate_to:
+      - propagation_engine
+      - state_transition_engine
+    active_metadata:
+      action: "invalidate_downstream"
+      message: "전파 규칙 변경 → 시뮬레이션 결과 무효화"
+
+  - when: "config/glossary.yaml modified"
+    propagate_to:
+      - entity_extraction
+      - report_section_writer
+    active_metadata:
+      action: "notify"
+      message: "용어 정의 변경 → 추출/서술 재검토 필요"

@@ -1,0 +1,74 @@
+# Layer 3: Manifest — 시스템 선언
+
+system:
+  name: "ComadEye"
+  version: "0.1.0"
+  frame: ["GraphRAG", "ReBAC"]
+  description: "온톨로지 네이티브 예측 시뮬레이션 엔진"
+
+packages:
+  ingestion:
+    version: "0.1.0"
+    description: "시드데이터 입력 → 지식그래프 구축 파이프라인"
+    capabilities:
+      - text_chunking
+      - entity_extraction
+      - deduplication
+      - vector_enrichment
+    depends_on: [llm_client, neo4j_client, embeddings]
+
+  ontology:
+    version: "0.1.0"
+    description: "온톨로지 스키마 정의 및 규칙 엔진"
+    capabilities:
+      - domain_ontology_builder
+      - meta_edge_engine
+      - action_registry
+      - leiden_community_detection
+    depends_on: [neo4j_client]
+
+  simulation:
+    version: "0.1.0"
+    description: "메타엣지 규칙 기반 상태 전이 시뮬레이션"
+    capabilities:
+      - event_chain_manager
+      - state_transition_engine
+      - propagation_engine
+      - action_resolver
+      - community_refresher
+      - snapshot_writer
+    depends_on: [ontology, neo4j_client]
+
+  analysis:
+    version: "0.1.0"
+    description: "6개 분석공간을 통한 시뮬레이션 결과 분석"
+    capabilities:
+      - space_hierarchy
+      - space_temporal
+      - space_recursive
+      - space_structural
+      - space_causal
+      - space_cross
+      - aggregator
+    depends_on: [simulation]
+
+  narration:
+    version: "0.1.0"
+    description: "분석 결과를 리포트와 대화로 변환"
+    capabilities:
+      - report_outline_generator
+      - report_section_writer
+      - interview_synthesizer
+      - qa_session
+    depends_on: [analysis, llm_client, neo4j_client, embeddings]
+
+  infrastructure:
+    version: "0.1.0"
+    description: "공통 인프라 유틸리티"
+    capabilities:
+      - llm_client
+      - neo4j_client
+      - embeddings
+      - impact_analyzer
+      - active_metadata_bus
+    depends_on: []

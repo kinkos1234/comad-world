@@ -1,0 +1,40 @@
+name: Feature Request
+description: 새로운 기능이나 개선을 제안해주세요.
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        기능 제안을 환영합니다!
+        비개발자의 관점에서 "이런 게 있으면 좋겠다"도 충분합니다.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 어떤 불편함이 있나요?
+      description: 현재 겪고 있는 문제나 아쉬운 점을 설명해주세요.
+      placeholder: 실험 결과를 비교하기가 어렵습니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 어떻게 되면 좋을까요?
+      description: 원하는 동작이나 기능을 설명해주세요.
+      placeholder: '"비교해봐"라고 하면 최근 실험 5개를 표로 정리해주면 좋겠습니다.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 다른 방법은 시도해보셨나요?
+      description: 현재 이 문제를 어떻게 해결하고 있나요?
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 추가 정보
+      description: 참고 자료, 스크린샷, 관련 프로젝트 등

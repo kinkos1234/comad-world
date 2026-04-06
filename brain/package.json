@@ -12,11 +12,12 @@
     "crawl:ingest": "bun run --smol packages/crawler/src/ingest-crawl-results.ts",
     "crawl:resume": "bun run --smol packages/crawler/src/resume-ingest.ts",
     "crawl:enrich": "bun run --smol packages/crawler/src/enrich-papers.ts",
+    "crawl:retry": "bun run --smol packages/crawler/src/retry-failed-articles.ts",
+    "crawl:playwright": "bun run --smol packages/crawler/src/playwright-fetcher.ts",
     "test": "bun test",
     "test:core": "bun test packages/core/"
   },
   "dependencies": {
-    "yaml": "^2.7.0",
     "playwright": "^1.58.2"
   },
   "devDependencies": {

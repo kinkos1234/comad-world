@@ -1,0 +1,57 @@
+name: Bug Report
+description: 버그를 발견하셨나요? 여기에 알려주세요.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        버그 리포트를 작성해주셔서 감사합니다.
+        가능한 자세히 적어주시면 더 빨리 해결할 수 있습니다.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 무슨 문제인가요?
+      description: 어떤 상황에서 무엇이 잘못되었는지 설명해주세요.
+      placeholder: "검토해봐" 입력 후 카드가 표시되지 않습니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 기대했던 동작
+      description: 원래 어떻게 되어야 하나요?
+      placeholder: 3-5개의 개선 카드가 표시되어야 합니다.
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 방법
+      description: 문제를 재현하는 단계를 알려주세요.
+      placeholder: |
+        1. Claude Code에서 프로젝트 열기
+        2. "검토해봐" 입력
+        3. ...
+
+  - type: input
+    id: claude-version
+    attributes:
+      label: Claude Code 버전
+      placeholder: "claude --version 결과"
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 운영체제
+      options:
+        - macOS
+        - Linux
+        - Windows (WSL)
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 추가 정보
+      description: 스크린샷, 에러 메시지 등 도움될 만한 정보를 추가해주세요.

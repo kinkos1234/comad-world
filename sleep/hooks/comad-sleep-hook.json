@@ -1,0 +1,14 @@
+{
+  "hooks": [
+    {
+      "event": "Stop",
+      "command": "bash -c 'TOTAL=$(find ~/.claude/projects/*/memory -name \"*.md\" -exec cat {} + 2>/dev/null | wc -l); if [ \"${TOTAL:-0}\" -gt 150 ]; then echo \"hint: [ComadSleep] Memory is ${TOTAL} lines. Auto-consolidation recommended.\nTo consolidate, start a new session and say: dream\nTo disable this hint, remove ~/.claude/hooks/comad-sleep-hook.json\"; fi'",
+      "timeout": 5000
+    },
+    {
+      "event": "SessionStart",
+      "command": "bash -c 'STATE=\"$HOME/.claude/.comad-sleep-state.json\"; if [ -f \"$STATE\" ]; then LAST=$(python3 -c \"import json,sys; d=json.load(open(sys.argv[1])); print(d.get('\\''lastRun'\\','\\''never'\\'))\" \"$STATE\" 2>/dev/null || echo never); TOTAL=$(find ~/.claude/projects/*/memory -name \"*.md\" -exec cat {} + 2>/dev/null | wc -l); if [ \"${TOTAL:-0}\" -gt 150 ]; then echo \"hint: [ComadSleep] Memory is ${TOTAL} lines (last consolidated: ${LAST}). Say \\\"dream\\\" to consolidate.\"; fi; fi'",
+      "timeout": 3000
+    }
+  ]
+}
