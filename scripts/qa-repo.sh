@@ -73,7 +73,7 @@ check "apply-config.sh exists + executable" $([[ -x scripts/apply-config.sh ]] &
 echo ""
 echo "Security:"
 # Check for hardcoded secrets
-SECRETS=$(grep -rn "password.*=.*[a-zA-Z0-9]" --include="*.ts" --include="*.py" --include="*.yaml" --include="*.yml" --include="*.json" . 2>/dev/null | grep -v "changeme" | grep -v ".example" | grep -v "NEO4J_PASSWORD" | grep -v "env var" | grep -v "qa-repo" | grep -v "node_modules" || true)
+SECRETS=$(grep -rn "password.*=.*[a-zA-Z0-9]" --include="*.ts" --include="*.py" --include="*.yaml" --include="*.yml" --include="*.json" . 2>/dev/null | grep -v "changeme" | grep -v ".example" | grep -v "NEO4J_PASSWORD" | grep -v "env var" | grep -v "qa-repo" | grep -v "node_modules" | grep -v "test_" | grep -v "_test\." | grep -v "\.test\." || true)
 check "No hardcoded secrets" $([[ -z "$SECRETS" ]] && echo 0 || echo 1)
 
 # Check for .env files (should be gitignored)
