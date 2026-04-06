@@ -76,7 +76,7 @@ one config file and the entire knowledge pipeline adapts.
 
 What it does:
 - Crawls RSS/arXiv/GitHub filtered by YOUR interests
-- Builds a Neo4j knowledge graph with 15 MCP tools
+- Builds a Neo4j knowledge graph with 20+ MCP tools
 - Curates content with 3-tier relevance scoring
 - Runs prediction simulations through 10 strategic lenses
 - Manages Claude Code memory across projects
@@ -105,7 +105,7 @@ Create your own in 10 minutes.
    Change one file, get a whole new knowledge system. 🧵
 
 2/ The 6 agents:
-   🧠 Brain — Neo4j knowledge graph, 15 MCP tools, GraphRAG
+   🧠 Brain — Neo4j knowledge graph, 20+ MCP tools, GraphRAG
    👂 Ear — Discord curator, 3-tier relevance
    👁 Eye — Simulation engine, 10 strategic lenses
    📷 Photo — AI photo correction
@@ -121,7 +121,7 @@ Create your own in 10 minutes.
 
 4/ Built on @ClaudeCode + Neo4j + Ollama.
 
-   - Brain: Bun/TypeScript, 15 MCP tools
+   - Brain: Bun/TypeScript, 20+ MCP tools
    - Eye: Python/FastAPI + Next.js, runs locally
    - Everything else: just Claude Code agents
 

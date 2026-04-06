@@ -484,6 +484,7 @@ const pipeline = new GraphRAGPipeline({
 **Model**: `nomic-embed-text` via Ollama (768 dimensions)
 
 **What gets embedded**:
+
 | Data | Embedded Text | Stored On |
 |---|---|---|
 | CAR events | `"{openIssue} {followUpPlan} {mainCategory} {aiKeywords}"` | `(:CAREvent).embedding` |

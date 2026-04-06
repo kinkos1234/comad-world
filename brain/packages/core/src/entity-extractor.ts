@@ -4,10 +4,45 @@ import { join } from "path";
 import type { ExtractedEntities } from "./types.js";
 
 /**
+ * Blacklist: overly generic topics and technologies that pollute the knowledge graph.
+ * These are too broad to be useful as entities — they create noise instead of signal.
+ */
+const BLACKLISTED_TOPICS = new Set([
+  "서버 관리", "접근 제어", "보안", "데이터 관리", "시스템 관리",
+  "네트워크", "소프트웨어 개발", "프로그래밍", "클라우드", "인프라",
+  "자동화", "모니터링", "배포", "테스트", "디버깅", "성능 최적화",
+  "웹 개발", "백엔드", "프론트엔드", "데이터베이스", "DevOps",
+  "마이크로서비스", "아키텍처", "보안 관리", "데이터 분석",
+  "코딩", "개발", "IT", "기술", "컴퓨터 과학", "정보 기술",
+  "소프트웨어 엔지니어링", "시스템 엔지니어링", "데이터 엔지니어링",
+  "오픈소스", "버전 관리", "코드 리뷰", "기술 블로그",
+]);
+
+const BLACKLISTED_TECH = new Set([
+  "AI", "API", "CLI", "LLM", "SaaS", "OS", "ML", "NLP", "GPU", "CPU",
+  "RAM", "SDK", "IDE", "HTTP", "REST", "SQL", "NoSQL", "JSON", "YAML",
+  "XML", "HTML", "CSS", "UI", "UX", "TCP", "UDP", "SSH", "SSL", "TLS",
+  "DNS", "CDN", "VM", "VPN", "IoT", "CI", "CD", "CI/CD", "ORM",
+  "MVC", "CRUD", "FTP", "SMTP", "OAuth", "JWT", "HTTPS", "WebSocket",
+  "GraphQL", "gRPC", "WASM", "PWA", "SPA", "SSR", "SSG", "CSR",
+]);
+
+/** Combined blacklist for fast lookup (case-insensitive) */
+const BLACKLIST_LOWER = new Set([
+  ...[...BLACKLISTED_TOPICS].map((s) => s.toLowerCase()),
+  ...[...BLACKLISTED_TECH].map((s) => s.toLowerCase()),
+]);
+
+function isBlacklisted(name: string): boolean {
+  return BLACKLIST_LOWER.has(name.trim().toLowerCase());
+}
+
+/**
  * Extract entities, claims, and relationships from article content using Claude Code -p mode (OAuth).
  * No API key needed — uses the same auth as Claude Code CLI.
  *
  * v2: Enhanced with Claim extraction, confidence scoring, context snippets, and analysis space tagging.
+ * v3: Added blacklist filtering to prevent generic topics/tech from polluting the graph.
  */
 export async function extractEntities(
   title: string,
@@ -20,8 +55,13 @@ export async function extractEntities(
 내용:
 ${content.slice(0, 4000)}
 
+⛔ 블랙리스트 (다음 항목은 너무 범용적이므로 절대 추출하지 마세요):
+- 범용 토픽 제외: ${[...BLACKLISTED_TOPICS].join(", ")}
+- 범용 기술 약어 제외: ${[...BLACKLISTED_TECH].join(", ")}
+위 항목이 기사에 등장하더라도 technologies나 topics에 포함하지 마세요. 구체적이고 도메인 특정적인 엔티티만 추출하세요.
+
 추출 지침:
-1. technologies: 기사에 언급된 모든 기술 (언어, 프레임워크, 라이브러리, 도구, 플랫폼, DB, 프로토콜)
+1. technologies: 기사에 언급된 구체적 기술만 (언어, 프레임워크, 라이브러리, 도구, 플랫폼, DB, 프로토콜). 위 블랙리스트 제외.
 2. people: 언급된 인물 (이름, GitHub 아이디, 소속)
 3. organizations: 기업, 연구소, 오픈소스 조직, 대학
 4. topics: 주제/분야 (예: "서버리스", "머신러닝", "웹 보안")
@@ -75,20 +115,44 @@ ${content.slice(0, 4000)}
     }
 
     const entities = JSON.parse(responseText.slice(jsonStart, jsonEnd + 1)) as ExtractedEntities;
-    return {
-      technologies: entities.technologies ?? [],
-      people: entities.people ?? [],
-      organizations: entities.organizations ?? [],
-      topics: entities.topics ?? [],
-      claims: entities.claims ?? [],
-      relationships: (entities.relationships ?? []).map((r) => ({
+
+    // Post-extraction blacklist filtering (prompt alone can't guarantee 100% compliance)
+    const technologies = (entities.technologies ?? []).filter((t) => !isBlacklisted(t.name));
+    const topics = (entities.topics ?? []).filter((t) => !isBlacklisted(t.name));
+    const blacklistedNames = new Set([
+      ...(entities.technologies ?? []).filter((t) => isBlacklisted(t.name)).map((t) => t.name),
+      ...(entities.topics ?? []).filter((t) => isBlacklisted(t.name)).map((t) => t.name),
+    ]);
+
+    // Filter relationships that reference blacklisted entities
+    const relationships = (entities.relationships ?? [])
+      .filter((r) => !isBlacklisted(r.from) && !isBlacklisted(r.to))
+      .map((r) => ({
         from: r.from,
         to: r.to,
         type: r.type,
         confidence: r.confidence ?? 0.5,
         context: r.context,
         analysis_space: r.analysis_space,
-      })),
+      }));
+
+    // Filter blacklisted entities from claim related_entities
+    const claims = (entities.claims ?? []).map((c) => ({
+      ...c,
+      related_entities: (c.related_entities ?? []).filter((e) => !isBlacklisted(e)),
+    }));
+
+    if (blacklistedNames.size > 0) {
+      console.log(`  ℹ Filtered ${blacklistedNames.size} blacklisted entities: ${[...blacklistedNames].join(", ")}`);
+    }
+
+    return {
+      technologies,
+      people: entities.people ?? [],
+      organizations: entities.organizations ?? [],
+      topics,
+      claims,
+      relationships,
     };
   } catch (e) {
     console.warn(`  ⚠ Entity extraction failed: ${e}`);

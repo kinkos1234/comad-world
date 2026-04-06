@@ -30,16 +30,16 @@
 | | Without Comad World | With Comad World |
 |---|---|---|
 | **Collecting** | Manually check 20+ sites, forget half | `ear` auto-detects and archives from RSS, HN, arXiv, GitHub |
-| **Organizing** | Bookmarks pile up, no connections | `brain` builds a knowledge graph — 3,000+ nodes, searchable via GraphRAG |
+| **Organizing** | Bookmarks pile up, no connections | `brain` builds a knowledge graph — 10,000+ nodes, searchable via GraphRAG |
 | **Analyzing** | Read each article, form opinions alone | `eye` runs simulations through 10 strategic lenses, outputs 800-line reports |
 | **Remembering** | Context lost between sessions | `sleep` consolidates memory, `voice` automates recurring workflows |
 
 <details>
 <summary><b>Key numbers from a real deployment</b></summary>
 
-- **3,070** graph nodes, **4,147** relationships from 2 weeks of crawling
+- **10,000+** graph nodes, **15,000+** relationships from ongoing crawling
 - **22** RSS feeds monitored (OpenAI, Anthropic, Google, Meta, arXiv, researcher blogs)
-- **15** MCP tools for querying your knowledge graph from Claude Code
+- **20+** MCP tools for querying your knowledge graph from Claude Code
 - **$0.60/day** operating cost (down from $4.50 after optimization)
 - **1,422** tests across all modules
 
@@ -178,7 +178,7 @@ One YAML change. Different feeds, different keywords, different categories, diff
 
 Neo4j-based knowledge graph that crawls, extracts entities, and answers questions via MCP.
 
-- **15 MCP tools** for querying, searching, and analyzing the graph
+- **20+ MCP tools** for querying, searching, and analyzing the graph
 - **Dual-retriever GraphRAG** — Local + Global + Temporal 3-way search
 - **MetaEdge engine** — 10 rules for automated relationship inference
 - **Claim tracking** — fact/opinion/prediction with confidence scores and timelines
@@ -380,7 +380,7 @@ comad-world/
 │   │   ├── crawler/         # RSS, arXiv, GitHub crawlers (config-driven)
 │   │   ├── graphrag/        # Dual-retriever search engine
 │   │   ├── ingester/        # Content importer
-│   │   └── mcp-server/      # 15 MCP tools
+│   │   └── mcp-server/      # 20+ MCP tools
 │   ├── docker-compose.yml
 │   └── package.json
 ├── ear/                     # Content curator (Claude Code agent)

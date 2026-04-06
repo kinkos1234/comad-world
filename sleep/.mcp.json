@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "comad-sleep": {
-      "command": "bun",
-      "args": ["run", "--cwd", "/Users/jhkim/Programmer/01-comad/comad-sleep/mcp-server", "start"]
-    }
-  }
-}
