@@ -1,0 +1,41 @@
+{# 커뮤니티 요약 프롬프트 템플릿 #}
+아래 커뮤니티의 특성을 요약하세요.
+
+## 커뮤니티 정보
+
+- 커뮤니티 ID: {{ community_id }}
+- 계층(Tier): C{{ tier }}
+- 멤버 수: {{ members | length }}
+
+## 멤버 목록
+
+{% for member in members %}
+- **{{ member.name }}** ({{ member.object_type }})
+  - stance: {{ "%.2f"|format(member.stance) }}
+  - influence: {{ "%.2f"|format(member.influence_score) }}
+  - 설명: {{ member.description | default("없음") }}
+{% endfor %}
+
+## 커뮤니티 내 관계
+
+{% for rel in relationships %}
+- {{ rel.source_name }} --[{{ rel.link_type }}]--> {{ rel.target_name }} (weight: {{ "%.2f"|format(rel.weight) }})
+{% endfor %}
+
+## 요약 규칙
+
+1. 2~3문장으로 커뮤니티의 핵심 특성을 요약하세요.
+2. 멤버 간 공통점과 주요 동적 관계를 설명하세요.
+3. 이 커뮤니티가 전체 시스템에서 어떤 역할을 하는지 설명하세요.
+
+## 출력 형식 (JSON)
+
+```json
+{
+  "community_id": "{{ community_id }}",
+  "summary": "커뮤니티 요약 텍스트",
+  "dominant_stance": "positive|negative|neutral",
+  "key_members": ["uid1", "uid2"],
+  "key_dynamics": "핵심 동학 설명"
+}
+```

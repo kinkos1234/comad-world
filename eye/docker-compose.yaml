@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  neo4j:
+    image: neo4j:5-community
+    container_name: comadeye-neo4j
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:-changeme}
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_memory_heap_initial__size=512m
+      - NEO4J_dbms_memory_heap_max__size=1G
+      - NEO4J_dbms_memory_pagecache_size=512m
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD", "neo4j", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: comadeye-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: comadeye-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    environment:
+      - COMADEYE_NEO4J_URI=bolt://neo4j:7687
+      - COMADEYE_OLLAMA_URL=http://ollama:11434/v1
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: comadeye-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:8000
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  ollama_data:

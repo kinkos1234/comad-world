@@ -1,0 +1,32 @@
+# LLM 클라이언트
+openai>=1.0.0                    # Ollama OpenAI-compatible API
+
+# 그래프 DB
+neo4j>=5.0.0                     # Neo4j Python 드라이버
+
+# 임베딩
+sentence-transformers>=2.2.0     # BGE-M3 로컬 임베딩
+torch>=2.0.0                     # PyTorch (임베딩 추론)
+
+# 그래프 분석
+python-igraph>=0.11.0            # Leiden 알고리즘 기반
+leidenalg>=0.10.0                # Leiden 커뮤니티 탐지
+networkx>=3.0                    # 그래프 분석 알고리즘
+
+# 벡터 검색
+numpy>=1.24.0                    # 코사인 유사도
+
+# 텍스트 처리
+tiktoken>=0.5.0                  # 토큰 카운팅
+kss>=6.0.0                       # 한국어 문장 분리
+python-mecab-kor>=1.0.0          # mecab 형태소 분석기 (Kss 가속)
+
+# CLI + 설정
+typer>=0.9.0                     # CLI 프레임워크
+rich>=13.0.0                     # 터미널 UI
+pyyaml>=6.0                      # YAML 설정 파싱
+pydantic>=2.0.0                  # 데이터 검증
+jinja2>=3.1.0                    # 프롬프트 템플릿
+
+# 유틸리티
+orjson>=3.9.0                    # 빠른 JSON 직렬화

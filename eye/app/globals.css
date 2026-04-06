@@ -1,0 +1,262 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  /* Palantir Industrial Technical Dashboard */
+  --color-bg-page: #1A1A1A;
+  --color-bg-card: #212121;
+  --color-bg-elevated: #2D2D2D;
+  --color-bg-placeholder: #3D3D3D;
+
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #777777;
+  --color-text-on-accent: #0D0D0D;
+
+  --color-accent-orange: #FF6B35;
+  --color-accent-teal: #00D4AA;
+
+  --color-stance-positive: #4CAF50;
+  --color-stance-negative: #F44336;
+  --color-stance-neutral: #808080;
+  --color-volatility-low: #4A90D9;
+  --color-volatility-high: #F44336;
+
+  --font-display: 'Oswald', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-card: 16px;
+}
+
+body {
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+}
+
+/* Hide default number input spinners */
+@layer base {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    margin: 0;
+    display: none !important;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-page);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-bg-placeholder);
+  border-radius: 3px;
+}
+
+/* ======= Report markdown styling ======= */
+
+/* Title */
+.report-markdown > h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--color-accent-orange);
+}
+
+/* Subtitle / first blockquote right after h1 */
+.report-markdown > h1 + blockquote {
+  border-left: none;
+  background: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+  border-radius: 0;
+}
+.report-markdown > h1 + blockquote p {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-style: normal;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* Section headers (h2) - major sections */
+.report-markdown h2 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-accent-orange);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-elevated);
+  border-left: 4px solid var(--color-accent-orange);
+  border-radius: 0 8px 8px 0;
+}
+
+/* Subsection headers (h3) */
+.report-markdown h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-accent-teal);
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--color-accent-teal);
+}
+
+/* Sub-subsection (h4) */
+.report-markdown h4 {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-top: 1.25rem;
+  margin-bottom: 0.375rem;
+}
+
+/* Body text */
+.report-markdown p {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.9;
+  margin-bottom: 1rem;
+  color: var(--color-text-primary);
+}
+
+/* Blockquotes (entity quotes) */
+.report-markdown blockquote {
+  border-left: 3px solid var(--color-accent-teal);
+  background: var(--color-bg-elevated);
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  border-radius: 0 12px 12px 0;
+}
+.report-markdown blockquote p {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-style: italic;
+  color: #BBBBBB;
+  margin-bottom: 0.25rem;
+  line-height: 1.7;
+}
+.report-markdown blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.report-markdown ul,
+.report-markdown ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+.report-markdown li {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.8;
+  color: var(--color-text-primary);
+  margin-bottom: 0.375rem;
+}
+.report-markdown li::marker {
+  color: var(--color-accent-teal);
+}
+.report-markdown ul ul,
+.report-markdown ol ol,
+.report-markdown ul ol,
+.report-markdown ol ul {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Inline emphasis */
+.report-markdown strong {
+  color: var(--color-accent-orange);
+  font-weight: 700;
+}
+.report-markdown em {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* Horizontal rules - section dividers */
+.report-markdown hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--color-bg-placeholder),
+    var(--color-accent-teal),
+    var(--color-bg-placeholder)
+  );
+  margin: 2.5rem 0;
+}
+
+/* Inline code */
+.report-markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  background: var(--color-bg-page);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  color: var(--color-accent-teal);
+  border: 1px solid var(--color-bg-elevated);
+}
+
+/* Tables */
+.report-markdown table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.25rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-bg-elevated);
+}
+.report-markdown th {
+  background: var(--color-bg-elevated);
+  color: var(--color-accent-orange);
+  font-weight: 700;
+  padding: 0.625rem 1rem;
+  text-align: left;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+.report-markdown td {
+  padding: 0.625rem 1rem;
+  border-top: 1px solid var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+.report-markdown tr:hover td {
+  background: var(--color-bg-elevated);
+}
+
+/* Links */
+.report-markdown a {
+  color: var(--color-accent-teal);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--color-accent-teal);
+}
+.report-markdown a:hover {
+  color: var(--color-text-primary);
+}

@@ -1,0 +1,53 @@
+{# 엔티티 추출 프롬프트 템플릿 #}
+아래 텍스트에서 엔티티(개체), 관계, 속성을 추출하세요.
+
+## 추출 규칙
+
+1. **엔티티 유형**:
+{% for obj_type in object_types %}
+   - {{ obj_type.name }}: {{ obj_type.description }}
+{% endfor %}
+
+2. **관계 유형**:
+{% for link_type in link_types %}
+   - {{ link_type.name }}: {{ link_type.description }} (가중치: {{ link_type.default_weight }})
+{% endfor %}
+
+3. **필수 속성**:
+   - uid: 고유 식별자 (영문 snake_case)
+   - name: 한글 이름
+   - object_type: 위 유형 중 하나
+   - stance: 입장/방향성 (-1.0 ~ 1.0)
+   - influence_score: 영향력 (0.0 ~ 1.0)
+
+## 텍스트
+
+{{ text }}
+
+## 출력 형식 (JSON)
+
+```json
+{
+  "entities": [
+    {
+      "uid": "entity_uid",
+      "name": "엔티티명",
+      "object_type": "Actor|Asset|Event|Indicator|Policy",
+      "description": "설명",
+      "stance": 0.0,
+      "influence_score": 0.5,
+      "susceptibility": 0.5,
+      "volatility": 0.0
+    }
+  ],
+  "relationships": [
+    {
+      "source": "source_uid",
+      "target": "target_uid",
+      "link_type": "INFLUENCES|OPPOSES|...",
+      "weight": 1.0,
+      "description": "관계 설명"
+    }
+  ]
+}
+```

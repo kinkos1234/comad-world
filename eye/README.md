@@ -1,66 +1,36 @@
-# Eye — Prediction Simulation Engine
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Ontology-based simulation engine. Takes any text, converts to knowledge graph, runs multi-round simulations, and generates analysis reports through 10 strategic lenses.
+## Getting Started
 
-**Fully domain-agnostic** — the ontology schema uses abstract primitives (Actor, Artifact, Event, Concept) that work for any subject matter.
-
-## Quick Start
+First, run the development server:
 
 ```bash
-# 1. Start infrastructure
-docker compose up -d   # Neo4j + Ollama
-
-# 2. Install Python dependencies
-pip install -r requirements.txt
-
-# 3. Run
-make dev               # API (port 8000) + Frontend (port 3000)
+npm run dev
 # or
-python main.py run     # CLI pipeline
-python main.py qa      # Interactive Q&A
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## Pipeline
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```
-Text → Ingestion → Graph Loading → Community Detection → Simulation → Analysis → Report
-```
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### 6 Analytical Spaces
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-| Space | Weight | Focus |
-|-------|--------|-------|
-| Causal | 1.0 | Cause-effect chains |
-| Structural | 0.9 | Dependencies, architectures |
-| Temporal | 0.8 | Timeline, evolution |
-| Hierarchy | 0.7 | Taxonomies, compositions |
-| Cross-space | 0.6 | Multi-dimensional patterns |
-| Recursive | 0.5 | Feedback loops, self-reference |
+## Learn More
 
-### 10 Strategic Lenses
+To learn more about Next.js, take a look at the following resources:
 
-- **Sun Tzu** — 势 (strategic advantage), 虛實 (misdirection)
-- **Machiavelli** — Virtù/Fortuna, power dynamics
-- **Clausewitz** — Fog of war, Schwerpunkt (decisive point)
-- **Adam Smith** — Invisible hand, comparative advantage
-- **Taleb** — Antifragility, Black Swan events
-- **Kahneman** — Prospect theory, System 1/2 biases
-- **Hegel** — Thesis/Antithesis/Synthesis dialectic
-- **Darwin** — Natural selection, adaptation pressure
-- **Meadows** — 12 leverage points in systems
-- **Descartes** — Methodical doubt, clarity of evidence
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## Stack
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-- Backend: Python 3.13 + FastAPI
-- Frontend: Next.js (React 19)
-- Database: Neo4j 5
-- LLM: Ollama (local) or any OpenAI-compatible API
-- Embeddings: BGE-M3 via sentence-transformers
+## Deploy on Vercel
 
-## Environment
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-```bash
-cp .env.example .env
-# Edit NEO4J_PASSWORD, LLM_MODEL, etc.
-```
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

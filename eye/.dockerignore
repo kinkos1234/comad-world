@@ -1,0 +1,29 @@
+# Python virtualenvs
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Git
+.git/
+.gitignore
+
+# Node.js / Next.js (frontend built separately)
+node_modules/
+.next/
+frontend/
+
+# Runtime data & logs
+data/
+*.log
+
+# Secrets
+.env
+
+# Dev artifacts
+.DS_Store
+*.md
+design.pen
+tester/
+results.tsv
+validation_results.tsv
