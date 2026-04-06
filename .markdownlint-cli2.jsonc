@@ -13,5 +13,13 @@
     "MD041": false,
     "MD050": false,
     "MD060": false
-  }
+  },
+  "ignores": [
+    "node_modules/**",
+    "**/node_modules/**",
+    "**/*-report-*.md",
+    "**/CHANGELOG.md",
+    ".venv/**",
+    "**/.venv/**"
+  ]
 }
