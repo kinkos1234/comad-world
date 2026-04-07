@@ -29,6 +29,10 @@
         "@comad-brain/core": "workspace:*",
       },
     },
+    "packages/explorer": {
+      "name": "@comad/explorer",
+      "version": "0.1.0",
+    },
     "packages/graphrag": {
       "name": "@comad-brain/graphrag",
       "version": "0.1.0",
@@ -54,6 +58,14 @@
         "zod": "^3.24.0",
       },
     },
+    "packages/search": {
+      "name": "@comad-brain/search",
+      "version": "0.1.0",
+      "dependencies": {
+        "@comad-brain/core": "workspace:*",
+        "@comad-brain/graphrag": "workspace:*",
+      },
+    },
   },
   "packages": {
     "@anthropic-ai/sdk": ["@anthropic-ai/sdk@0.39.0", "", { "dependencies": { "@types/node": "^18.11.18", "@types/node-fetch": "^2.6.4", "abort-controller": "^3.0.0", "agentkeepalive": "^4.2.1", "form-data-encoder": "1.7.2", "formdata-node": "^4.3.2", "node-fetch": "^2.6.7" } }, "sha512-eMyDIPRZbt1CCLErRCi3exlAvNkBtRe+kW5vvJyef93PmNr/clstYgHhtvmkxN82nlKgzyGPCyGxrm0JQ1ZIdg=="],
@@ -67,6 +79,10 @@
     "@comad-brain/ingester": ["@comad-brain/ingester@workspace:packages/ingester"],
 
     "@comad-brain/mcp-server": ["@comad-brain/mcp-server@workspace:packages/mcp-server"],
+
+    "@comad-brain/search": ["@comad-brain/search@workspace:packages/search"],
+
+    "@comad/explorer": ["@comad/explorer@workspace:packages/explorer"],
 
     "@hono/node-server": ["@hono/node-server@1.19.11", "", { "peerDependencies": { "hono": "^4" } }, "sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g=="],
 
