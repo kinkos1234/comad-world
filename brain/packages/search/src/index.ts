@@ -16,6 +16,8 @@ import { evaluateRepos } from "./evaluator.js";
 import { archiveRepos, loadReferences } from "./archiver.js";
 import { createAdoptionPlan, formatPlan } from "./planner.js";
 import { createSandbox, verifySandbox, mergeSandbox, discardSandbox } from "./sandbox.js";
+import { recordMetric, getMetricsTrend } from "./metrics.js";
+import { recordDecision, getPatternConfidence, wasRepoRejected } from "./plan-tracker.js";
 import { validateCandidates, validateEvaluated } from "./types.js";
 import type {
   SearchQuery,
@@ -42,6 +44,9 @@ export { evaluateRepos } from "./evaluator.js";
 export { archiveRepos, loadReferences } from "./archiver.js";
 export { createAdoptionPlan, formatPlan } from "./planner.js";
 export { createSandbox, verifySandbox, mergeSandbox, discardSandbox } from "./sandbox.js";
+export { recordMetric, getMetricsTrend } from "./metrics.js";
+export { recordDecision, getPatternConfidence, wasRepoRejected } from "./plan-tracker.js";
+export { PATTERN_REGISTRY, extractPatternsFromText } from "./patterns.js";
 
 export interface SearchResult {
   query: string;
@@ -119,6 +124,21 @@ export async function search(
     `[search] Done in ${duration}ms: ${summary.adopt} adopt, ${summary.study} study, ${summary.skip} skip → ${summary.archived} archived`
   );
 
+  // Record metrics (Sutskever: trend tracking)
+  await recordMetric({
+    date: new Date().toISOString(),
+    query,
+    mode: "search",
+    total_found: summary.total_found,
+    adopt: summary.adopt,
+    study: summary.study,
+    skip: summary.skip,
+    plans_generated: 0,
+    changes_proposed: 0,
+    latency_ms: duration,
+    sub_queries: 0,
+  }).catch(() => {});
+
   return { query, candidates, evaluated, archived, summary };
 }
 
@@ -186,6 +206,21 @@ export async function searchAndPlan(
   console.error(
     `[search] Generated ${plans.length} adoption plans (${plans.filter((p) => p.changes.length > 0).length} with changes)`
   );
+
+  // Record metrics (Sutskever: trend tracking)
+  await recordMetric({
+    date: new Date().toISOString(),
+    query,
+    mode: "plan",
+    total_found: result.summary.total_found,
+    adopt: result.summary.adopt,
+    study: result.summary.study,
+    skip: result.summary.skip,
+    plans_generated: plans.length,
+    changes_proposed: plans.reduce((s, p) => s + p.changes.length, 0),
+    latency_ms: result.summary.duration_ms,
+    sub_queries: 0,
+  }).catch(() => {});
 
   return { ...result, plans, plans_text: plansText };
 }

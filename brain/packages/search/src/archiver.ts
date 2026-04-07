@@ -15,33 +15,11 @@ const REFERENCES_DIR = join(import.meta.dir, "../../../data/references");
 /**
  * Extract patterns from repo README and metadata
  */
-// Map raw keywords/topics to high-level pattern names that match PATTERN_TO_CHANGES
-const KEYWORD_TO_PATTERN: Record<string, string> = {
-  rag: "RAG pipeline", retrieval: "RAG pipeline", "retrieval-augmented": "RAG pipeline",
-  graph: "Knowledge graph", neo4j: "Knowledge graph", knowledge: "Knowledge graph", ontology: "Knowledge graph",
-  mcp: "MCP integration", "model-context-protocol": "MCP integration",
-  agent: "Agent orchestration", orchestration: "Agent orchestration", "multi-agent": "Agent orchestration",
-  stream: "Streaming/real-time", realtime: "Streaming/real-time", websocket: "Streaming/real-time",
-  cache: "Caching strategy", redis: "Caching strategy",
-  queue: "Caching strategy", worker: "Caching strategy",
-  embed: "Vector embeddings", vector: "Vector embeddings", similarity: "Vector embeddings",
-  crawl: "Web crawling", scrape: "Web crawling", rss: "Web crawling",
-  benchmark: "Performance optimization", perf: "Performance optimization", optimization: "Performance optimization",
-  simulation: "Agent orchestration", prediction: "Agent orchestration",
-};
+import { extractPatternsFromText } from "./patterns.js";
 
 function extractPatterns(repo: EvaluatedRepo): string[] {
-  const patternSet = new Set<string>();
-  const text = `${repo.candidate.readme_preview} ${repo.candidate.description} ${repo.candidate.topics.join(" ")}`.toLowerCase();
-
-  // Match against known pattern keywords
-  for (const [keyword, pattern] of Object.entries(KEYWORD_TO_PATTERN)) {
-    if (text.includes(keyword)) {
-      patternSet.add(pattern);
-    }
-  }
-
-  return [...patternSet].slice(0, 8);
+  const text = `${repo.candidate.readme_preview} ${repo.candidate.description} ${repo.candidate.topics.join(" ")}`;
+  return extractPatternsFromText(text);
 }
 
 /**
