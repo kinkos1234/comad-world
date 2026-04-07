@@ -31,17 +31,19 @@
 |---|---|---|
 | **Collecting** | Manually check 20+ sites, forget half | `ear` auto-detects and archives from RSS, HN, arXiv, GitHub |
 | **Organizing** | Bookmarks pile up, no connections | `brain` builds a knowledge graph — 10,000+ nodes, searchable via GraphRAG |
-| **Analyzing** | Read each article, form opinions alone | `eye` runs simulations through 10 strategic lenses, outputs 800-line reports |
+| **Analyzing** | Read each article, form opinions alone | `eye` runs simulations through 5 core strategic lenses (tiered system), tracks prediction accuracy |
 | **Remembering** | Context lost between sessions | `sleep` consolidates memory, `voice` automates recurring workflows |
 
 <details>
 <summary><b>Key numbers from a real deployment</b></summary>
 
-- **10,000+** graph nodes, **15,000+** relationships from ongoing crawling
+- **60,000+** graph nodes, **150,000+** relationships from ongoing crawling
 - **22** RSS feeds monitored (OpenAI, Anthropic, Google, Meta, arXiv, researcher blogs)
 - **20+** MCP tools for querying your knowledge graph from Claude Code
+- **Entity-level confidence scoring** (0.0–1.0) for trust boundary tracking
+- **Built-in performance monitoring** via `comad_brain_perf` MCP tool
 - **$0.60/day** operating cost (down from $4.50 after optimization)
-- **1,422** tests across all modules
+- **1,482** tests across all modules
 
 </details>
 
@@ -154,7 +156,7 @@ One YAML change. Different feeds, different keywords, different categories, diff
 
 1. **Ear** detects articles in Discord, classifies relevance using your interests, archives to markdown
 2. **Brain** crawls RSS/arXiv/GitHub filtered by your keywords, builds a Neo4j knowledge graph with entities and relationships. JS-heavy pages automatically rendered via **Browse**
-3. **Eye** takes any text, converts to ontology, runs multi-round simulations, generates analysis through 10 strategic lenses
+3. **Eye** takes any text, converts to ontology, runs multi-round simulations, generates analysis through 5 core strategic lenses with prediction tracking
 4. **Photo** corrects images via Photoshop MCP (domain-agnostic)
 5. **Sleep** consolidates Claude Code memory across all projects (domain-agnostic)
 6. **Voice** provides workflow automation triggers for Claude Code (domain-agnostic)
@@ -179,9 +181,11 @@ One YAML change. Different feeds, different keywords, different categories, diff
 Neo4j-based knowledge graph that crawls, extracts entities, and answers questions via MCP.
 
 - **20+ MCP tools** for querying, searching, and analyzing the graph
-- **Dual-retriever GraphRAG** — Local + Global + Temporal 3-way search
+- **Dual-retriever GraphRAG** — Local + Global + Temporal 3-way search with quality benchmark (20 fixed questions)
 - **MetaEdge engine** — 10 rules for automated relationship inference
-- **Claim tracking** — fact/opinion/prediction with confidence scores and timelines
+- **Entity & claim confidence** — every node scored 0.0–1.0 (explicit mention=0.9+, inferred=0.6–0.8, uncertain=0.3–0.5)
+- **Claim tracking** — fact/opinion/prediction with confidence scores, decay, and timelines
+- **Performance monitoring** — latency tracking for all MCP tools, GraphRAG pipeline, and crawlers
 - **Community detection** — hierarchical clustering for topic discovery
 
 ```bash
@@ -204,7 +208,8 @@ Discord bot that detects articles, classifies relevance, and archives with struc
 Ontology-based simulation that converts text to knowledge graph and runs multi-round impact analysis.
 
 - **6 analytical spaces**: hierarchy, temporal, recursive, structural, causal, cross-space
-- **10 strategic lenses**: Sun Tzu, Machiavelli, Clausewitz, Adam Smith, Taleb, Kahneman, Hegel, Darwin, Meadows, Descartes
+- **Tiered lens system**: 5 core (Sun Tzu, Adam Smith, Taleb, Kahneman, Meadows) + 2 optional (Clausewitz, Darwin) + 3 legacy
+- **Prediction tracking**: closed-loop learning — records predictions with verification deadlines, measures accuracy over time
 - **Full pipeline**: ingestion → graph → community → simulation → analysis → report
 - **Web UI**: FastAPI backend + Next.js frontend
 
