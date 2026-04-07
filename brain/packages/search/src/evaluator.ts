@@ -40,8 +40,8 @@ const ANTI_SIGNALS: Array<{ test: (c: RepoCandidate) => boolean; label: string }
   },
   {
     test: (c) =>
-      c.readme_preview.length < 50 ||
-      !c.readme_preview.match(/install|usage|getting started|quick/i),
+      c.readme_preview.length > 100 &&
+      !c.readme_preview.match(/install|usage|getting started|quick|setup|npm|pip|brew|cargo|bun|docker|clone/i),
     label: "README에 시작 가이드 없음",
   },
 ];
@@ -148,13 +148,13 @@ export async function evaluateRepos(
       let verdict: "adopt" | "study" | "skip";
       let reason: string;
 
-      if (totalScore >= 0.6 && antiSignals.length === 0) {
+      if (totalScore >= 0.5 && antiSignals.length <= 1) {
         verdict = "adopt";
-        reason = `높은 종합 점수 (${(totalScore * 100).toFixed(0)}점), 안티 시그널 없음`;
-      } else if (totalScore >= 0.4) {
+        reason = `높은 종합 점수 (${(totalScore * 100).toFixed(0)}점)${antiSignals.length ? `, 경미한 안티 시그널: ${antiSignals[0]}` : ""}`;
+      } else if (totalScore >= 0.35) {
         verdict = "study";
         reason =
-          antiSignals.length > 0
+          antiSignals.length > 1
             ? `안티 시그널 ${antiSignals.length}개: ${antiSignals.join(", ")}`
             : `보통 수준 (${(totalScore * 100).toFixed(0)}점) — 참고 가치 있음`;
       } else {

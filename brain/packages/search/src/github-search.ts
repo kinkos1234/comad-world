@@ -91,25 +91,36 @@ async function deepScan(
         ).catch(() => null);
         if (readmeData?.content) {
           const decoded = atob(readmeData.content.replace(/\n/g, ""));
-          c.readme_preview = decoded.slice(0, 500);
+          c.readme_preview = decoded.slice(0, 1500);
         }
 
-        // Check for CI (look for .github/workflows or .travis.yml)
+        // Check for CI and tests with recursive tree (catches .github/workflows/)
         const tree = await githubFetch(
-          `/repos/${c.name}/git/trees/HEAD?recursive=false`
+          `/repos/${c.name}/git/trees/HEAD?recursive=true`
         ).catch(() => ({ tree: [] }));
 
-        const paths = (tree.tree || []).map((t: any) => t.path);
+        const paths = (tree.tree || []).map((t: any) => t.path as string);
         c.has_ci = paths.some(
-          (p: string) =>
-            p === ".github" || p === ".travis.yml" || p === ".circleci"
+          (p) =>
+            p.startsWith(".github/workflows/") ||
+            p === ".travis.yml" ||
+            p === ".circleci/config.yml" ||
+            p === "Jenkinsfile" ||
+            p === ".gitlab-ci.yml"
         );
         c.has_tests = paths.some(
-          (p: string) =>
-            p === "tests" ||
-            p === "test" ||
-            p === "__tests__" ||
-            p === "spec"
+          (p) =>
+            p.startsWith("tests/") ||
+            p.startsWith("test/") ||
+            p.startsWith("__tests__/") ||
+            p.startsWith("spec/") ||
+            p.match(/\.test\.[jt]sx?$/) != null ||
+            p.match(/\.spec\.[jt]sx?$/) != null ||
+            p.match(/test_.*\.py$/) != null ||
+            p === "pytest.ini" ||
+            p === "jest.config.js" ||
+            p === "jest.config.ts" ||
+            p === "vitest.config.ts"
         );
       } catch {
         // Skip enrichment on error, keep fast-scan data
@@ -125,7 +136,25 @@ async function deepScan(
 }
 
 /**
- * Full 2-pass search
+ * Split long queries into sub-queries for better recall.
+ * GitHub AND-matches all terms, so "knowledge graph entity extraction confidence"
+ * returns 0 results. Split into overlapping 2-3 word sub-queries.
+ */
+function splitQuery(query: string): string[] {
+  const words = query.split(/\s+/).filter(Boolean);
+  if (words.length <= 3) return [query];
+
+  const subs: string[] = [];
+  // Sliding window of 2-3 words
+  for (let i = 0; i < words.length - 1; i++) {
+    subs.push(words.slice(i, i + 3).join(" "));
+  }
+  // Also add full query as first attempt
+  return [query, ...subs];
+}
+
+/**
+ * Full 2-pass search with automatic query splitting for better recall
  */
 export async function searchGitHub(
   query: string,
@@ -133,17 +162,58 @@ export async function searchGitHub(
 ): Promise<RepoCandidate[]> {
   const totalTimer = startTimer();
   const merged = { ...DEFAULT_CONSTRAINTS, ...constraints };
+  const maxResults = merged.max_results ?? 30;
 
-  // Pass 1: Fast
-  const candidates = await fastSearch(query, merged);
-  if (candidates.length === 0) return [];
+  const subQueries = splitQuery(query);
+  const seen = new Set<string>();
+  let allCandidates: RepoCandidate[] = [];
+
+  for (const sq of subQueries) {
+    if (allCandidates.length >= maxResults) break;
+    try {
+      const results = await fastSearch(sq, { ...merged, max_results: maxResults });
+      for (const r of results) {
+        if (!seen.has(r.url)) {
+          seen.add(r.url);
+          allCandidates.push(r);
+        }
+      }
+    } catch {
+      // Sub-query failed, continue with others
+    }
+  }
+
+  // Auto-retry with lower min_stars if no results found
+  if (allCandidates.length === 0 && merged.min_stars > 30) {
+    const retryStars = Math.max(Math.floor(merged.min_stars / 3), 20);
+    console.error(`[search] No results, retrying with min_stars=${retryStars}`);
+    for (const sq of subQueries.slice(0, 3)) {
+      try {
+        const results = await fastSearch(sq, { ...merged, min_stars: retryStars, max_results: maxResults });
+        for (const r of results) {
+          if (!seen.has(r.url)) {
+            seen.add(r.url);
+            allCandidates.push(r);
+          }
+        }
+        if (allCandidates.length > 0) break;
+      } catch {
+        // continue
+      }
+    }
+  }
+
+  // Cap at max_results
+  allCandidates = allCandidates.slice(0, maxResults);
+
+  if (allCandidates.length === 0) return [];
 
   // Pass 2: Deep (top 10 only)
-  const enriched = await deepScan(candidates, 10);
+  const enriched = await deepScan(allCandidates, 10);
 
   recordTiming("search:total", totalTimer());
   console.error(
-    `[search] Found ${enriched.length} repos for "${query}" (${Math.round(totalTimer())}ms)`
+    `[search] Found ${enriched.length} repos for "${query}" (${subQueries.length} sub-queries, ${Math.round(totalTimer())}ms)`
   );
   return enriched;
 }
