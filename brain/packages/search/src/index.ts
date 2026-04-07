@@ -1,17 +1,21 @@
 /**
- * /search — Self-Evolving Reference Pipeline (Phase 1 MVP)
+ * /search — Self-Evolving Reference Pipeline
  *
- * SEARCH → EVALUATE → ARCHIVE
+ * Phase 1: SEARCH → EVALUATE → ARCHIVE
+ * Phase 2: + PLAN → SANDBOX → APPLY → QA
  *
  * Usage:
- *   import { search } from '@comad-brain/search';
+ *   import { search, searchAndPlan } from '@comad-brain/search';
  *   const results = await search('knowledge graph MCP');
+ *   const plans = await searchAndPlan('knowledge graph MCP');
  */
 
-import { startTimer, recordTiming, getTimings } from "@comad-brain/core";
+import { startTimer, recordTiming } from "@comad-brain/core";
 import { searchGitHub } from "./github-search.js";
 import { evaluateRepos } from "./evaluator.js";
 import { archiveRepos, loadReferences } from "./archiver.js";
+import { createAdoptionPlan, formatPlan } from "./planner.js";
+import { createSandbox, verifySandbox, mergeSandbox, discardSandbox } from "./sandbox.js";
 import { validateCandidates, validateEvaluated } from "./types.js";
 import type {
   SearchQuery,
@@ -20,6 +24,8 @@ import type {
   EvaluatedRepo,
   ReferenceCard,
 } from "./types.js";
+import type { AdoptionPlan } from "./planner.js";
+import type { SandboxResult } from "./sandbox.js";
 
 export type {
   SearchQuery,
@@ -27,11 +33,15 @@ export type {
   RepoCandidate,
   EvaluatedRepo,
   ReferenceCard,
+  AdoptionPlan,
+  SandboxResult,
 };
 
 export { searchGitHub } from "./github-search.js";
 export { evaluateRepos } from "./evaluator.js";
 export { archiveRepos, loadReferences } from "./archiver.js";
+export { createAdoptionPlan, formatPlan } from "./planner.js";
+export { createSandbox, verifySandbox, mergeSandbox, discardSandbox } from "./sandbox.js";
 
 export interface SearchResult {
   query: string;
@@ -143,4 +153,39 @@ export function formatResults(result: SearchResult): string {
   }
 
   return lines.join("\n");
+}
+
+// ── Phase 2: PLAN → SANDBOX → VERIFY ──
+
+export interface SearchAndPlanResult extends SearchResult {
+  plans: AdoptionPlan[];
+  plans_text: string;
+}
+
+/**
+ * Full Phase 2 pipeline: SEARCH → EVALUATE → ARCHIVE → PLAN
+ * Returns adoption plans for top adopt repos
+ */
+export async function searchAndPlan(
+  query: string,
+  constraints?: Partial<SearchConstraints>,
+  maxPlans: number = 3
+): Promise<SearchAndPlanResult> {
+  // Phase 1
+  const result = await search(query, constraints);
+
+  // Phase 2: Generate plans for top adopt repos
+  const adoptCards = result.archived.filter(
+    (c) => c.repo.verdict === "adopt"
+  ).slice(0, maxPlans);
+
+  const plans = adoptCards.map((card) => createAdoptionPlan(card));
+
+  const plansText = plans.map((p) => formatPlan(p)).join("\n---\n\n");
+
+  console.error(
+    `[search] Generated ${plans.length} adoption plans (${plans.filter((p) => p.changes.length > 0).length} with changes)`
+  );
+
+  return { ...result, plans, plans_text: plansText };
 }

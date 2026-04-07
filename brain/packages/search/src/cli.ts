@@ -7,7 +7,8 @@
  *   bun run packages/search/src/cli.ts "RAG retrieval" --min-stars 500
  */
 
-import { search, formatResults } from "./index.js";
+import { search, searchAndPlan, formatResults } from "./index.js";
+import { formatPlan } from "./planner.js";
 
 const args = process.argv.slice(2);
 
@@ -21,10 +22,13 @@ Options:
   --lang <language>   Filter by language (repeatable)
   --max <n>           Max results (default: 30)
   --json              Output raw JSON instead of formatted text
+  --plan              Phase 2: generate adoption plans for top adopt repos
+  --plan-count <n>    Number of plans to generate (default: 3)
 
 Example:
   bun run packages/search/src/cli.ts "knowledge graph neo4j"
-  bun run packages/search/src/cli.ts "MCP server typescript" --min-stars 50 --lang TypeScript
+  bun run packages/search/src/cli.ts "MCP server typescript" --plan
+  bun run packages/search/src/cli.ts "RAG" --plan --plan-count 5 --json
 `);
   process.exit(0);
 }
@@ -36,6 +40,8 @@ let maxAge = 180;
 const languages: string[] = [];
 let maxResults = 30;
 let jsonOutput = false;
+let planMode = false;
+let planCount = 3;
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--min-stars") {
@@ -48,6 +54,10 @@ for (let i = 0; i < args.length; i++) {
     maxResults = parseInt(args[++i]);
   } else if (args[i] === "--json") {
     jsonOutput = true;
+  } else if (args[i] === "--plan") {
+    planMode = true;
+  } else if (args[i] === "--plan-count") {
+    planCount = parseInt(args[++i]);
   } else if (!args[i].startsWith("--")) {
     query += (query ? " " : "") + args[i];
   }
@@ -58,15 +68,29 @@ if (!query) {
   process.exit(1);
 }
 
-const result = await search(query, {
+const constraints = {
   min_stars: minStars,
   max_age_days: maxAge,
   languages: languages.length > 0 ? languages : undefined,
   max_results: maxResults,
-});
+};
 
-if (jsonOutput) {
-  console.log(JSON.stringify(result, null, 2));
+if (planMode) {
+  const result = await searchAndPlan(query, constraints, planCount);
+  if (jsonOutput) {
+    console.log(JSON.stringify(result, null, 2));
+  } else {
+    console.log(formatResults(result));
+    if (result.plans.length > 0) {
+      console.log("\n" + "=".repeat(60) + "\n");
+      console.log(result.plans_text);
+    }
+  }
 } else {
-  console.log(formatResults(result));
+  const result = await search(query, constraints);
+  if (jsonOutput) {
+    console.log(JSON.stringify(result, null, 2));
+  } else {
+    console.log(formatResults(result));
+  }
 }

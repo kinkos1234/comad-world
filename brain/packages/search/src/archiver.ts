@@ -15,31 +15,33 @@ const REFERENCES_DIR = join(import.meta.dir, "../../../data/references");
 /**
  * Extract patterns from repo README and metadata
  */
+// Map raw keywords/topics to high-level pattern names that match PATTERN_TO_CHANGES
+const KEYWORD_TO_PATTERN: Record<string, string> = {
+  rag: "RAG pipeline", retrieval: "RAG pipeline", "retrieval-augmented": "RAG pipeline",
+  graph: "Knowledge graph", neo4j: "Knowledge graph", knowledge: "Knowledge graph", ontology: "Knowledge graph",
+  mcp: "MCP integration", "model-context-protocol": "MCP integration",
+  agent: "Agent orchestration", orchestration: "Agent orchestration", "multi-agent": "Agent orchestration",
+  stream: "Streaming/real-time", realtime: "Streaming/real-time", websocket: "Streaming/real-time",
+  cache: "Caching strategy", redis: "Caching strategy",
+  queue: "Caching strategy", worker: "Caching strategy",
+  embed: "Vector embeddings", vector: "Vector embeddings", similarity: "Vector embeddings",
+  crawl: "Web crawling", scrape: "Web crawling", rss: "Web crawling",
+  benchmark: "Performance optimization", perf: "Performance optimization", optimization: "Performance optimization",
+  simulation: "Agent orchestration", prediction: "Agent orchestration",
+};
+
 function extractPatterns(repo: EvaluatedRepo): string[] {
-  const patterns: string[] = [];
-  const readme = repo.candidate.readme_preview.toLowerCase();
+  const patternSet = new Set<string>();
+  const text = `${repo.candidate.readme_preview} ${repo.candidate.description} ${repo.candidate.topics.join(" ")}`.toLowerCase();
 
-  // Detect common patterns from README
-  if (/rag|retrieval.augmented/i.test(readme)) patterns.push("RAG pipeline");
-  if (/graph|neo4j|knowledge/i.test(readme)) patterns.push("Knowledge graph");
-  if (/mcp|model.context/i.test(readme)) patterns.push("MCP integration");
-  if (/agent|orchestrat/i.test(readme)) patterns.push("Agent orchestration");
-  if (/stream|real.time/i.test(readme)) patterns.push("Streaming/real-time");
-  if (/cache|redis|memcach/i.test(readme)) patterns.push("Caching strategy");
-  if (/queue|worker|job/i.test(readme)) patterns.push("Job queue");
-  if (/embed|vector|similarity/i.test(readme)) patterns.push("Vector embeddings");
-  if (/crawl|scrape|fetch/i.test(readme)) patterns.push("Web crawling");
-  if (/benchmark|perf|optim/i.test(readme)) patterns.push("Performance optimization");
-
-  // From topics
-  for (const topic of repo.candidate.topics) {
-    if (!patterns.some((p) => p.toLowerCase().includes(topic.toLowerCase()))) {
-      patterns.push(topic);
+  // Match against known pattern keywords
+  for (const [keyword, pattern] of Object.entries(KEYWORD_TO_PATTERN)) {
+    if (text.includes(keyword)) {
+      patternSet.add(pattern);
     }
-    if (patterns.length >= 8) break;
   }
 
-  return patterns;
+  return [...patternSet].slice(0, 8);
 }
 
 /**
