@@ -91,7 +91,7 @@ async function deepScan(
         ).catch(() => null);
         if (readmeData?.content) {
           const decoded = atob(readmeData.content.replace(/\n/g, ""));
-          c.readme_preview = decoded.slice(0, 1500);
+          c.readme_preview = decoded.slice(0, 5000);
         }
 
         // Check for CI and tests with recursive tree (catches .github/workflows/)

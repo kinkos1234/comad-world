@@ -129,7 +129,7 @@ export function formatResults(result: SearchResult): string {
   for (const r of notable) {
     const badge = r.verdict === "adopt" ? "ADOPT" : "STUDY";
     const score = Math.round(
-      (r.trust_score * 0.3 + r.quality_score * 0.3 + r.relevance_score * 0.4) * 100
+      (r.trust_score * 0.2 + r.quality_score * 0.3 + r.relevance_score * 0.5) * 100
     );
     lines.push(
       `### [${badge}] ${r.candidate.name} (${score}점, ${r.candidate.stars} stars)`

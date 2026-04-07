@@ -143,7 +143,7 @@ export async function evaluateRepos(
 
       // Anti-signal penalty
       const penalty = antiSignals.length * 0.1;
-      const totalScore = (trust * 0.3 + quality * 0.3 + relevance * 0.4) - penalty;
+      const totalScore = (trust * 0.2 + quality * 0.3 + relevance * 0.5) - penalty;
 
       let verdict: "adopt" | "study" | "skip";
       let reason: string;
@@ -177,8 +177,8 @@ export async function evaluateRepos(
 
   // Sort by total score descending
   evaluated.sort((a, b) => {
-    const scoreA = a.trust_score * 0.3 + a.quality_score * 0.3 + a.relevance_score * 0.4;
-    const scoreB = b.trust_score * 0.3 + b.quality_score * 0.3 + b.relevance_score * 0.4;
+    const scoreA = a.trust_score * 0.2 + a.quality_score * 0.3 + a.relevance_score * 0.5;
+    const scoreB = b.trust_score * 0.2 + b.quality_score * 0.3 + b.relevance_score * 0.5;
     return scoreB - scoreA;
   });
 
