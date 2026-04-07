@@ -45,8 +45,10 @@ export { archiveRepos, loadReferences } from "./archiver.js";
 export { createAdoptionPlan, formatPlan } from "./planner.js";
 export { createSandbox, verifySandbox, mergeSandbox, discardSandbox } from "./sandbox.js";
 export { recordMetric, getMetricsTrend } from "./metrics.js";
-export { recordDecision, getPatternConfidence, wasRepoRejected } from "./plan-tracker.js";
+export { recordDecision, getPatternConfidence, wasRepoRejected, recordApplyResult, recordRevert } from "./plan-tracker.js";
 export { PATTERN_REGISTRY, extractPatternsFromText } from "./patterns.js";
+export { checkSurvival, getSurvivalStats } from "./survival.js";
+export type { SurvivalCheck } from "./survival.js";
 
 export interface SearchResult {
   query: string;

@@ -24,6 +24,64 @@ export interface PlanDecision {
   applied?: boolean;
   reverted?: boolean;
   outcome?: "positive" | "neutral" | "negative";
+  commit_hash?: string;
+}
+
+/**
+ * Update the last decision for a repo with apply result
+ */
+export async function recordApplyResult(
+  repoUrl: string,
+  applied: boolean,
+  commitHash?: string
+): Promise<void> {
+  try {
+    const decisions = await readDecisions();
+    // Find last decision for this repo
+    for (let i = decisions.length - 1; i >= 0; i--) {
+      if (decisions[i].repo_url === repoUrl) {
+        decisions[i].applied = applied;
+        decisions[i].outcome = applied ? "positive" : "neutral";
+        if (commitHash) decisions[i].commit_hash = commitHash;
+        break;
+      }
+    }
+    // Rewrite file
+    await mkdir(TRACKER_DIR, { recursive: true });
+    const { writeFile } = await import("fs/promises");
+    await writeFile(
+      TRACKER_FILE,
+      decisions.map((d) => JSON.stringify(d)).join("\n") + "\n",
+      "utf-8"
+    );
+  } catch {
+    // Non-critical
+  }
+}
+
+/**
+ * Mark the last applied entry for a repo as reverted
+ */
+export async function recordRevert(repoUrl: string): Promise<void> {
+  try {
+    const decisions = await readDecisions();
+    for (let i = decisions.length - 1; i >= 0; i--) {
+      if (decisions[i].repo_url === repoUrl && decisions[i].applied) {
+        decisions[i].reverted = true;
+        decisions[i].outcome = "negative";
+        break;
+      }
+    }
+    await mkdir(TRACKER_DIR, { recursive: true });
+    const { writeFile } = await import("fs/promises");
+    await writeFile(
+      TRACKER_FILE,
+      decisions.map((d) => JSON.stringify(d)).join("\n") + "\n",
+      "utf-8"
+    );
+  } catch {
+    // Non-critical
+  }
 }
 
 /**
