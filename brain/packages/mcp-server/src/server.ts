@@ -15,6 +15,8 @@ import {
   getClaimsAt, getEntityClaimTimeline, findStaleClaims, calculateTemporalConfidence,
   // Refiner
   refineGraph, updateEdgeWeights, decayConfidence, detectPotentialConflicts, suggestPruning,
+  // Perf
+  startTimer, recordTiming, getTimings, resetTimings,
 } from "@comad-brain/core";
 import { ask, resolveEntities, retrieveSubgraph, buildContext } from "@comad-brain/graphrag";
 
@@ -35,6 +37,7 @@ server.tool(
     limit: z.number().optional().describe("최대 결과 수 (기본 10)"),
   },
   async ({ query: q, type, limit }) => {
+    const elapsed = startTimer();
     const maxResults = limit ?? 10;
 
     let records;
@@ -73,6 +76,10 @@ server.tool(
       score: r.get("score"),
     }));
 
+    const ms = elapsed();
+    recordTiming("tool:comad_brain_search", ms);
+    console.error(`[perf] comad_brain_search: ${ms.toFixed(0)}ms`);
+
     return {
       content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
     };
@@ -89,7 +96,11 @@ server.tool(
     question: z.string().describe("질문"),
   },
   async ({ question }) => {
+    const elapsed = startTimer();
     const answer = await ask(question);
+    const ms = elapsed();
+    recordTiming("tool:comad_brain_ask", ms);
+    console.error(`[perf] comad_brain_ask: ${ms.toFixed(0)}ms`);
     return {
       content: [{ type: "text" as const, text: answer }],
     };
@@ -107,6 +118,7 @@ server.tool(
     depth: z.number().optional().describe("탐색 깊이 (기본 2)"),
   },
   async ({ entity, depth }) => {
+    const elapsed = startTimer();
     const resolved = await resolveEntities([entity]);
     if (resolved.length === 0) {
       return { content: [{ type: "text" as const, text: `"${entity}" 관련 엔티티를 찾을 수 없습니다.` }] };
@@ -114,6 +126,10 @@ server.tool(
 
     const subgraph = await retrieveSubgraph(resolved.slice(0, 3), depth ?? 2, 30);
     const context = buildContext(subgraph);
+
+    const ms = elapsed();
+    recordTiming("tool:comad_brain_explore", ms);
+    console.error(`[perf] comad_brain_explore: ${ms.toFixed(0)}ms`);
 
     return {
       content: [{ type: "text" as const, text: context }],
@@ -133,6 +149,7 @@ server.tool(
     limit: z.number().optional().describe("최대 결과 수 (기본 20)"),
   },
   async ({ days, type, limit }) => {
+    const elapsed = startTimer();
     const d = days ?? 7;
     const maxResults = limit ?? 20;
     const dateFilter = new Date(Date.now() - d * 86400000).toISOString().split("T")[0];
@@ -154,6 +171,10 @@ server.tool(
       };
     });
 
+    const ms = elapsed();
+    recordTiming("tool:comad_brain_recent", ms);
+    console.error(`[perf] comad_brain_recent: ${ms.toFixed(0)}ms`);
+
     return {
       content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
     };
@@ -168,6 +189,7 @@ server.tool(
   "지식 그래프 통계",
   {},
   async () => {
+    const elapsed = startTimer();
     const nodeCountRecs = await query(
       `MATCH (n) RETURN labels(n)[0] AS label, count(n) AS cnt ORDER BY cnt DESC`
     );
@@ -192,6 +214,10 @@ server.tool(
       total_relationships: Object.values(relCounts).reduce((a, b) => a + b, 0),
     };
 
+    const ms = elapsed();
+    recordTiming("tool:comad_brain_stats", ms);
+    console.error(`[perf] comad_brain_stats: ${ms.toFixed(0)}ms`);
+
     return {
       content: [{ type: "text" as const, text: JSON.stringify(stats, null, 2) }],
     };
@@ -209,6 +235,7 @@ server.tool(
     relation_type: z.string().optional().describe("관계 유형 필터 (예: DISCUSSES, USES_TECHNOLOGY)"),
   },
   async ({ name, relation_type }) => {
+    const elapsed = startTimer();
     let cypher: string;
     const params: Record<string, unknown> = { name: name.toLowerCase() };
 
@@ -236,6 +263,10 @@ server.tool(
       relation: r.get("relation"),
     }));
 
+    const ms = elapsed();
+    recordTiming("tool:comad_brain_related", ms);
+    console.error(`[perf] comad_brain_related: ${ms.toFixed(0)}ms`);
+
     return {
       content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
     };
@@ -252,6 +283,7 @@ server.tool(
     days: z.number().optional().describe("최근 N일 (기본 7)"),
   },
   async ({ days }) => {
+    const elapsed = startTimer();
     const d = days ?? 7;
     const since = new Date(Date.now() - d * 86400000).toISOString().split("T")[0];
 
@@ -281,6 +313,10 @@ server.tool(
       topic: r.get("topic"),
       mentions: typeof r.get("mentions") === "object" ? (r.get("mentions") as any).low : r.get("mentions"),
     }));
+
+    const ms = elapsed();
+    recordTiming("tool:comad_brain_trend", ms);
+    console.error(`[perf] comad_brain_trend: ${ms.toFixed(0)}ms`);
 
     return {
       content: [{
@@ -1006,6 +1042,30 @@ server.tool(
     }
 
     return { content: [{ type: "text" as const, text: "알 수 없는 action입니다." }] };
+  }
+);
+
+// ============================================
+// Tool: comad_brain_perf (performance stats)
+// ============================================
+server.tool(
+  "comad_brain_perf",
+  "MCP 서버 성능 통계 조회 — 각 도구별 호출 횟수, 평균/최소/최대 응답 시간",
+  {
+    reset: z.boolean().optional().describe("true면 통계 초기화"),
+  },
+  async ({ reset }) => {
+    if (reset) {
+      resetTimings();
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify({ message: "성능 통계가 초기화되었습니다." }) }],
+      };
+    }
+
+    const timings = getTimings();
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(timings, null, 2) }],
+    };
   }
 );
 

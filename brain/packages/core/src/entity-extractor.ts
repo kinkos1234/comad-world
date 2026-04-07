@@ -61,10 +61,11 @@ ${content.slice(0, 4000)}
 위 항목이 기사에 등장하더라도 technologies나 topics에 포함하지 마세요. 구체적이고 도메인 특정적인 엔티티만 추출하세요.
 
 추출 지침:
-1. technologies: 기사에 언급된 구체적 기술만 (언어, 프레임워크, 라이브러리, 도구, 플랫폼, DB, 프로토콜). 위 블랙리스트 제외.
-2. people: 언급된 인물 (이름, GitHub 아이디, 소속)
-3. organizations: 기업, 연구소, 오픈소스 조직, 대학
-4. topics: 주제/분야 (예: "서버리스", "머신러닝", "웹 보안")
+- entity confidence: 명시적으로 언급된 엔티티=0.9+, 문맥에서 추론=0.6-0.8, 불확실=0.3-0.5
+1. technologies: 기사에 언급된 구체적 기술만 (언어, 프레임워크, 라이브러리, 도구, 플랫폼, DB, 프로토콜). 위 블랙리스트 제외. confidence 포함.
+2. people: 언급된 인물 (이름, GitHub 아이디, 소속). confidence 포함.
+3. organizations: 기업, 연구소, 오픈소스 조직, 대학. confidence 포함.
+4. topics: 주제/분야 (예: "서버리스", "머신러닝", "웹 보안"). confidence 포함.
 5. claims: 기사의 핵심 주장, 사실, 예측, 비교 (가장 중요!)
    - content: 주장 내용 (1-2문장으로 요약)
    - claim_type: fact(사실) | opinion(의견) | prediction(예측) | comparison(비교)
@@ -76,7 +77,7 @@ ${content.slice(0, 4000)}
    - analysis_space: hierarchy(계층) | temporal(시간) | structural(구조) | causal(인과) | recursive(재귀) | cross(교차)
 
 응답 형식:
-{"technologies":[{"name":"이름","type":"language|framework|library|tool|platform|database|protocol"}],"people":[{"name":"이름","github_username":"있으면","affiliation":"소속"}],"organizations":[{"name":"이름","type":"company|research_lab|open_source_org|university"}],"topics":[{"name":"토픽명"}],"claims":[{"content":"주장 내용","claim_type":"fact|opinion|prediction|comparison","confidence":0.8,"related_entities":["엔티티1","엔티티2"]}],"relationships":[{"from":"엔티티명","to":"엔티티명","type":"USES_TECHNOLOGY|DEPENDS_ON|BUILT_ON|ALTERNATIVE_TO|DISCUSSES|MENTIONS|AFFILIATED_WITH|DEVELOPS|INFLUENCES|EVOLVED_FROM","confidence":0.9,"context":"원문 snippet","analysis_space":"structural"}]}`;
+{"technologies":[{"name":"이름","type":"language|framework|library|tool|platform|database|protocol","confidence":0.9}],"people":[{"name":"이름","github_username":"있으면","affiliation":"소속","confidence":0.9}],"organizations":[{"name":"이름","type":"company|research_lab|open_source_org|university","confidence":0.9}],"topics":[{"name":"토픽명","confidence":0.9}],"claims":[{"content":"주장 내용","claim_type":"fact|opinion|prediction|comparison","confidence":0.8,"related_entities":["엔티티1","엔티티2"]}],"relationships":[{"from":"엔티티명","to":"엔티티명","type":"USES_TECHNOLOGY|DEPENDS_ON|BUILT_ON|ALTERNATIVE_TO|DISCUSSES|MENTIONS|AFFILIATED_WITH|DEVELOPS|INFLUENCES|EVOLVED_FROM","confidence":0.9,"context":"원문 snippet","analysis_space":"structural"}]}`;
 
   const tmpFile = join(tmpdir(), `ko-extract-${Date.now()}.txt`);
 
@@ -115,6 +116,12 @@ ${content.slice(0, 4000)}
     }
 
     const entities = JSON.parse(responseText.slice(jsonStart, jsonEnd + 1)) as ExtractedEntities;
+
+    // Post-extraction: default confidence to 0.7 if LLM didn't provide it (backward compat)
+    for (const t of entities.technologies ?? []) { t.confidence = t.confidence ?? 0.7; }
+    for (const p of entities.people ?? []) { p.confidence = p.confidence ?? 0.7; }
+    for (const o of entities.organizations ?? []) { o.confidence = o.confidence ?? 0.7; }
+    for (const t of entities.topics ?? []) { t.confidence = t.confidence ?? 0.7; }
 
     // Post-extraction blacklist filtering (prompt alone can't guarantee 100% compliance)
     const technologies = (entities.technologies ?? []).filter((t) => !isBlacklisted(t.name));

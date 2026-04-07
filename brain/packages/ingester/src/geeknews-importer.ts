@@ -100,13 +100,13 @@ async function mergeArticle(article: ParsedArticle, entities: ExtractedEntities)
     const tUid = techUid(tech.name);
     await write(
       `MERGE (t:Technology {uid: $uid})
-       SET t.name = $name, t.type = $type
+       SET t.name = $name, t.type = $type, t.confidence = $confidence
        WITH t
        MATCH (a:Article {uid: $articleUid})
        MERGE (a)-[r:DISCUSSES]->(t)
        ON CREATE SET r.confidence = 0.8, r.source = 'extractor', r.extracted_at = $now,
                      r.analysis_space = 'structural', r.observed_at = $observed_at, r.weight = 1.0`,
-      { uid: tUid, name: tech.name, type: tech.type, articleUid: uid, now, observed_at: article.date || now }
+      { uid: tUid, name: tech.name, type: tech.type, confidence: tech.confidence ?? 0.7, articleUid: uid, now, observed_at: article.date || now }
     );
   }
 
@@ -127,9 +127,10 @@ async function mergeArticle(article: ParsedArticle, entities: ExtractedEntities)
       props.affiliation = person.affiliation;
       setExtra += ", p.affiliation = $affiliation";
     }
+    props.confidence = person.confidence ?? 0.7;
     await write(
       `MERGE (p:Person {uid: $uid})
-       SET p.name = $name${setExtra}
+       SET p.name = $name, p.confidence = $confidence${setExtra}
        WITH p
        MATCH (a:Article {uid: $articleUid})
        MERGE (a)-[:MENTIONS]->(p)`,
@@ -142,11 +143,11 @@ async function mergeArticle(article: ParsedArticle, entities: ExtractedEntities)
     const oUid = orgUid(org.name);
     await write(
       `MERGE (o:Organization {uid: $uid})
-       SET o.name = $name, o.type = $type
+       SET o.name = $name, o.type = $type, o.confidence = $confidence
        WITH o
        MATCH (a:Article {uid: $articleUid})
        MERGE (a)-[:MENTIONS]->(o)`,
-      { uid: oUid, name: org.name, type: org.type, articleUid: uid }
+      { uid: oUid, name: org.name, type: org.type, confidence: org.confidence ?? 0.7, articleUid: uid }
     );
   }
 
@@ -155,11 +156,11 @@ async function mergeArticle(article: ParsedArticle, entities: ExtractedEntities)
     const tUid = topicUid(topic.name);
     await write(
       `MERGE (t:Topic {uid: $uid})
-       SET t.name = $name
+       SET t.name = $name, t.confidence = $confidence
        WITH t
        MATCH (a:Article {uid: $articleUid})
        MERGE (a)-[:TAGGED_WITH]->(t)`,
-      { uid: tUid, name: topic.name, articleUid: uid }
+      { uid: tUid, name: topic.name, confidence: topic.confidence ?? 0.7, articleUid: uid }
     );
   }
 

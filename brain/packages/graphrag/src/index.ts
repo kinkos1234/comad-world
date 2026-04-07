@@ -1,4 +1,4 @@
-import { close } from "@comad-brain/core";
+import { close, startTimer, recordTiming } from "@comad-brain/core";
 import { analyzeQuery } from "./query-analyzer.js";
 import { resolveEntities } from "./entity-resolver.js";
 import { retrieveSubgraph } from "./subgraph-retriever.js";
@@ -15,15 +15,26 @@ export type {
   GlobalMatch,
   TemporalMatch,
 } from "./dual-retriever.js";
+export { BENCHMARK_QUESTIONS } from "./benchmark.js";
+export type {
+  BenchmarkQuestion,
+  BenchmarkResult,
+  BenchmarkReport,
+} from "./benchmark.js";
 
 /**
  * Full GraphRAG pipeline: question → answer with graph context.
  */
 export async function ask(question: string): Promise<string> {
+  const totalTimer = startTimer();
+
   // 1. Analyze query
+  const t1 = startTimer();
   const analyzed = await analyzeQuery(question);
+  recordTiming("graphrag:analyzeQuery", t1());
 
   // 2. Resolve entities in graph
+  const t2 = startTimer();
   const resolved = await resolveEntities(analyzed.entities);
 
   if (resolved.length === 0) {
@@ -39,6 +50,8 @@ export async function ask(question: string): Promise<string> {
     );
 
     if (fallback.length === 0) {
+      recordTiming("graphrag:resolveEntities", t2());
+      recordTiming("graphrag:total", totalTimer());
       return "지식 그래프에서 관련 정보를 찾을 수 없습니다.";
     }
 
@@ -51,15 +64,23 @@ export async function ask(question: string): Promise<string> {
       });
     }
   }
+  recordTiming("graphrag:resolveEntities", t2());
 
   // 3. Retrieve subgraph
+  const t3 = startTimer();
   const subgraph = await retrieveSubgraph(resolved.slice(0, 5), 2, 30);
+  recordTiming("graphrag:retrieveSubgraph", t3());
 
   // 4. Build context
+  const t4 = startTimer();
   const context = buildContext(subgraph);
+  recordTiming("graphrag:buildContext", t4());
 
   // 5. Synthesize answer
+  const t5 = startTimer();
   const answer = await synthesize(question, context);
+  recordTiming("graphrag:synthesize", t5());
 
+  recordTiming("graphrag:total", totalTimer());
   return answer;
 }

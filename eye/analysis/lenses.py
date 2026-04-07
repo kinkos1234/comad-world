@@ -30,6 +30,7 @@ class Lens:
     system_prompt: str  # LLM 시스템 프롬프트
     space_prompts: dict[str, str] = field(default_factory=dict)  # 공간별 분석 프롬프트
     default_enabled: bool = True
+    tier: int = 1  # 1=core (기본 실행), 2=optional (딥 분석), 3=deprecated (명시 요청 시만)
 
 
 # 10개 렌즈 정의
@@ -67,6 +68,7 @@ LENS_CATALOG: list[Lens] = [
         thinker="니콜로 마키아벨리",
         framework="권력 구조/동맹 역학 — 군주론, 비르투(Virtù)와 포르투나(Fortuna)",
         default_enabled=False,
+        tier=3,  # deprecated: 70% overlap with Sun Tzu
         system_prompt="""\
 당신은 마키아벨리 관점의 권력 분석가입니다.
 다음 원리로 시뮬레이션 데이터를 분석하세요:
@@ -91,7 +93,8 @@ LENS_CATALOG: list[Lens] = [
         name_en="Clausewitz",
         thinker="카를 폰 클라우제비츠",
         framework="마찰/불확실성/결정적 타격점 — 전쟁론, 전장의 안개",
-        default_enabled=False,  # 로컬 LLM 부하 절감
+        default_enabled=False,
+        tier=2,  # optional: for deep analysis
         system_prompt="""\
 당신은 클라우제비츠 관점의 전략 분석가입니다.
 다음 원리로 시뮬레이션 데이터를 분석하세요:
@@ -197,6 +200,7 @@ LENS_CATALOG: list[Lens] = [
         thinker="게오르크 빌헬름 프리드리히 헤겔",
         framework="변증법적 대립과 종합 — 정(These), 반(Antithese), 합(Synthese)",
         default_enabled=False,
+        tier=3,  # deprecated: low unique value
         system_prompt="""\
 당신은 헤겔 변증법 관점의 분석가입니다.
 다음 원리로 시뮬레이션 데이터를 분석하세요:
@@ -222,6 +226,7 @@ LENS_CATALOG: list[Lens] = [
         thinker="찰스 다윈",
         framework="적응/도태/진화 압력 — 자연선택, 적자생존, 변이",
         default_enabled=False,
+        tier=2,  # optional: for deep analysis
         system_prompt="""\
 당신은 다윈 진화론 관점의 분석가입니다.
 다음 원리로 시뮬레이션 데이터를 분석하세요:
@@ -274,7 +279,8 @@ LENS_CATALOG: list[Lens] = [
         name_en="Descartes",
         thinker="르네 데카르트",
         framework="방법적 회의/가정 검증 — 체계적 의심, 명석판명한 인식",
-        default_enabled=True,
+        default_enabled=False,
+        tier=3,  # deprecated: meta-validation, not analysis
         system_prompt="""\
 당신은 데카르트 관점의 인식론 분석가입니다.
 다음 원리로 시뮬레이션 데이터를 분석하세요:
@@ -298,11 +304,20 @@ LENS_CATALOG: list[Lens] = [
 # 렌즈 ID → 렌즈 객체 매핑
 LENS_MAP: dict[str, Lens] = {lens.id: lens for lens in LENS_CATALOG}
 
-# 기본 활성화 렌즈 ID 목록
-DEFAULT_LENS_IDS: list[str] = [lens.id for lens in LENS_CATALOG if lens.default_enabled]
+# 기본 활성화 렌즈 ID 목록 (tier 1 = core only)
+DEFAULT_LENS_IDS: list[str] = [lens.id for lens in LENS_CATALOG if lens.tier == 1]
+
+# Tier 2: optional lenses for deep analysis
+OPTIONAL_LENS_IDS: list[str] = [lens.id for lens in LENS_CATALOG if lens.tier == 2]
+
+# Tier 3: deprecated lenses (available but not recommended)
+DEPRECATED_LENS_IDS: list[str] = [lens.id for lens in LENS_CATALOG if lens.tier == 3]
 
 # 전체 렌즈 ID 목록
 ALL_LENS_IDS: list[str] = [lens.id for lens in LENS_CATALOG]
+
+# Core + optional (excludes deprecated)
+ACTIVE_LENS_IDS: list[str] = [lens.id for lens in LENS_CATALOG if lens.tier <= 2]
 
 
 def compute_lens_budget(settings_override: dict[str, Any] | None = None) -> int:
@@ -315,7 +330,7 @@ def compute_lens_budget(settings_override: dict[str, Any] | None = None) -> int:
         3 ~ 10 사이의 렌즈 예산
     """
     if not settings_override:
-        return len(DEFAULT_LENS_IDS)  # 기본 6개
+        return len(DEFAULT_LENS_IDS)  # 기본 5개 (tier 1 core)
 
     rounds = settings_override.get("max_rounds", 10)
     hops = settings_override.get("propagation_max_hops", settings_override.get("max_hops", 3))
@@ -364,11 +379,16 @@ class LensEngine:
         seed_text: str,
         analysis_prompt: str | None,
         budget: int,
+        include_deprecated: bool = False,
     ) -> None:
         """LLM을 사용하여 시드 데이터와 분석 주제에 적합한 렌즈를 자동 선별한다."""
+        # 기본적으로 deprecated (tier 3) 렌즈는 후보에서 제외
+        candidates = LENS_CATALOG if include_deprecated else [
+            lens for lens in LENS_CATALOG if lens.tier <= 2
+        ]
         catalog_desc = "\n".join(
             f"- {lens.id}: {lens.name_ko} ({lens.name_en}) — {lens.framework}"
-            for lens in LENS_CATALOG
+            for lens in candidates
         )
 
         prompt = (

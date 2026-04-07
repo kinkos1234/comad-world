@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from rich.console import Console
@@ -15,6 +16,7 @@ from ontology.action_registry import ActionRegistry
 from ontology.meta_edge_engine import MetaEdgeEngine
 from simulation.action_resolver import ActionResolver
 from simulation.event_chain import EventChain, SimEvent
+from simulation.prediction_tracker import record_prediction
 from simulation.propagation import PropagationEngine
 from simulation.snapshot import SnapshotWriter
 from utils.active_metadata import ActiveMetadataBus
@@ -37,6 +39,7 @@ class SimulationResult:
     llm_calls: int = 0
     early_stop: bool = False
     early_stop_reason: str = ""
+    predictions: list[dict] = field(default_factory=list)  # tracked predictions
 
 
 class SimulationEngine:
@@ -163,17 +166,93 @@ class SimulationEngine:
         result.total_community_migrations = total_migrations
         result.blast_radius = self._propagation.blast_radius(all_effects) if all_effects else None
 
+        # Record predictions for closed-loop tracking (LeCun improvement)
+        result.predictions = self._record_predictions(result, events)
+
         console.print(Panel(
             f"[bold green]Simulation Complete[/bold green]\n"
             f"Rounds: {result.total_rounds} | "
             f"Events: {result.total_events} | "
             f"Actions: {result.total_actions} | "
             f"Meta-edges: {result.total_meta_edges_fired} | "
+            f"Predictions: {len(result.predictions)} | "
             f"LLM: 0",
             title="Result",
         ))
 
         return result
+
+    def _record_predictions(
+        self, result: SimulationResult, events: list[SimEvent]
+    ) -> list[dict]:
+        """시뮬레이션 결과에서 예측을 추출하고 추적기에 기록한다."""
+        predictions: list[dict] = []
+
+        # 수렴 예측: 시뮬레이션이 수렴했다면 안정 상태 예측
+        if result.early_stop:
+            convergence_query = self._client.query(
+                "MATCH (n:Entity) RETURN n.uid AS uid, n.name AS name, "
+                "n.volatility AS vol, n.stance AS stance "
+                "ORDER BY n.volatility DESC LIMIT 10"
+            )
+            for entity in convergence_query:
+                uid = entity.get("uid", "")
+                name = entity.get("name", uid)
+                vol = float(entity.get("vol", 0) or 0)
+                stance = float(entity.get("stance", 0) or 0)
+                pid = hashlib.sha256(
+                    f"sim-{uid}-{result.total_rounds}".encode()
+                ).hexdigest()[:12]
+                try:
+                    rec = record_prediction(
+                        prediction_id=pid,
+                        content=(
+                            f"Entity '{name}' predicted to stabilize at "
+                            f"stance={stance:.3f}, volatility={vol:.3f} "
+                            f"after {result.total_rounds} rounds"
+                        ),
+                        confidence=max(0.1, 1.0 - vol),
+                        horizon_days=90,
+                        source_analysis="simulation_convergence",
+                        related_entities=[uid],
+                    )
+                    predictions.append(rec)
+                except Exception as e:
+                    logger.warning("Failed to record prediction for %s: %s", uid, e)
+
+        # blast radius 예측: 높은 영향 노드
+        if result.blast_radius:
+            top_affected = sorted(
+                result.blast_radius.items(),
+                key=lambda x: abs(x[1]) if isinstance(x[1], (int, float)) else 0,
+                reverse=True,
+            )[:5]
+            for uid, impact in top_affected:
+                if not isinstance(impact, (int, float)):
+                    continue
+                pid = hashlib.sha256(
+                    f"blast-{uid}-{result.total_rounds}".encode()
+                ).hexdigest()[:12]
+                try:
+                    rec = record_prediction(
+                        prediction_id=pid,
+                        content=(
+                            f"Entity '{uid}' predicted high impact "
+                            f"(blast_radius={impact:.3f})"
+                        ),
+                        confidence=min(0.9, abs(impact)),
+                        horizon_days=90,
+                        source_analysis="simulation_blast_radius",
+                        related_entities=[uid],
+                    )
+                    predictions.append(rec)
+                except Exception as e:
+                    logger.warning("Failed to record blast prediction for %s: %s", uid, e)
+
+        if predictions:
+            logger.info("Recorded %d predictions for closed-loop tracking", len(predictions))
+
+        return predictions
 
     def _inject_events(
         self, events: list[SimEvent]

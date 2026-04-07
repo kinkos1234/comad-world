@@ -278,9 +278,14 @@ async function main() {
   const outputIdx = args.indexOf("--output");
   const outputPath = outputIdx !== -1 ? args[outputIdx + 1] : "data/articles-crawl.json";
 
+  const totalStart = performance.now();
+
   // Phase 1: Collect URLs from HN + RSS
+  const phase1Start = performance.now();
   const hnArticles = await crawlHackerNews(Math.floor(limit * 0.4));
   const rssArticles = await crawlRssFeeds(Math.floor(limit * 0.6));
+  const phase1Ms = performance.now() - phase1Start;
+  console.log(`\n[perf] Phase 1 (HN + RSS collection): ${phase1Ms.toFixed(0)}ms`);
 
   // Deduplicate by URL
   const seen = new Set<string>();
@@ -320,15 +325,25 @@ async function main() {
   console.log(`\nSelected ${topArticles.length} articles with diversity cap (skipping ${allArticles.length - topArticles.length} excess/older articles)`);
 
   // Phase 2: Fetch full content only for selected articles
+  const phase2Start = performance.now();
   await fetchFullContents(topArticles);
+  const phase2Ms = performance.now() - phase2Start;
+  console.log(`[perf] Phase 2 (content fetching): ${phase2Ms.toFixed(0)}ms`);
 
-  // Write output
+  // Phase 3: Write output
+  const phase3Start = performance.now();
   const output = {
     source: "blogs",
     items: topArticles,
   };
 
   writeFileSync(outputPath, JSON.stringify(output, null, 2));
+  const phase3Ms = performance.now() - phase3Start;
+  console.log(`[perf] Phase 3 (serialization + write): ${phase3Ms.toFixed(0)}ms`);
+
+  const totalMs = performance.now() - totalStart;
+  console.log(`\n[perf] Total: ${totalMs.toFixed(0)}ms (${(totalMs / 1000).toFixed(1)}s)`);
+  console.log(`[perf] Breakdown: collection=${phase1Ms.toFixed(0)}ms, fetch=${phase2Ms.toFixed(0)}ms, write=${phase3Ms.toFixed(0)}ms`);
   console.log(`\nOutput: ${outputPath} (${topArticles.length} articles)`);
 }
 

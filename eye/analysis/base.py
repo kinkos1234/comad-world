@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from graph.neo4j_client import Neo4jClient
-from simulation.snapshot import SnapshotWriter
 
 
 @dataclass
@@ -32,7 +31,12 @@ class SimulationData:
         graph: Neo4jClient | None = None,
     ) -> SimulationData:
         """스냅샷 디렉토리에서 SimulationData를 구축한다."""
-        snapshots = SnapshotWriter.load_snapshots(snapshot_dir)
+        snapshot_path = Path(snapshot_dir)
+        snapshots: list[dict[str, Any]] = []
+        for path in sorted(snapshot_path.glob("round_*.jsonl")):
+            with open(path, encoding="utf-8") as fh:
+                for line in fh:
+                    snapshots.append(json.loads(line.strip()))
         if not snapshots:
             return cls(graph=graph)
 

@@ -6,11 +6,18 @@ import json
 import tempfile
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from analysis.base import AnalysisSpace, SimulationData
+
+
+def _write_snapshots(tmp_dir: Path, snapshots: list[dict[str, Any]]) -> None:
+    """Write snapshot dicts as round_NNN.jsonl files for from_snapshots."""
+    for i, snap in enumerate(snapshots, start=1):
+        path = tmp_dir / f"round_{i:03d}.jsonl"
+        path.write_text(json.dumps(snap) + "\n", encoding="utf-8")
 
 
 # ── SimulationData construction ──
@@ -43,24 +50,19 @@ class TestSimulationDataInit:
 
 
 class TestFromSnapshots:
-    @patch("analysis.base.SnapshotWriter.load_snapshots")
-    def test_empty_snapshots_returns_empty_data(self, mock_load):
-        mock_load.return_value = []
-        sd = SimulationData.from_snapshots("/fake")
+    def test_empty_snapshots_returns_empty_data(self, tmp_path):
+        sd = SimulationData.from_snapshots(tmp_path)
         assert sd.snapshots == []
         assert sd.events_log == []
         assert sd.graph is None
 
-    @patch("analysis.base.SnapshotWriter.load_snapshots")
-    def test_empty_snapshots_preserves_graph(self, mock_load):
-        mock_load.return_value = []
+    def test_empty_snapshots_preserves_graph(self, tmp_path):
         graph = MagicMock()
-        sd = SimulationData.from_snapshots("/fake", graph=graph)
+        sd = SimulationData.from_snapshots(tmp_path, graph=graph)
         assert sd.graph is graph
 
-    @patch("analysis.base.SnapshotWriter.load_snapshots")
-    def test_events_extracted(self, mock_load):
-        mock_load.return_value = [
+    def test_events_extracted(self, tmp_path):
+        _write_snapshots(tmp_path, [
             {
                 "round": 1,
                 "changes": {
@@ -81,8 +83,8 @@ class TestFromSnapshots:
                 },
                 "summary": {"total": 15},
             },
-        ]
-        sd = SimulationData.from_snapshots("/fake")
+        ])
+        sd = SimulationData.from_snapshots(tmp_path)
         assert len(sd.events_log) == 2
         assert sd.events_log[0]["round"] == 1
         assert sd.events_log[1]["round"] == 2
@@ -91,23 +93,21 @@ class TestFromSnapshots:
         assert len(sd.meta_edges_log) == 1
         assert len(sd.community_migrations) == 1
 
-    @patch("analysis.base.SnapshotWriter.load_snapshots")
-    def test_communities_initial_and_final(self, mock_load):
-        mock_load.return_value = [
+    def test_communities_initial_and_final(self, tmp_path):
+        _write_snapshots(tmp_path, [
             {"round": 0, "changes": {}, "summary": {"clusters": 3}},
             {"round": 1, "changes": {}, "summary": {"clusters": 5}},
-        ]
-        sd = SimulationData.from_snapshots("/fake")
+        ])
+        sd = SimulationData.from_snapshots(tmp_path)
         assert sd.communities_initial == {"clusters": 3}
         assert sd.communities_final == {"clusters": 5}
 
-    @patch("analysis.base.SnapshotWriter.load_snapshots")
-    def test_missing_changes_key(self, mock_load):
+    def test_missing_changes_key(self, tmp_path):
         """Snapshots without 'changes' key should not crash."""
-        mock_load.return_value = [
+        _write_snapshots(tmp_path, [
             {"round": 0, "summary": {}},
-        ]
-        sd = SimulationData.from_snapshots("/fake")
+        ])
+        sd = SimulationData.from_snapshots(tmp_path)
         assert sd.events_log == []
         assert sd.actions_log == []
 

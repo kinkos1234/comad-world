@@ -42,6 +42,16 @@ analysis:
     - structural
     - causal
     - cross_space
+  # Lens tiers: 1=core (default), 2=optional (deep analysis), 3=deprecated
+  # Core (tier 1): sun_tzu, adam_smith, taleb, kahneman, meadows
+  # Optional (tier 2): clausewitz, darwin
+  # Deprecated (tier 3): machiavelli (overlaps sun_tzu), hegel (low unique value), descartes (meta-validation)
+  enabled_lenses:
+    - sun_tzu
+    - adam_smith
+    - taleb
+    - kahneman
+    - meadows
 
 report:
   include_interviews: true

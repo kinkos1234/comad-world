@@ -48,6 +48,7 @@ export interface Technology {
   uid: string;
   name: string;
   type: "language" | "framework" | "library" | "tool" | "platform" | "database" | "protocol";
+  confidence?: number; // 0.0-1.0, entity-level trust score (default 0.7)
   description?: string;
   website?: string;
   category?: string;
@@ -58,6 +59,7 @@ export interface Person {
   name: string;
   github_username?: string;
   affiliation?: string;
+  confidence?: number; // 0.0-1.0, entity-level trust score (default 0.7)
   url?: string;
 }
 
@@ -65,6 +67,7 @@ export interface Organization {
   uid: string;
   name: string;
   type: "company" | "research_lab" | "open_source_org" | "university";
+  confidence?: number; // 0.0-1.0, entity-level trust score (default 0.7)
   url?: string;
   description?: string;
 }
@@ -72,6 +75,7 @@ export interface Organization {
 export interface Topic {
   uid: string;
   name: string;
+  confidence?: number; // 0.0-1.0, entity-level trust score (default 0.7)
   description?: string;
   parent_topic?: string;
 }
@@ -253,10 +257,10 @@ export interface ExtractedRelationship {
 }
 
 export interface ExtractedEntities {
-  technologies: Array<Pick<Technology, "name" | "type">>;
-  people: Array<Pick<Person, "name" | "github_username" | "affiliation">>;
-  organizations: Array<Pick<Organization, "name" | "type">>;
-  topics: Array<Pick<Topic, "name">>;
+  technologies: Array<Pick<Technology, "name" | "type" | "confidence">>;
+  people: Array<Pick<Person, "name" | "github_username" | "affiliation" | "confidence">>;
+  organizations: Array<Pick<Organization, "name" | "type" | "confidence">>;
+  topics: Array<Pick<Topic, "name" | "confidence">>;
   claims: ExtractedClaim[];
   relationships: ExtractedRelationship[];
 }

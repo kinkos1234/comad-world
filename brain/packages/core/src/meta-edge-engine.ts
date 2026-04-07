@@ -437,6 +437,10 @@ export async function crossVerifyClaims(): Promise<number> {
  * - They come from different articles (different perspectives)
  * - They don't already have SUPPORTS/CONTRADICTS relationships
  * Creates CONTRADICTS edges for review.
+ *
+ * TODO(scheduling): This should be run on a weekly cron schedule to catch
+ * contradictions across newly ingested articles. Currently invoked manually
+ * or as part of the meta-edge evaluation pipeline.
  */
 export async function detectContradictions(): Promise<number> {
   const result = await query(`
