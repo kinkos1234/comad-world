@@ -99,9 +99,9 @@ async function deepScan(
           `/repos/${c.name}/git/trees/HEAD?recursive=true`
         ).catch(() => ({ tree: [] }));
 
-        const paths = (tree.tree || []).map((t: any) => t.path as string);
+        const paths: string[] = (tree.tree || []).map((t: any) => t.path as string);
         c.has_ci = paths.some(
-          (p) =>
+          (p: string) =>
             p.startsWith(".github/workflows/") ||
             p === ".travis.yml" ||
             p === ".circleci/config.yml" ||
@@ -109,14 +109,14 @@ async function deepScan(
             p === ".gitlab-ci.yml"
         );
         c.has_tests = paths.some(
-          (p) =>
+          (p: string) =>
             p.startsWith("tests/") ||
             p.startsWith("test/") ||
             p.startsWith("__tests__/") ||
             p.startsWith("spec/") ||
-            p.match(/\.test\.[jt]sx?$/) != null ||
-            p.match(/\.spec\.[jt]sx?$/) != null ||
-            p.match(/test_.*\.py$/) != null ||
+            /\.test\.[jt]sx?$/.test(p) ||
+            /\.spec\.[jt]sx?$/.test(p) ||
+            /test_.*\.py$/.test(p) ||
             p === "pytest.ini" ||
             p === "jest.config.js" ||
             p === "jest.config.ts" ||

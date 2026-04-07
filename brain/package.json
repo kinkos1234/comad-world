@@ -14,8 +14,11 @@
     "crawl:enrich": "bun run --smol packages/crawler/src/enrich-papers.ts",
     "crawl:retry": "bun run --smol packages/crawler/src/retry-failed-articles.ts",
     "crawl:playwright": "bun run --smol packages/crawler/src/playwright-fetcher.ts",
+    "typecheck": "npx tsc --noEmit --skipLibCheck",
+    "search": "bun run packages/search/src/cli.ts",
     "test": "bun test",
-    "test:core": "bun test packages/core/"
+    "test:core": "bun test packages/core/",
+    "ci": "bun run typecheck && bun test"
   },
   "dependencies": {
     "playwright": "^1.58.2"
