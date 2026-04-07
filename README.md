@@ -160,6 +160,7 @@ One YAML change. Different feeds, different keywords, different categories, diff
 4. **Photo** corrects images via Photoshop MCP (domain-agnostic)
 5. **Sleep** consolidates Claude Code memory across all projects (domain-agnostic)
 6. **Voice** provides workflow automation triggers for Claude Code (domain-agnostic)
+7. **Search** discovers GitHub repos, evaluates them, generates adoption plans, tests in sandbox — the system improves itself
 
 ### What's Config-Driven vs. Domain-Agnostic
 
@@ -167,7 +168,7 @@ One YAML change. Different feeds, different keywords, different categories, diff
 |--------|:---:|:---:|
 | **ear** | interests, categories, must-read stack, relevance thresholds | archive format, Discord integration, digest generation |
 | **brain** | RSS feeds, HN queries, arXiv categories, GitHub topics, entity extraction prompts | Neo4j schema, GraphRAG, MCP tools, MetaEdge engine |
-| **eye** | — | entire engine: ontology, simulation, 10 analysis lenses, report generation |
+| **eye** | — | entire engine: ontology, simulation, 5 tiered lenses, prediction tracking |
 | **photo** | — | everything (works with any photo) |
 | **sleep** | — | everything (manages any Claude Code memory) |
 | **voice** | — | everything (workflow triggers are generic) |
@@ -270,6 +271,25 @@ Standalone browser automation for AI agents. Anti-bot stealth, 16 commands.
 cd browse && bun install
 bun run src/cli.ts goto https://example.com
 bun run src/cli.ts text  # rendered text extraction
+```
+
+### Search — Self-Evolving Reference Discovery
+
+GitHub repo discovery → evaluation → adoption planning → sandbox testing. The system finds patterns to improve itself.
+
+- **3-axis evaluation**: trust (stars/forks/activity), quality (tests/CI/README), relevance (overlap with brain graph)
+- **Adoption planning**: maps discovered patterns to concrete file changes with risk assessment
+- **Sandbox testing**: git worktree isolation for safe verification before merging
+- **Self-supervised learning**: git survival analysis tracks whether adopted patterns survive or get reverted
+- **Metrics dashboard**: JSONL trend tracking for recall, precision, and latency over time
+- **6 anti-signals**: marketing README, no license, abandoned repos, star manipulation
+
+```bash
+cd brain
+bun run packages/search/src/cli.ts "knowledge graph MCP"            # search
+bun run packages/search/src/cli.ts "RAG pipeline" --plan             # + adoption plans
+bun run packages/search/src/cli.ts "MCP server" --apply 1 --dry-run  # sandbox preview
+bun run packages/search/src/cli.ts --stats                           # health dashboard
 ```
 
 ---
@@ -385,7 +405,8 @@ comad-world/
 │   │   ├── crawler/         # RSS, arXiv, GitHub crawlers (config-driven)
 │   │   ├── graphrag/        # Dual-retriever search engine
 │   │   ├── ingester/        # Content importer
-│   │   └── mcp-server/      # 20+ MCP tools
+│   │   ├── mcp-server/      # 20+ MCP tools
+│   │   └── search/          # Self-evolving reference discovery
 │   ├── docker-compose.yml
 │   └── package.json
 ├── ear/                     # Content curator (Claude Code agent)
