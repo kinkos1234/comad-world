@@ -48,6 +48,27 @@ class PropagationEngine:
         except FileNotFoundError:
             return {}
 
+    def _prefetch_adjacency(self) -> dict[str, list[dict[str, Any]]]:
+        """모든 활성 관계를 한 번에 조회하여 인접 리스트를 구축한다."""
+        rows = self._client.query(
+            "MATCH (n:Entity)-[r]->(m:Entity) "
+            "WHERE r.expired_at IS NULL "
+            "RETURN n.uid AS src, m.uid AS uid, type(r) AS rel_type, "
+            "r.weight AS weight, properties(m) AS props"
+        )
+        adj: dict[str, list[dict[str, Any]]] = {}
+        for row in (rows or []):
+            src = row["src"]
+            if src not in adj:
+                adj[src] = []
+            adj[src].append({
+                "uid": row["uid"],
+                "rel_type": row["rel_type"],
+                "weight": row["weight"],
+                "props": row["props"],
+            })
+        return adj
+
     def propagate(
         self,
         impacted_nodes: list[tuple[str, float]],
@@ -56,6 +77,9 @@ class PropagationEngine:
         visited: set[str] = set()
         queue: deque[tuple[str, float, int]] = deque()
         effects: list[PropagationEffect] = []
+
+        # 전체 인접 리스트를 한 번에 조회 (N개 개별 쿼리 → 1개 배치 쿼리)
+        adjacency = self._prefetch_adjacency()
 
         # 초기 영향 노드 삽입
         for uid, effect in impacted_nodes:
@@ -68,8 +92,11 @@ class PropagationEngine:
             if distance >= self._max_hops:
                 continue
 
-            # 이웃 노드 조회
-            neighbors = self._client.get_neighbors(uid, active_only=True)
+            # 이웃 노드 조회: 배치 인접 리스트 우선, 없으면 개별 쿼리 폴백
+            if adjacency:
+                neighbors = adjacency.get(uid, [])
+            else:
+                neighbors = self._client.get_neighbors(uid, active_only=True)
 
             for neighbor in neighbors:
                 n_uid = neighbor["uid"]

@@ -82,5 +82,32 @@ export async function resolveEntities(entityNames: string[]): Promise<ResolvedEn
     }
   }
 
+  // Fallback: if resolution is sparse, broaden Topic search using individual keywords
+  if (byUid.size < 2 && entityNames.length > 0) {
+    for (const name of entityNames) {
+      const keywords = name.split(/\s+/).filter((w) => w.length > 2);
+      for (const kw of keywords) {
+        const fallbackTopics = await query(
+          `MATCH (t:Topic)
+           WHERE toLower(t.name) CONTAINS toLower($term)
+           RETURN t.uid AS uid, 'Topic' AS label, t.name AS name, 6.0 AS score
+           LIMIT 5`,
+          { term: kw }
+        );
+        for (const rec of fallbackTopics) {
+          const uid = rec.get("uid");
+          if (!byUid.has(uid)) {
+            byUid.set(uid, {
+              uid,
+              label: rec.get("label"),
+              name: rec.get("name"),
+              score: rec.get("score"),
+            });
+          }
+        }
+      }
+    }
+  }
+
   return Array.from(byUid.values()).sort((a, b) => b.score - a.score);
 }

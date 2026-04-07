@@ -27,7 +27,7 @@ ingestion:
 
 simulation:
   max_rounds: 10
-  community_refresh_interval: 3
+  community_refresh_interval: 5
   propagation_decay: 0.6
   propagation_max_hops: 3
   volatility_decay: 0.1

@@ -90,6 +90,38 @@ export async function retrieveSubgraph(
     }
   }
 
+  // Claim-based enrichment: pull claims matching seed entity names
+  if (seeds.length > 0) {
+    const primaryKeyword = seeds[0].name;
+    try {
+      const claimRecords = await query(
+        `MATCH (c:Claim)
+         WHERE toLower(c.content) CONTAINS toLower($keyword)
+         RETURN c.uid AS uid, labels(c)[0] AS label, properties(c) AS props
+         ORDER BY c.confidence DESC LIMIT 5`,
+        { keyword: primaryKeyword }
+      );
+
+      for (const rec of claimRecords) {
+        const uid = rec.get("uid") as string;
+        if (uid && !nodesMap.has(uid)) {
+          const rawProps = rec.get("props") as Record<string, unknown>;
+          const props: Record<string, unknown> = {};
+          for (const [key, val] of Object.entries(rawProps)) {
+            if (typeof val === "object" && val !== null && "low" in (val as any)) {
+              props[key] = (val as any).low;
+            } else {
+              props[key] = val;
+            }
+          }
+          nodesMap.set(uid, { uid, label: rec.get("label") as string, properties: props });
+        }
+      }
+    } catch {
+      // Claim search is best-effort; skip if Claim label doesn't exist
+    }
+  }
+
   return {
     nodes: Array.from(nodesMap.values()),
     edges,

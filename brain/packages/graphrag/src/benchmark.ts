@@ -62,7 +62,7 @@ export const BENCHMARK_QUESTIONS: BenchmarkQuestion[] = [
   {
     id: "b07",
     question: "LLM의 hallucination 문제를 해결하려는 접근법들은?",
-    expected_entities: [],
+    expected_entities: ["RLHF", "Constitutional AI", "RAG"],
     expected_topics: ["hallucination", "grounding", "RAG"],
     difficulty: "medium",
   },
@@ -83,7 +83,7 @@ export const BENCHMARK_QUESTIONS: BenchmarkQuestion[] = [
   {
     id: "b10",
     question: "AI Agent 아키텍처의 핵심 구성요소는?",
-    expected_entities: [],
+    expected_entities: ["LangChain", "AutoGPT", "ReAct"],
     expected_topics: ["agent", "tool use", "planning", "memory"],
     difficulty: "medium",
   },

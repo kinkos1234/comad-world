@@ -6,8 +6,42 @@ CLI(main.py)와 API(api/routes/pipeline.py) 모두 이 모듈을 통해
 
 from __future__ import annotations
 
+import logging
+import time
 from pathlib import Path
 from typing import Any, Callable
+
+logger = logging.getLogger("comadeye")
+
+
+class PipelineTimer:
+    """6단계 파이프라인 타이밍 수집기."""
+
+    def __init__(self) -> None:
+        self._timings: dict[str, float] = {}
+        self._start: float = time.time()
+
+    def record(self, stage: str, elapsed: float) -> None:
+        self._timings[stage] = round(elapsed, 2)
+
+    def summary(self) -> dict[str, float]:
+        total = round(time.time() - self._start, 2)
+        return {**self._timings, "total": total}
+
+    def log_summary(self) -> None:
+        s = self.summary()
+        parts = [
+            f"ingestion={s.get('ingestion', '-')}s",
+            f"graph={s.get('graph', '-')}s",
+            f"community={s.get('community', '-')}s",
+            f"simulation={s.get('simulation', '-')}s",
+            f"analysis={s.get('analysis', '-')}s",
+            f"report={s.get('report', '-')}s",
+            f"total={s.get('total', '-')}s",
+        ]
+        msg = f"[perf] Pipeline: {', '.join(parts)}"
+        logger.info(msg)
+        print(msg)
 
 
 def run_ingestion(
@@ -204,3 +238,60 @@ def run_report(
         analysis_prompt=analysis_prompt,
     )
     return path, llm.usage_stats
+
+
+def run_full_pipeline(
+    seed_text: str,
+    settings: Any,
+    output_dir: Path | str = "output",
+    *,
+    on_progress: Callable | None = None,
+    data_dir: Path | None = None,
+    skip_report: bool = False,
+    lenses: list[str] | None = None,
+    analysis_prompt: str | None = None,
+) -> dict[str, Any]:
+    """6단계 파이프라인을 타이밍과 함께 실행한다."""
+    timer = PipelineTimer()
+
+    t = time.time()
+    chunks, ontology, usage = run_ingestion(
+        seed_text, settings, on_progress=on_progress, data_dir=data_dir,
+    )
+    timer.record("ingestion", time.time() - t)
+
+    t = time.time()
+    client = run_graph_loading(ontology, settings)
+    timer.record("graph", time.time() - t)
+
+    t = time.time()
+    run_community_detection(client, settings)
+    timer.record("community", time.time() - t)
+
+    t = time.time()
+    sim_result = run_simulation(client, ontology, settings, data_dir=data_dir)
+    timer.record("simulation", time.time() - t)
+
+    t = time.time()
+    run_analysis(
+        client, settings, seed_text=seed_text, lenses=lenses,
+        analysis_prompt=analysis_prompt, data_dir=data_dir,
+    )
+    timer.record("analysis", time.time() - t)
+
+    report_path = None
+    if not skip_report:
+        t = time.time()
+        report_path, _ = run_report(
+            seed_text, sim_result, output_dir, settings,
+            analysis_prompt=analysis_prompt, data_dir=data_dir,
+        )
+        timer.record("report", time.time() - t)
+
+    timer.log_summary()
+
+    return {
+        "sim_result": sim_result,
+        "report_path": report_path,
+        "timings": timer.summary(),
+    }
