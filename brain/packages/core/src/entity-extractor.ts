@@ -2,6 +2,7 @@ import { writeFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import type { ExtractedEntities } from "./types.js";
+import { scanContent } from "./content-guard.js";
 
 /**
  * Blacklist: overly generic topics and technologies that pollute the knowledge graph.
@@ -48,6 +49,13 @@ export async function extractEntities(
   title: string,
   content: string
 ): Promise<ExtractedEntities> {
+  // Scan for prompt injection before sending to LLM
+  const guard = scanContent(content, title);
+  if (!guard.safe) {
+    console.error(`[entity-extractor] Content flagged: ${guard.threats.join(', ')}. Using cleaned version.`);
+    content = guard.cleaned;
+  }
+
   const prompt = `다음 기술 기사에서 엔티티, 관계, 그리고 핵심 주장(Claim)을 추출하여 JSON으로만 응답해라. 마크다운 코드블록 없이 순수 JSON만 출력해라.
 
 제목: ${title}

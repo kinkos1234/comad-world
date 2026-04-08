@@ -7,6 +7,7 @@
 import { existsSync, readFileSync, mkdirSync, unlinkSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
+import { scanContent } from "./content-guard.js";
 
 const FETCH_TIMEOUT = 10_000; // 10 seconds
 const PDF_TIMEOUT = 120_000; // 2 minutes for PDF parsing
@@ -21,14 +22,24 @@ const BROWSE_CLI_WORLD = join(import.meta.dir, "../../../comad-world/browse/src/
  */
 export async function fetchContent(url: string, useBrowse = true): Promise<string | null> {
   const native = await fetchContentNative(url);
-  if (native && native.length >= MIN_USEFUL_CONTENT) return native;
+  if (native && native.length >= MIN_USEFUL_CONTENT) return guardContent(native, url);
 
   if (useBrowse) {
     const rendered = await fetchContentViaBrowse(url);
-    if (rendered && rendered.length >= MIN_USEFUL_CONTENT) return rendered;
+    if (rendered && rendered.length >= MIN_USEFUL_CONTENT) return guardContent(rendered, url);
   }
 
   return native;
+}
+
+/** Scan fetched content for prompt injection, return cleaned version if threats found. */
+function guardContent(content: string, url: string): string {
+  const guard = scanContent(content, url);
+  if (!guard.safe) {
+    console.error(`[content-fetcher] Content flagged: ${guard.threats.join(', ')}. Using cleaned version.`);
+    return guard.cleaned;
+  }
+  return content;
 }
 
 async function fetchContentNative(url: string): Promise<string | null> {

@@ -11,3 +11,4 @@ export * from "./entity-dedup.js";
 export * from "./temporal-query.js";
 export * from "./graph-refiner.js";
 export * from "./perf.js";
+export * from "./content-guard.js";

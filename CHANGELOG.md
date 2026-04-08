@@ -5,11 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Content guard: prompt injection detection on crawled content (10 threat patterns + invisible Unicode)
 - Multi-source search: npm, PyPI, arXiv alongside GitHub
 - Neo4j graph storage for search reference cards
 - Config-driven relevance scoring from comad.config.yaml
 - Weekly CRON for automatic /search PUSH mode
 - Explorer package for interactive graph visualization
+- CHANGELOG.md
 
 ### Fixed
 - MCP server: Cypher injection prevention (allowlist validation)

@@ -188,6 +188,8 @@ Neo4j-based knowledge graph that crawls, extracts entities, and answers question
 - **Claim tracking** — fact/opinion/prediction with confidence scores, decay, and timelines
 - **Performance monitoring** — latency tracking for all MCP tools, GraphRAG pipeline, and crawlers
 - **Community detection** — hierarchical clustering for topic discovery
+- **Content guard** — prompt injection detection on all crawled content (10 threat patterns + invisible Unicode scanning)
+- **Config-driven crawlers** — RSS, arXiv, GitHub crawlers load sources from `comad.config.yaml`
 
 ```bash
 cd brain
@@ -277,11 +279,13 @@ bun run src/cli.ts text  # rendered text extraction
 
 GitHub repo discovery → evaluation → adoption planning → sandbox testing. The system finds patterns to improve itself.
 
-- **3-axis evaluation**: trust (stars/forks/activity), quality (tests/CI/README), relevance (overlap with brain graph)
+- **Multi-source search**: GitHub, npm, PyPI, and arXiv (papers with code) searched in parallel
+- **3-axis evaluation**: trust (stars/forks/activity), quality (tests/CI/README), relevance (config-driven keywords from `comad.config.yaml`)
+- **Neo4j graph storage**: reference cards stored as graph nodes for cross-referencing with brain entities
 - **Adoption planning**: maps discovered patterns to concrete file changes with risk assessment
 - **Sandbox testing**: git worktree isolation for safe verification before merging
 - **Self-supervised learning**: git survival analysis tracks whether adopted patterns survive or get reverted
-- **Metrics dashboard**: JSONL trend tracking for recall, precision, and latency over time
+- **Weekly CRON**: automatic PUSH mode diagnosis every Monday
 - **6 anti-signals**: marketing README, no license, abandoned repos, star manipulation
 
 ```bash
@@ -467,6 +471,10 @@ Yes! See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Credits
 
 Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and the [Model Context Protocol](https://modelcontextprotocol.io/).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for all notable changes.
 
 ## License
 

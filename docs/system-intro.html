@@ -214,6 +214,7 @@
   .issue-card .badge.quality { background:var(--accent-dim); color:var(--accent); }
   .issue-card .badge.stability { background:rgba(52,211,153,0.10); color:var(--green); }
   .issue-card .badge.bias { background:rgba(244,114,182,0.10); color:var(--pink); }
+  .issue-card .badge.security { background:rgba(239,68,68,0.10); color:#ef4444; }
   .issue-card .problem { font-size:0.82rem; color:var(--text-bright); font-weight:600; }
   .issue-card .solution { font-size:0.78rem; }
   .issue-card .project-tag { font-size:0.68rem; color:var(--accent); }
@@ -291,7 +292,7 @@
     <div class="hero-stat"><div class="num" data-count="7">0</div><div class="label">Modules</div></div>
     <div class="hero-stat"><div class="num" data-count="61000" data-display="61K+">0</div><div class="label">Graph Nodes</div></div>
     <div class="hero-stat"><div class="num" data-count="40000" data-display="40K">0</div><div class="label">LOC</div></div>
-    <div class="hero-stat"><div class="num" data-count="1484" data-separator="true">0</div><div class="label">Tests</div></div>
+    <div class="hero-stat"><div class="num" data-count="2816" data-separator="true">0</div><div class="label">Tests</div></div>
     <div class="hero-stat"><div class="num" data-count="87" data-suffix="%">0</div><div class="label">Cost Reduction</div></div>
   </div>
 
@@ -420,18 +421,20 @@
         &nbsp;&nbsp;&darr;<br>
         <span class="dim">[검색층]</span> Dual-Retriever: <span class="hl">Local + Global + Temporal</span><br>
         &nbsp;&nbsp;&darr;<br>
-        <span class="dim">[MCP층]</span> <span class="hl">15</span>개 도구
+        <span class="dim">[MCP층]</span> <span class="hl">20+</span>개 도구
       </div>
     </div>
 
     <div class="sub-section">
-      <h4>모노레포 (5개 패키지)</h4>
+      <h4>모노레포 (7개 패키지)</h4>
       <table>
         <tr><td><code>core</code></td><td>엔티티 추출, 중복 감지, Claim 추적, MetaEdge</td></tr>
         <tr><td><code>crawler</code></td><td>HN/arXiv/GitHub 크롤러, 인제스트 파이프라인</td></tr>
         <tr><td><code>graphrag</code></td><td>Dual-Retriever, 서브그래프 탐색, 답변 합성</td></tr>
         <tr><td><code>ingester</code></td><td>ear 아카이브 &rarr; 그래프 임포터</td></tr>
-        <tr><td><code>mcp-server</code></td><td>MCP 프로토콜 서버 (15개 도구)</td></tr>
+        <tr><td><code>mcp-server</code></td><td>MCP 프로토콜 서버 (20+개 도구)</td></tr>
+        <tr><td><code>search</code></td><td>자기진화 레퍼런스 파이프라인 (GitHub/npm/PyPI/arXiv)</td></tr>
+        <tr><td><code>explorer</code></td><td>인터랙티브 그래프 시각화 (D3.js)</td></tr>
       </table>
     </div>
 
@@ -596,7 +599,7 @@
 <div class="container">
   <div class="reveal">
     <div class="section-label">Engineering Challenges</div>
-    <h2>13개의 문제, <em>직접 해결</em></h2>
+    <h2>15개의 문제, <em>직접 해결</em></h2>
   </div>
   <div class="issue-grid reveal">
     <div class="issue-card"><div class="badge env">환경</div><div><div class="problem">CRLF &rarr; macOS cron 실패</div><div class="solution">전체 LF 변환</div><div class="project-tag">brain</div></div></div>
@@ -612,6 +615,8 @@
     <div class="issue-card"><div class="badge stability">안정성</div><div><div class="problem">Discord 봇 오프라인</div><div class="solution">LAZY 제거 + 플러그인 해결</div><div class="project-tag">ear</div></div></div>
     <div class="issue-card"><div class="badge stability">안정성</div><div><div class="problem">Stale lock 파일</div><div class="solution">자동 정리 로직</div><div class="project-tag">sleep</div></div></div>
     <div class="issue-card"><div class="badge bias">편향</div><div><div class="problem">HN+OpenAI 편중</div><div class="solution">25 RSS 균등 + 30% 캡</div><div class="project-tag">brain</div></div></div>
+    <div class="issue-card"><div class="badge security">보안</div><div><div class="problem">Cypher injection 4곳</div><div class="solution">allowlist 검증 + 파라미터화</div><div class="project-tag">brain</div></div></div>
+    <div class="issue-card"><div class="badge security">보안</div><div><div class="problem">크롤링 콘텐츠 인젝션</div><div class="solution">Content Guard (10패턴 + 유니코드)</div><div class="project-tag">brain</div></div></div>
   </div>
 </div>
 </section>
