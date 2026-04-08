@@ -31,7 +31,7 @@ The /search skill is what makes it self-evolving: it finds patterns from other r
 
 Demo GIF in the README shows the full flow: clone → configure → crawl → query.
 
-Real numbers: 60K+ nodes, 150K+ relationships, $0.60/day, 1,482 tests, every query <100ms, entity confidence scoring (0.0-1.0), built-in performance monitoring.
+Real numbers: 60K+ nodes, 150K+ relationships, $0.60/day, 2,800+ tests, every query <100ms, entity confidence scoring (0.0-1.0), built-in performance monitoring.
 
 4 presets included (AI/ML, Web Dev, Finance, Biotech). Creating a custom one takes ~10 minutes — it's just YAML.
 

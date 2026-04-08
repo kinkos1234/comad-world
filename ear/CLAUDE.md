@@ -120,7 +120,19 @@ WebSearch 도구를 활용하여 최신 관련 자료를 찾아 링크합니다.
 
 ## 세션 시작 시 다이제스트
 
-시작 시 `digests/{어제날짜}-digest.html`이 없으면 `archive/`의 어제 파일들과 `digest-template.html`로 다이제스트를 생성하고 Discord `1484784808247689237`에 요약을 보내라. 있으면 스킵.
+시작 시 다음 순서로 다이제스트를 처리한다:
+
+1. `digests/{어제날짜}-digest.html` 파일 확인
+2. **파일이 없거나, 파일 크기가 1KB 미만이면** (깨진 파일) → 다이제스트 생성
+3. 파일이 있고 1KB 이상이면 → 스킵
+
+생성 방법:
+- `archive/{어제날짜}-*.md` 파일들을 모두 읽는다
+- `digest-template.html`의 구조를 참조하여 HTML 다이제스트를 생성한다
+- `{{DATE}}`, `{{MUST_COUNT}}`, `{{RECOMMEND_COUNT}}`, `{{NOTE_COUNT}}`, `{{TOTAL_COUNT}}`, `{{ARTICLES}}` 플레이스홀더를 실제 값으로 치환한다
+- 각 기사는 frontmatter의 relevance(필독/추천/참고)에 따라 색상 dot을 부여한다
+- 완성된 HTML을 `digests/{어제날짜}-digest.html`에 저장한다
+- Discord 채널 `1484784808247689237`에 "📰 {어제날짜} 다이제스트: 필독 N건, 추천 N건, 참고 N건" 요약을 보낸다
 
 ## 아카이브 형식
 

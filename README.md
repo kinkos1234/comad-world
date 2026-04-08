@@ -43,7 +43,7 @@
 - **Entity-level confidence scoring** (0.0–1.0) for trust boundary tracking
 - **Built-in performance monitoring** via `comad_brain_perf` MCP tool
 - **$0.60/day** operating cost (down from $4.50 after optimization)
-- **1,482** tests across all modules
+- **2,800+** tests across all modules (Brain 152 + Eye 2,664)
 
 </details>
 
@@ -201,7 +201,7 @@ Discord bot that detects articles, classifies relevance, and archives with struc
 
 - **3-tier relevance**: Must-Read (~15%) → Recommended (~65%) → Reference (~20%)
 - **Configurable categories** from `comad.config.yaml`
-- **Daily digest** auto-generation in HTML
+- **Daily digest** auto-generation in HTML (generated on bot session start)
 - **YAML frontmatter** for every archived article
 
 ### Eye — Prediction Simulation Engine
@@ -406,7 +406,8 @@ comad-world/
 │   │   ├── graphrag/        # Dual-retriever search engine
 │   │   ├── ingester/        # Content importer
 │   │   ├── mcp-server/      # 20+ MCP tools
-│   │   └── search/          # Self-evolving reference discovery
+│   │   ├── search/          # Self-evolving reference discovery
+│   │   └── explorer/        # Interactive graph visualization (D3.js)
 │   ├── docker-compose.yml
 │   └── package.json
 ├── ear/                     # Content curator (Claude Code agent)
