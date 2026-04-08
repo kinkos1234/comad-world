@@ -1,0 +1,16 @@
+{
+  "name": "@comad-eye/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "typecheck": "bun x tsc --noEmit --skipLibCheck"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.2.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2"
+  }
+}
