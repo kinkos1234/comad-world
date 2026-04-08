@@ -11,6 +11,9 @@
   "dependencies": {
     "playwright": "^1.58.0"
   },
+  "scripts": {
+    "typecheck": "bun x tsc --noEmit --skipLibCheck"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   }

@@ -26,22 +26,22 @@ const BOOTSTRAP_LEVERS: LeverDef[] = [
   {
     name: "geeknews-ingestion",
     lever_type: "ingestion",
-    config: { source: "ccd-geeknews/archive", format: "markdown+frontmatter", schedule: "30 9 * * *" },
+    config: { source: "ccd-geeknews/archive", format: "markdown+frontmatter" },
   },
   {
     name: "arxiv-crawl",
     lever_type: "ingestion",
-    config: { source: "arXiv", categories: ["cs.AI", "cs.SE", "cs.PL"], schedule: "0 9 * * *" },
+    config: { source: "arXiv", categories: ["cs.AI", "cs.SE", "cs.PL"] },
   },
   {
     name: "github-crawl",
     lever_type: "ingestion",
-    config: { source: "GitHub trending", schedule: "0 11 * * 1" },
+    config: { source: "GitHub trending" },
   },
   {
     name: "blog-crawl",
     lever_type: "ingestion",
-    config: { source: "HN/dev.to/tech blogs", schedule: "0 10 * * *" },
+    config: { source: "HN/dev.to/tech blogs" },
   },
   {
     name: "entity-extraction",
@@ -51,17 +51,17 @@ const BOOTSTRAP_LEVERS: LeverDef[] = [
   {
     name: "community-detection",
     lever_type: "enrichment",
-    config: { algorithm: "label-propagation", levels: 3, schedule: "weekly" },
+    config: { algorithm: "label-propagation", levels: 3 },
   },
   {
     name: "claim-verification",
     lever_type: "enrichment",
-    config: { method: "cross-reference", threshold: 0.3, schedule: "weekly" },
+    config: { method: "cross-reference", threshold: 0.3 },
   },
   {
     name: "dedup-resolution",
     lever_type: "enrichment",
-    config: { method: "name-similarity+context", threshold: 0.85, schedule: "weekly" },
+    config: { method: "name-similarity+context", threshold: 0.85 },
   },
 ];
 
@@ -69,7 +69,6 @@ interface MetaLeverDef {
   name: string;
   manages: string[];
   policy: string;
-  schedule: string;
 }
 
 const BOOTSTRAP_META_LEVERS: MetaLeverDef[] = [
@@ -77,19 +76,16 @@ const BOOTSTRAP_META_LEVERS: MetaLeverDef[] = [
     name: "daily-comad-brain-pipeline",
     manages: ["geeknews-ingestion", "arxiv-crawl", "blog-crawl", "entity-extraction"],
     policy: "Sequential execution: ingest → extract → validate. Retry failed levers up to 2x.",
-    schedule: "0 9 * * *",
   },
   {
     name: "weekly-enrichment",
     manages: ["community-detection", "claim-verification", "dedup-resolution", "github-crawl"],
     policy: "Run all enrichment levers. Generate community summaries. Flag low-confidence claims.",
-    schedule: "0 3 * * 0",
   },
   {
     name: "quality-monitor",
     manages: ["entity-extraction", "claim-verification"],
     policy: "Monitor extraction quality. If F1 < 0.7, trigger autoresearch optimization loop.",
-    schedule: "0 0 * * *",
   },
 ];
 
@@ -118,9 +114,9 @@ export async function bootstrapMetaLevers(): Promise<void> {
     await write(
       `MERGE (ml:MetaLever {uid: $uid})
        ON CREATE SET ml.name = $name, ml.manages = $manages,
-                     ml.policy = $policy, ml.schedule = $schedule, ml.active = true
-       ON MATCH SET ml.policy = $policy, ml.schedule = $schedule`,
-      { uid, name: ml.name, manages: ml.manages, policy: ml.policy, schedule: ml.schedule }
+                     ml.policy = $policy, ml.active = true
+       ON MATCH SET ml.policy = $policy`,
+      { uid, name: ml.name, manages: ml.manages, policy: ml.policy }
     );
 
     // Create MANAGES relationships to Levers

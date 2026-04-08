@@ -1,3 +1,4 @@
+<!-- NOTE: This trigger is superseded by Nexus autonomous trigger #15 when Nexus is active -->
 ### T1. 상황 검토 & 개선 제안 (비전공자 모드)
 
 **감지 키워드:** "상황 검토", "검토해봐", "개선 가능성", "뭐 개선할 수 있어?", "어디가 문제야?", "health check", "진단해봐", "분석해봐", "어떤 실험 할 수 있어?"

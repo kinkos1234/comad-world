@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "start": "bun run src/index.ts"
+    "start": "bun run src/index.ts",
+    "typecheck": "bun x tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
