@@ -12,6 +12,7 @@
 
 import { startTimer, recordTiming } from "@comad-brain/core";
 import { searchGitHub } from "./github-search.js";
+import { searchMultiSource } from "./multi-source.js";
 import { evaluateRepos } from "./evaluator.js";
 import { archiveRepos, loadReferences } from "./archiver.js";
 import { createAdoptionPlan, formatPlan } from "./planner.js";
@@ -40,6 +41,8 @@ export type {
 };
 
 export { searchGitHub } from "./github-search.js";
+export { searchMultiSource } from "./multi-source.js";
+export type { SearchSource, MultiSourceOptions } from "./multi-source.js";
 export { evaluateRepos } from "./evaluator.js";
 export { archiveRepos, loadReferences } from "./archiver.js";
 export { createAdoptionPlan, formatPlan } from "./planner.js";
@@ -74,9 +77,25 @@ export async function search(
 ): Promise<SearchResult> {
   const totalTimer = startTimer();
 
-  // Step 1: SEARCH
-  console.error(`[search] Searching GitHub for: "${query}"`);
-  const candidates = await searchGitHub(query, constraints);
+  // Step 1: SEARCH (GitHub + npm + PyPI + arXiv in parallel)
+  console.error(`[search] Searching multiple sources for: "${query}"`);
+  const [githubCandidates, multiResults] = await Promise.all([
+    searchGitHub(query, constraints),
+    searchMultiSource(query, { limit: 5 }),
+  ]);
+
+  // Merge results, deduplicate by URL
+  const seen = new Set<string>();
+  const candidates = [...githubCandidates];
+  for (const c of candidates) seen.add(c.url);
+  for (const result of multiResults) {
+    for (const c of result.candidates) {
+      if (!seen.has(c.url)) {
+        seen.add(c.url);
+        candidates.push(c);
+      }
+    }
+  }
 
   try {
     validateCandidates(candidates);

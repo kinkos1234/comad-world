@@ -104,25 +104,67 @@ function scoreQuality(c: RepoCandidate): number {
 }
 
 async function scoreRelevance(c: RepoCandidate): Promise<number> {
-  // Use heuristic by default. Neo4j graph matching is Phase 2
-  // (requires connection pool management to avoid blocking)
-  return scoreRelevanceHeuristic(c);
-}
+  // Try config-driven keywords first, then hardcoded fallback
+  const configKeywords = await loadConfigKeywords();
+  const keywords = configKeywords.length > 0 ? configKeywords : FALLBACK_KEYWORDS;
 
-function scoreRelevanceHeuristic(c: RepoCandidate): number {
-  // Fallback: keyword matching against comad-world domains
-  const comadKeywords = [
-    "knowledge graph", "neo4j", "graphrag", "rag", "mcp",
-    "entity extraction", "ontology", "crawler", "rss",
-    "simulation", "prediction", "analysis", "discord",
-    "agent", "claude", "anthropic", "llm", "embedding",
-  ];
   const text = `${c.description} ${c.topics.join(" ")} ${c.readme_preview}`.toLowerCase();
   let matches = 0;
-  for (const kw of comadKeywords) {
-    if (text.includes(kw)) matches++;
+  for (const kw of keywords) {
+    if (text.includes(kw.toLowerCase())) matches++;
   }
   return Math.min(matches / 5, 1); // 5+ matches = perfect relevance
+}
+
+const FALLBACK_KEYWORDS = [
+  "knowledge graph", "neo4j", "graphrag", "rag", "mcp",
+  "entity extraction", "ontology", "crawler", "rss",
+  "simulation", "prediction", "analysis", "discord",
+  "agent", "claude", "anthropic", "llm", "embedding",
+];
+
+let _configKeywordsCache: string[] | null = null;
+
+async function loadConfigKeywords(): Promise<string[]> {
+  if (_configKeywordsCache) return _configKeywordsCache;
+  try {
+    const { readFile } = await import("fs/promises");
+    const { join } = await import("path");
+    const configPath = join(import.meta.dir, "../../../../comad.config.yaml");
+    const yaml = await readFile(configPath, "utf-8");
+
+    // Extract keywords from interests.high and interests.medium
+    const keywords: string[] = [];
+    const kwRegex = /keywords:\s*\[([^\]]+)\]/g;
+    let match;
+    while ((match = kwRegex.exec(yaml)) !== null) {
+      const items = match[1].split(",").map(s => s.trim().replace(/^["']|["']$/g, ""));
+      keywords.push(...items);
+    }
+
+    // Also extract from sources.hn_queries
+    const hnSection = yaml.match(/hn_queries:\s*\n((?:\s+-[^\n]+\n?)*)/);
+    if (hnSection) {
+      const hnItems = hnSection[1].match(/- "([^"]+)"/g);
+      if (hnItems) {
+        keywords.push(...hnItems.map(s => s.replace(/^- "|"$/g, "")));
+      }
+    }
+
+    // Also extract from must_read_stack
+    const stackSection = yaml.match(/must_read_stack:\s*\n((?:\s+-[^\n]+\n?)*)/);
+    if (stackSection) {
+      const stackItems = stackSection[1].match(/- "([^"]+)"/g);
+      if (stackItems) {
+        keywords.push(...stackItems.map(s => s.replace(/^- "|"$/g, "")));
+      }
+    }
+
+    _configKeywordsCache = [...new Set(keywords)];
+    return _configKeywordsCache;
+  } catch {
+    return [];
+  }
 }
 
 // ── Main Evaluator ──

@@ -5,7 +5,7 @@
  * and as local JSON files in data/references/
  */
 
-import { startTimer, recordTiming } from "@comad-brain/core";
+import { startTimer, recordTiming, write as neo4jWrite } from "@comad-brain/core";
 import type { EvaluatedRepo, ReferenceCard } from "./types.js";
 import { join } from "path";
 import { mkdir, writeFile, readFile } from "fs/promises";
@@ -43,8 +43,52 @@ function detectApplicability(repo: EvaluatedRepo): string[] {
   return applicable.length > 0 ? applicable : ["general"];
 }
 
-// TODO Phase 2: storeInGraph() — Neo4j graph storage for reference cards
-// Requires connection pool management to avoid blocking when Neo4j is down.
+/**
+ * Store reference card in Neo4j graph.
+ * Creates a ReferenceCard node linked to pattern and module nodes.
+ * Fails silently if Neo4j is unavailable (local JSON is the fallback).
+ */
+async function storeInGraph(card: ReferenceCard): Promise<string | undefined> {
+  try {
+    const c = card.repo.candidate;
+    const records = await neo4jWrite(
+      `MERGE (r:ReferenceCard {url: $url})
+       SET r.name = $name,
+           r.description = $description,
+           r.stars = $stars,
+           r.language = $language,
+           r.trust_score = $trust,
+           r.quality_score = $quality,
+           r.relevance_score = $relevance,
+           r.verdict = $verdict,
+           r.verdict_reason = $reason,
+           r.patterns = $patterns,
+           r.applicable_to = $applicable,
+           r.archived_at = datetime($archived_at),
+           r.updated_at = datetime()
+       RETURN elementId(r) AS nodeId`,
+      {
+        url: c.url,
+        name: c.name,
+        description: c.description,
+        stars: c.stars,
+        language: c.language,
+        trust: card.repo.trust_score,
+        quality: card.repo.quality_score,
+        relevance: card.repo.relevance_score,
+        verdict: card.repo.verdict,
+        reason: card.repo.verdict_reason,
+        patterns: card.extracted_patterns,
+        applicable: card.applicable_to,
+        archived_at: card.archived_at,
+      }
+    );
+    return records[0]?.get("nodeId") as string | undefined;
+  } catch (e: any) {
+    console.error(`[search:graph] Neo4j write failed (falling back to local): ${e.message}`);
+    return undefined;
+  }
+}
 
 /**
  * Store reference card as local JSON
@@ -78,7 +122,11 @@ export async function archiveRepos(
       archived_at: new Date().toISOString(),
     };
 
-    // Store locally (graph storage requires Neo4j — Phase 2)
+    // Store in Neo4j graph (fails silently if unavailable)
+    const nodeId = await storeInGraph(card);
+    if (nodeId) card.brain_node_id = nodeId;
+
+    // Always store locally as backup
     await storeLocal(card);
 
     cards.push(card);
