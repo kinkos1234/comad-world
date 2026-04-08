@@ -7,14 +7,14 @@
  */
 
 const THREAT_PATTERNS: [RegExp, string][] = [
-  [/ignore\s+(previous|all|above|prior)\s+instructions/i, "prompt_injection"],
+  [/ignore\s+(?:all\s+)?(?:previous\s+|above\s+|prior\s+)?instructions/i, "prompt_injection"],
   [/do\s+not\s+tell\s+the\s+user/i, "deception_hide"],
   [/system\s+prompt\s+override/i, "sys_prompt_override"],
   [/disregard\s+(your|all|any)\s+(instructions|rules|guidelines)/i, "disregard_rules"],
   [/act\s+as\s+(if|though)\s+you\s+(have\s+no|don't\s+have)\s+(restrictions|limits|rules)/i, "bypass_restrictions"],
   [/<!--[^>]*(?:ignore|override|system|secret|hidden)[^>]*-->/i, "html_comment_injection"],
   [/<\s*div\s+style\s*=\s*["'].*display\s*:\s*none/i, "hidden_div"],
-  [/translate\s+.*\s+into\s+.*\s+and\s+(execute|run|eval)/i, "translate_execute"],
+  [/translate\s+.*into\s+.*and\s+(execute|run|eval)/i, "translate_execute"],
   [/curl\s+[^\n]*\$\{?\w*(KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL|API)/i, "exfil_curl"],
   [/cat\s+[^\n]*(\.env|credentials|\.netrc|\.pgpass)/i, "read_secrets"],
 ];
