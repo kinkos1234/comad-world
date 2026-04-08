@@ -8,7 +8,7 @@ import {
 } from "@comad-brain/core";
 import type { ExtractedEntities } from "@comad-brain/core";
 
-const ARCHIVE_DIR = process.env.ARCHIVE_DIR ?? `${process.env.HOME}/Programmer/ccd-geeknews/archive`;
+const ARCHIVE_DIR = process.env.ARCHIVE_DIR ?? `${process.env.HOME}/Programmer/01-comad/comad-world/ear/archive`;
 const STATE_FILE = join(import.meta.dir, "../../.last-ingest-time");
 
 // ============================================

@@ -25,6 +25,30 @@ const server = new McpServer({
   version: "0.1.0",
 });
 
+// ── Injection Prevention ──
+const ALLOWED_LABELS = new Set([
+  "Article", "Paper", "Repo", "Technology", "Person",
+  "Organization", "Topic", "Claim", "Community", "ReferenceCard",
+]);
+const ALLOWED_RELATIONS = new Set([
+  "DISCUSSES", "USES_TECHNOLOGY", "TAGGED_WITH", "CLAIMS",
+  "CITES", "AUTHORED_BY", "AFFILIATED_WITH", "MEMBER_OF",
+  "SUPPORTS", "CONTRADICTS", "RELATED_TO", "BUILT_ON",
+  "ALTERNATIVE_TO", "OUTPERFORMS", "PART_OF",
+]);
+function safeLabel(label: string): boolean {
+  return /^[A-Za-z_]\w*$/.test(label) && ALLOWED_LABELS.has(label);
+}
+function safeRel(rel: string): boolean {
+  return /^[A-Z_][A-Z0-9_]*$/.test(rel) && ALLOWED_RELATIONS.has(rel);
+}
+function clampLimit(n: number | undefined, fallback: number, max = 500): number {
+  return Math.max(1, Math.min(n ?? fallback, max));
+}
+function toolError(msg: string) {
+  return { content: [{ type: "text" as const, text: JSON.stringify({ error: msg }) }] };
+}
+
 // ============================================
 // Tool: comad_brain_search
 // ============================================
@@ -37,8 +61,9 @@ server.tool(
     limit: z.number().optional().describe("최대 결과 수 (기본 10)"),
   },
   async ({ query: q, type, limit }) => {
+    try {
     const elapsed = startTimer();
-    const maxResults = limit ?? 10;
+    const maxResults = clampLimit(limit, 10);
 
     let records;
     if (type) {
@@ -50,8 +75,8 @@ server.tool(
                 coalesce(node.name, node.title, node.full_name) AS name,
                 node.summary AS summary, node.relevance AS relevance,
                 node.published_date AS date, score
-         ORDER BY score DESC LIMIT ${maxResults}`,
-        { q, type }
+         ORDER BY score DESC LIMIT toInteger($maxResults)`,
+        { q, type, maxResults }
       );
     } else {
       records = await query(
@@ -61,8 +86,8 @@ server.tool(
                 coalesce(node.name, node.title, node.full_name) AS name,
                 node.summary AS summary, node.relevance AS relevance,
                 node.published_date AS date, score
-         ORDER BY score DESC LIMIT ${maxResults}`,
-        { q }
+         ORDER BY score DESC LIMIT toInteger($maxResults)`,
+        { q, maxResults }
       );
     }
 
@@ -83,6 +108,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -96,6 +124,7 @@ server.tool(
     question: z.string().describe("질문"),
   },
   async ({ question }) => {
+    try {
     const elapsed = startTimer();
     const answer = await ask(question);
     const ms = elapsed();
@@ -104,6 +133,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: answer }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -118,6 +150,7 @@ server.tool(
     depth: z.number().optional().describe("탐색 깊이 (기본 2)"),
   },
   async ({ entity, depth }) => {
+    try {
     const elapsed = startTimer();
     const resolved = await resolveEntities([entity]);
     if (resolved.length === 0) {
@@ -134,6 +167,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: context }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -149,16 +185,18 @@ server.tool(
     limit: z.number().optional().describe("최대 결과 수 (기본 20)"),
   },
   async ({ days, type, limit }) => {
+    try {
+    if (type && !safeLabel(type)) return toolError(`Invalid type: ${type}`);
     const elapsed = startTimer();
     const d = days ?? 7;
-    const maxResults = limit ?? 20;
+    const maxResults = clampLimit(limit, 20);
     const dateFilter = new Date(Date.now() - d * 86400000).toISOString().split("T")[0];
 
     const cypher = type
-      ? `MATCH (n:${type}) WHERE n.published_date >= $since RETURN n ORDER BY n.published_date DESC LIMIT ${maxResults}`
-      : `MATCH (n) WHERE n.published_date IS NOT NULL AND n.published_date >= $since RETURN n ORDER BY n.published_date DESC LIMIT ${maxResults}`;
+      ? `MATCH (n:${type}) WHERE n.published_date >= $since RETURN n ORDER BY n.published_date DESC LIMIT toInteger($maxResults)`
+      : `MATCH (n) WHERE n.published_date IS NOT NULL AND n.published_date >= $since RETURN n ORDER BY n.published_date DESC LIMIT toInteger($maxResults)`;
 
-    const records = await query(cypher, { since: dateFilter });
+    const records = await query(cypher, { since: dateFilter, maxResults });
 
     const results = records.map((r) => {
       const node = r.get("n");
@@ -178,6 +216,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -189,6 +230,7 @@ server.tool(
   "지식 그래프 통계",
   {},
   async () => {
+    try {
     const elapsed = startTimer();
     const nodeCountRecs = await query(
       `MATCH (n) RETURN labels(n)[0] AS label, count(n) AS cnt ORDER BY cnt DESC`
@@ -221,6 +263,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: JSON.stringify(stats, null, 2) }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -235,6 +280,8 @@ server.tool(
     relation_type: z.string().optional().describe("관계 유형 필터 (예: DISCUSSES, USES_TECHNOLOGY)"),
   },
   async ({ name, relation_type }) => {
+    try {
+    if (relation_type && !safeRel(relation_type)) return toolError(`Invalid relation_type: ${relation_type}`);
     const elapsed = startTimer();
     let cypher: string;
     const params: Record<string, unknown> = { name: name.toLowerCase() };
@@ -270,6 +317,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -283,6 +333,7 @@ server.tool(
     days: z.number().optional().describe("최근 N일 (기본 7)"),
   },
   async ({ days }) => {
+    try {
     const elapsed = startTimer();
     const d = days ?? 7;
     const since = new Date(Date.now() - d * 86400000).toISOString().split("T")[0];
@@ -324,6 +375,9 @@ server.tool(
         text: JSON.stringify({ technologies: techTrends, topics: topicTrends, period_days: d }, null, 2),
       }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -340,11 +394,12 @@ server.tool(
     limit: z.number().optional().describe("최대 결과 수 (기본 20)"),
   },
   async ({ claim_type, min_confidence, entity, limit }) => {
-    const maxResults = limit ?? 20;
+    try {
+    const maxResults = clampLimit(limit, 20);
     const minConf = min_confidence ?? 0.0;
 
     let cypher: string;
-    const params: Record<string, unknown> = { minConf };
+    const params: Record<string, unknown> = { minConf, maxResults };
 
     if (entity) {
       cypher = `MATCH (c:Claim)
@@ -355,7 +410,7 @@ server.tool(
                 RETURN c.uid AS uid, c.content AS content, c.claim_type AS claim_type,
                        c.confidence AS confidence, c.related_entities AS entities,
                        coalesce(source.title, source.uid) AS source_title
-                ORDER BY c.confidence DESC LIMIT ${maxResults}`;
+                ORDER BY c.confidence DESC LIMIT toInteger($maxResults)`;
       params.entity = entity;
       if (claim_type) params.claim_type = claim_type;
     } else if (claim_type) {
@@ -365,7 +420,7 @@ server.tool(
                 RETURN c.uid AS uid, c.content AS content, c.claim_type AS claim_type,
                        c.confidence AS confidence, c.related_entities AS entities,
                        coalesce(source.title, source.uid) AS source_title
-                ORDER BY c.confidence DESC LIMIT ${maxResults}`;
+                ORDER BY c.confidence DESC LIMIT toInteger($maxResults)`;
       params.claim_type = claim_type;
     } else {
       cypher = `MATCH (c:Claim)
@@ -374,7 +429,7 @@ server.tool(
                 RETURN c.uid AS uid, c.content AS content, c.claim_type AS claim_type,
                        c.confidence AS confidence, c.related_entities AS entities,
                        coalesce(source.title, source.uid) AS source_title
-                ORDER BY c.confidence DESC LIMIT ${maxResults}`;
+                ORDER BY c.confidence DESC LIMIT toInteger($maxResults)`;
     }
 
     const records = await query(cypher, params);
@@ -390,6 +445,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -405,6 +463,7 @@ server.tool(
     run_detection: z.boolean().optional().describe("true면 커뮤니티 탐지 재실행"),
   },
   async ({ level, name, run_detection }) => {
+    try {
     if (run_detection) {
       const result = await runCommunityDetection();
       return {
@@ -460,6 +519,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -474,7 +536,8 @@ server.tool(
     depth: z.number().optional().describe("영향 분석 깊이 (기본 3)"),
   },
   async ({ entity, depth }) => {
-    const maxDepth = depth ?? 3;
+    try {
+    const maxDepth = Math.min(depth ?? 3, 5);
 
     // Find the entity
     const entityRecords = await query(
@@ -556,6 +619,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: JSON.stringify(impact, null, 2) }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -571,6 +637,7 @@ server.tool(
     min_change: z.number().optional().describe("trends 최소 변화량 (기본 0.1)"),
   },
   async ({ action, claim_uid, min_change }) => {
+    try {
     if (action === "init") {
       const count = await initClaimHistory();
       return {
@@ -596,6 +663,9 @@ server.tool(
     }
 
     return { content: [{ type: "text" as const, text: "알 수 없는 action입니다." }] };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -612,6 +682,7 @@ server.tool(
     min_similarity: z.number().optional().describe("find 최소 유사도 (기본 0.85)"),
   },
   async ({ action, keep_uid, remove_uid, min_similarity }) => {
+    try {
     if (action === "find") {
       const candidates = await findDuplicates(min_similarity ?? 0.85);
       return {
@@ -651,6 +722,9 @@ server.tool(
     }
 
     return { content: [{ type: "text" as const, text: "알 수 없는 action입니다." }] };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -664,6 +738,7 @@ server.tool(
     action: z.string().optional().describe("조회 대상: meta_edges, levers, evaluate, enrich (기본: 전체)"),
   },
   async ({ action }) => {
+    try {
     if (action === "enrich") {
       const results: Record<string, unknown> = {};
 
@@ -719,6 +794,9 @@ server.tool(
         }, null, 2),
       }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -732,6 +810,7 @@ server.tool(
     entity: z.string().describe("분석할 엔티티 이름"),
   },
   async ({ entity }) => {
+    try {
     const result = await analyzeEntityImpact(entity);
     return {
       content: [{
@@ -739,6 +818,9 @@ server.tool(
         text: JSON.stringify(result, null, 2),
       }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -753,6 +835,7 @@ server.tool(
     entity: z.string().optional().describe("특정 엔티티 관련 모순만 필터"),
   },
   async ({ action, entity }) => {
+    try {
     if (action === "detect") {
       const count = await detectContradictions();
       return {
@@ -797,6 +880,9 @@ server.tool(
         text: JSON.stringify({ total: contradictions.length, contradictions }, null, 2),
       }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -812,6 +898,8 @@ server.tool(
     limit: z.number().optional().describe("노드 수 제한 (기본: 100)"),
   },
   async ({ types, include_edges = true, limit = 100 }) => {
+    try {
+    if (types && types.some(t => !safeLabel(t))) return toolError(`Invalid type in: ${types.join(", ")}`);
     let nodeQuery = `MATCH (n)`;
     const params: Record<string, unknown> = { limit };
     if (types && types.length > 0) {
@@ -855,6 +943,9 @@ server.tool(
         text: JSON.stringify({ nodes: nodes.length, edges: edges.length, data: { nodes, edges } }, null, 2),
       }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -873,6 +964,7 @@ server.tool(
     threshold_days: z.number().optional().describe("stale 판단 기준일 (기본 90)"),
   },
   async ({ action, date, entity, threshold_days }) => {
+    try {
     if (action === "at") {
       const d = date ? new Date(date) : new Date();
       const claims = await getClaimsAt(d, entity);
@@ -936,6 +1028,9 @@ server.tool(
     }
 
     return { content: [{ type: "text" as const, text: "알 수 없는 action입니다." }] };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -950,6 +1045,7 @@ server.tool(
     include_prune: z.boolean().optional().describe("정리 후보도 포함 (기본 false)"),
   },
   async ({ threshold_days, include_prune }) => {
+    try {
     const days = threshold_days ?? 90;
     const stale = await findStaleClaims(days);
 
@@ -973,6 +1069,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -989,6 +1088,7 @@ server.tool(
     threshold_days: z.number().optional().describe("prune 기준일 (기본 180)"),
   },
   async ({ action, threshold_days }) => {
+    try {
     const act = action ?? "full";
 
     if (act === "full") {
@@ -1042,6 +1142,9 @@ server.tool(
     }
 
     return { content: [{ type: "text" as const, text: "알 수 없는 action입니다." }] };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 
@@ -1055,6 +1158,7 @@ server.tool(
     reset: z.boolean().optional().describe("true면 통계 초기화"),
   },
   async ({ reset }) => {
+    try {
     if (reset) {
       resetTimings();
       return {
@@ -1066,6 +1170,9 @@ server.tool(
     return {
       content: [{ type: "text" as const, text: JSON.stringify(timings, null, 2) }],
     };
+    } catch (e: any) {
+      return toolError(e.message);
+    }
   }
 );
 

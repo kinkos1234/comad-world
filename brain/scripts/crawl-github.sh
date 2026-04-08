@@ -3,6 +3,7 @@ export PATH="$HOME/.local/bin:$HOME/.bun/bin:$PATH"
 export SHELL="/bin/zsh"
 export USER="jhkim"
 export TERM="xterm-256color"
+export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
 
 TODAY=$(date +%Y-%m-%d)
 OUTFILE="/tmp/ko-github-${TODAY}.json"

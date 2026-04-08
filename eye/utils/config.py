@@ -81,6 +81,11 @@ class AnalysisSettings(BaseModel):
             "structural", "causal", "cross_space",
         ]
     )
+    enabled_lenses: list[str] = Field(
+        default_factory=lambda: [
+            "sun_tzu", "adam_smith", "taleb", "kahneman", "meadows",
+        ]
+    )
     parallel: bool = True  # 독립 공간 병렬 실행
 
 

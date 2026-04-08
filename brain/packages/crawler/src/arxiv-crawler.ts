@@ -11,6 +11,7 @@
  */
 
 import { writeFileSync } from "fs";
+import { getArxivCategories } from "./config-loader.js";
 
 const ARXIV_API = "http://export.arxiv.org/api/query";
 const S2_API = "https://api.semanticscholar.org/graph/v1";
@@ -26,8 +27,8 @@ interface ArxivPaper {
   abstract: string;
 }
 
-// Categories and their search weight
-const CATEGORIES: Array<{ cat: string; keywords: string[]; maxResults: number }> = [
+// Fallback categories if config-loader fails
+const FALLBACK_CATEGORIES: Array<{ cat: string; keywords: string[]; maxResults: number }> = [
   { cat: "cs.CL", keywords: ["language model", "transformer", "attention", "NLP", "text generation", "machine translation", "BERT", "GPT", "LLM"], maxResults: 800 },
   { cat: "cs.AI", keywords: ["artificial intelligence", "reasoning", "planning", "knowledge representation", "agent", "reinforcement learning"], maxResults: 600 },
   { cat: "cs.LG", keywords: ["deep learning", "neural network", "optimization", "generalization", "representation learning"], maxResults: 500 },
@@ -39,6 +40,19 @@ const CATEGORIES: Array<{ cat: string; keywords: string[]; maxResults: number }>
   { cat: "cs.SD", keywords: ["speech", "audio", "voice", "TTS", "ASR"], maxResults: 100 },
   { cat: "stat.ML", keywords: ["Bayesian", "probabilistic", "causal", "statistical learning"], maxResults: 50 },
 ];
+
+// Load from config, fall back to hardcoded values
+let CATEGORIES: Array<{ cat: string; keywords: string[]; maxResults: number }>;
+try {
+  CATEGORIES = getArxivCategories().map(c => ({
+    cat: c.category,
+    keywords: c.keywords,
+    maxResults: c.max_results,
+  }));
+} catch {
+  console.warn("⚠ config-loader failed for arxiv categories, using fallback");
+  CATEGORIES = FALLBACK_CATEGORIES;
+}
 
 async function searchArxiv(query: string, start: number, maxResults: number): Promise<string> {
   const params = new URLSearchParams({

@@ -11,9 +11,12 @@
  */
 
 import { writeFileSync } from "fs";
+import { getGitHubConfig } from "./config-loader.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN ?? "";
-const TOPICS = [
+
+// Fallback values if config-loader fails
+const FALLBACK_TOPICS = [
   "machine-learning", "deep-learning", "llm", "large-language-model",
   "natural-language-processing", "computer-vision", "reinforcement-learning",
   "transformer", "diffusion-model", "rag", "knowledge-graph",
@@ -21,7 +24,7 @@ const TOPICS = [
   "generative-ai", "langchain", "llama", "gpt", "stable-diffusion",
 ];
 
-const SEARCH_QUERIES = [
+const FALLBACK_SEARCH_QUERIES = [
   "language model stars:>1000",
   "machine learning stars:>1000",
   "deep learning stars:>1000",
@@ -43,6 +46,19 @@ const SEARCH_QUERIES = [
   "text-to-image stars:>1000",
   "speech recognition AI stars:>1000",
 ];
+
+// Load from config, fall back to hardcoded values
+let TOPICS: string[];
+let SEARCH_QUERIES: string[];
+try {
+  const ghConfig = getGitHubConfig();
+  TOPICS = ghConfig.topics;
+  SEARCH_QUERIES = ghConfig.search_queries;
+} catch {
+  console.warn("⚠ config-loader failed for GitHub config, using fallback");
+  TOPICS = FALLBACK_TOPICS;
+  SEARCH_QUERIES = FALLBACK_SEARCH_QUERIES;
+}
 
 interface RepoItem {
   title: string;

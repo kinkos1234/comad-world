@@ -13,11 +13,12 @@
 
 import { writeFileSync } from "fs";
 import { fetchContent } from "@comad-brain/core";
+import { getAllKeywords, getRssFeeds, getHnQueries } from "./config-loader.js";
 
 const HN_API = "https://hacker-news.firebaseio.com/v0";
 
-// AI/ML relevance keywords (case-insensitive check)
-const AI_KEYWORDS = [
+// Fallback keywords if config-loader fails
+const FALLBACK_AI_KEYWORDS = [
   "ai", "llm", "gpt", "claude", "gemini", "transformer", "neural", "deep learning",
   "machine learning", "openai", "anthropic", "deepseek", "diffusion", "rag",
   "embedding", "fine-tun", "reinforcement", "agent", "reasoning", "multimodal",
@@ -29,8 +30,8 @@ const AI_KEYWORDS = [
   "attention", "bert", "lora", "qlora", "benchmark", "evaluation",
 ];
 
-// RSS feeds from key AI/tech blogs
-const RSS_FEEDS: Array<{ name: string; url: string }> = [
+// Fallback RSS feeds if config-loader fails
+const FALLBACK_RSS_FEEDS: Array<{ name: string; url: string }> = [
   { name: "OpenAI Blog", url: "https://openai.com/blog/rss.xml" },
   { name: "Anthropic Blog", url: "https://www.anthropic.com/blog/rss.xml" },
   { name: "Google AI Blog", url: "https://blog.google/technology/ai/rss/" },
@@ -57,6 +58,23 @@ const RSS_FEEDS: Array<{ name: string; url: string }> = [
   { name: "Microsoft Research", url: "https://www.microsoft.com/en-us/research/feed/" },
   { name: "NVIDIA AI Blog", url: "https://blogs.nvidia.com/feed/" },
 ];
+
+// Load from config, fall back to hardcoded values
+let AI_KEYWORDS: string[];
+try {
+  AI_KEYWORDS = getAllKeywords();
+} catch {
+  console.warn("⚠ config-loader failed for keywords, using fallback");
+  AI_KEYWORDS = FALLBACK_AI_KEYWORDS;
+}
+
+let RSS_FEEDS: Array<{ name: string; url: string }>;
+try {
+  RSS_FEEDS = getRssFeeds();
+} catch {
+  console.warn("⚠ config-loader failed for RSS feeds, using fallback");
+  RSS_FEEDS = FALLBACK_RSS_FEEDS;
+}
 
 interface ArticleItem {
   title: string;
@@ -124,7 +142,14 @@ async function crawlHackerNews(limit: number): Promise<ArticleItem[]> {
   }
 
   // Also search HN Algolia for historical AI content
-  for (const query of ["LLM", "GPT", "Claude AI", "transformer neural", "RAG retrieval", "AI agent", "deep learning"]) {
+  let hnQueries: string[];
+  try {
+    hnQueries = getHnQueries();
+  } catch {
+    hnQueries = ["LLM", "GPT", "Claude AI", "transformer neural", "RAG retrieval", "AI agent", "deep learning"];
+  }
+
+  for (const query of hnQueries) {
     if (articles.length >= limit) break;
 
     try {
