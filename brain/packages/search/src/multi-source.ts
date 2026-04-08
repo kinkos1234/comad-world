@@ -33,31 +33,31 @@ async function searchNpm(query: string, limit: number = 10): Promise<RepoCandida
     if (!res.ok) return [];
 
     const data = await res.json();
-    const packages: NpmPackage[] = (data.objects || []).map((o: any) => o.package);
-
     const candidates: RepoCandidate[] = [];
-    for (const pkg of packages) {
-      // Skip packages with very low scores
-      if (pkg.score.final < 0.3) continue;
+    for (const obj of (data.objects || [])) {
+      const pkg = obj.package as NpmPackage | undefined;
+      const score = obj.score as NpmPackage["score"] | undefined;
+      if (!pkg || !score?.final || score.final < 0.3) continue;
 
       // Extract GitHub URL from repository link
-      const repoUrl = pkg.links.repository || pkg.links.homepage || pkg.links.npm;
+      const repoUrl = pkg.links?.repository || pkg.links?.homepage || pkg.links?.npm;
       const isGitHub = repoUrl?.includes("github.com");
+      const detail = score.detail || { quality: 0, popularity: 0, maintenance: 0 };
 
       candidates.push({
-        url: repoUrl || pkg.links.npm,
+        url: repoUrl || pkg.links?.npm || `https://www.npmjs.com/package/${pkg.name}`,
         name: isGitHub ? repoUrl!.replace("https://github.com/", "").replace(/\.git$/, "") : `npm/${pkg.name}`,
         description: pkg.description || "",
-        stars: Math.round(pkg.score.detail.popularity * 10000), // approximate from popularity score
+        stars: Math.round((detail.popularity || 0) * 10000),
         forks: 0,
-        last_commit: pkg.date,
+        last_commit: pkg.date || new Date().toISOString(),
         language: "TypeScript",
         topics: [],
         license: null,
         open_issues: 0,
         readme_preview: "",
-        has_ci: pkg.score.detail.maintenance > 0.5,
-        has_tests: pkg.score.detail.quality > 0.5,
+        has_ci: (detail.maintenance || 0) > 0.5,
+        has_tests: (detail.quality || 0) > 0.5,
       });
     }
 

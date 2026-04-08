@@ -1,8 +1,14 @@
 #!/bin/zsh
-export PATH="$HOME/.local/bin:$HOME/.bun/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH"
 export SHELL="/bin/zsh"
 export USER="jhkim"
 export TERM="xterm-256color"
+
+# GitHub token from gh CLI (avoids rate limiting in cron)
+export GITHUB_TOKEN=$(gh auth token 2>/dev/null)
+if [[ -z "$GITHUB_TOKEN" ]]; then
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] GITHUB_TOKEN not available — rate limit may apply" >> "$HOME/Programmer/01-comad/comad-world/brain/search-weekly.log"
+fi
 
 PROJECT_DIR="$HOME/Programmer/01-comad/comad-world/brain"
 LOG="$PROJECT_DIR/search-weekly.log"
