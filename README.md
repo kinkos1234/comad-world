@@ -43,7 +43,7 @@
 - **Entity-level confidence scoring** (0.0–1.0) for trust boundary tracking
 - **Content guard** — injection detection on all crawled content (10 threat patterns)
 - **Built-in performance monitoring** via `comad_brain_perf` MCP tool
-- **$0.60/day** operating cost (down from $4.50 after optimization)
+- **$0/day** additional cost with Claude Max subscription (all LLM calls via CLI, local Ollama for eye)
 - **2,800+** tests across all modules (Brain 152 + Eye 2,664)
 
 </details>
@@ -466,7 +466,7 @@ Yes. Edit `sources.rss_feeds` in `comad.config.yaml` and re-run `./scripts/apply
 No. The `finance` and `biotech` presets demonstrate non-tech usage. The system adapts to any domain where there are RSS feeds, papers, and GitHub repos to crawl.
 
 **Q: How much does it cost to run?**
-Brain uses Claude API for entity extraction (~$0.50/day with Haiku). Eye uses local Ollama (free). Ear and the others are free.
+With Claude Max subscription, additional cost is $0/day. Brain uses `claude -p --model haiku` (included in Max). Eye uses local Ollama (free). No external API calls.
 
 **Q: Can I contribute a preset for my domain?**
 Yes! See [CONTRIBUTING.md](CONTRIBUTING.md).
