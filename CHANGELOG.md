@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Eye MCP server: 7 tools (analyze, preflight, Q&A, jobs, report, lenses, status)
+- Photo auto-launch: Photoshop opens automatically via computer-use when needed
+- All modules now auto-trigger via natural language (no slash commands required)
+- 4 MCP servers auto-connect on session start (brain, eye, sleep, photoshop)
 - Content guard: prompt injection detection on crawled content (10 threat patterns + invisible Unicode)
 - Multi-source search: npm, PyPI, arXiv alongside GitHub
 - Neo4j graph storage for search reference cards

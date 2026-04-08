@@ -39,8 +39,9 @@
 
 - **60,000+** graph nodes, **150,000+** relationships from ongoing crawling
 - **22** RSS feeds monitored (OpenAI, Anthropic, Google, Meta, arXiv, researcher blogs)
-- **20+** MCP tools for querying your knowledge graph from Claude Code
+- **30+ MCP tools** across 4 servers (brain 20+, eye 7, sleep 2, photoshop) — all auto-connected
 - **Entity-level confidence scoring** (0.0–1.0) for trust boundary tracking
+- **Content guard** — injection detection on all crawled content (10 threat patterns)
 - **Built-in performance monitoring** via `comad_brain_perf` MCP tool
 - **$0.60/day** operating cost (down from $4.50 after optimization)
 - **2,800+** tests across all modules (Brain 152 + Eye 2,664)
@@ -154,13 +155,15 @@ One YAML change. Different feeds, different keywords, different categories, diff
 
 ### Data Flow
 
+All modules are accessible via natural language — no slash commands needed. 4 MCP servers auto-connect on session start.
+
 1. **Ear** detects articles in Discord, classifies relevance using your interests, archives to markdown
-2. **Brain** crawls RSS/arXiv/GitHub filtered by your keywords, builds a Neo4j knowledge graph with entities and relationships. JS-heavy pages automatically rendered via **Browse**
-3. **Eye** takes any text, converts to ontology, runs multi-round simulations, generates analysis through 5 core strategic lenses with prediction tracking
-4. **Photo** corrects images via Photoshop MCP (domain-agnostic)
+2. **Brain** crawls RSS/arXiv/GitHub filtered by your keywords, builds a Neo4j knowledge graph with entities and relationships. Content guard scans all crawled data. JS-heavy pages automatically rendered via **Browse**
+3. **Eye** takes any text, converts to ontology, runs multi-round simulations, generates analysis through 5 core strategic lenses with prediction tracking (7 MCP tools)
+4. **Photo** corrects images via Photoshop MCP — auto-launches Photoshop when needed (domain-agnostic)
 5. **Sleep** consolidates Claude Code memory across all projects (domain-agnostic)
 6. **Voice** provides workflow automation triggers for Claude Code (domain-agnostic)
-7. **Search** discovers GitHub repos, evaluates them, generates adoption plans, tests in sandbox — the system improves itself
+7. **Search** discovers repos across GitHub/npm/PyPI/arXiv, evaluates them, generates adoption plans, tests in sandbox — the system improves itself
 
 ### What's Config-Driven vs. Domain-Agnostic
 
@@ -214,6 +217,7 @@ Ontology-based simulation that converts text to knowledge graph and runs multi-r
 - **Tiered lens system**: 5 core (Sun Tzu, Adam Smith, Taleb, Kahneman, Meadows) + 2 optional (Clausewitz, Darwin) + 3 legacy
 - **Prediction tracking**: closed-loop learning — records predictions with verification deadlines, measures accuracy over time
 - **Full pipeline**: ingestion → graph → community → simulation → analysis → report
+- **7 MCP tools**: analyze, preflight, Q&A, jobs, report, lenses, status — all callable via natural language
 - **Web UI**: FastAPI backend + Next.js frontend
 
 ```bash
@@ -224,8 +228,9 @@ make dev  # API (port 8000) + Frontend (port 3000)
 
 ### Photo — AI Photo Correction
 
-Claude Code agent for photo editing via Photoshop MCP.
+Claude Code agent for photo editing via Photoshop MCP. Auto-launches Photoshop when needed.
 
+- **Auto-launch**: detects Photoshop state, opens via computer-use if not running
 - **Non-destructive** editing with backup
 - **PIL → Camera Raw → Advanced** priority chain
 - **Over-correction guard**: MAE > 20 triggers parameter reduction
