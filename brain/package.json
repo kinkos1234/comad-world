@@ -18,6 +18,7 @@
     "search": "bun run packages/search/src/cli.ts",
     "test": "bun test",
     "test:core": "bun test packages/core/",
+    "benchmark": "bun run packages/graphrag/src/run-benchmark.ts",
     "ci": "bun run typecheck && bun test"
   },
   "dependencies": {
