@@ -297,13 +297,27 @@ async function main() {
 
     console.log(`[${imported + 1}/${files.length}] ${article.title}`);
 
-    // Extract entities using Claude
-    const entities = await extractEntities(article.title, article.full_content);
-    console.log(
-      `  → ${entities.technologies.length} techs, ${entities.people.length} people, ` +
-      `${entities.organizations.length} orgs, ${entities.topics.length} topics, ` +
-      `${entities.claims?.length ?? 0} claims`
-    );
+    // Extract entities using Claude (graceful fallback if unavailable)
+    let entities: ExtractedEntities;
+    try {
+      entities = await extractEntities(article.title, article.full_content);
+      console.log(
+        `  → ${entities.technologies.length} techs, ${entities.people.length} people, ` +
+        `${entities.organizations.length} orgs, ${entities.topics.length} topics, ` +
+        `${entities.claims?.length ?? 0} claims`
+      );
+    } catch {
+      // Fallback: ingest with metadata only (categories as topics)
+      entities = {
+        technologies: [],
+        people: [],
+        organizations: [],
+        topics: article.categories.map(c => ({ name: c, context: "" })),
+        claims: [],
+        relationships: [],
+      };
+      console.log(`  → fallback: ${article.categories.length} categories as topics (entity extraction unavailable)`);
+    }
 
     // Merge into Neo4j
     await mergeArticle(article, entities);
