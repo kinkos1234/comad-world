@@ -7,11 +7,12 @@ mock.module("@comad-brain/core", () => ({
   query: mockQuery,
 }));
 
-const { resolveEntities } = await import("./entity-resolver.js");
+const { resolveEntities, clearEntityCache } = await import("./entity-resolver.js");
 
 describe("entity-resolver", () => {
   beforeEach(() => {
     mockQuery.mockReset();
+    clearEntityCache();
   });
 
   describe("resolveEntities", () => {

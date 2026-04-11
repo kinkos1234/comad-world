@@ -8,13 +8,54 @@ export interface ResolvedEntity {
 }
 
 /**
+ * LRU cache for entity resolution results.
+ * Avoids repeated Neo4j queries for the same entity name.
+ * TTL: 5 minutes. Max entries: 200.
+ */
+const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_MAX = 200;
+const entityCache = new Map<string, { results: ResolvedEntity[]; ts: number }>();
+
+function getCached(name: string): ResolvedEntity[] | null {
+  const entry = entityCache.get(name.toLowerCase());
+  if (!entry) return null;
+  if (Date.now() - entry.ts > CACHE_TTL) {
+    entityCache.delete(name.toLowerCase());
+    return null;
+  }
+  return entry.results;
+}
+
+/** Clear cache (for testing) */
+export function clearEntityCache(): void {
+  entityCache.clear();
+}
+
+function setCache(name: string, results: ResolvedEntity[]): void {
+  if (entityCache.size >= CACHE_MAX) {
+    // Evict oldest entry
+    const oldest = entityCache.keys().next().value;
+    if (oldest) entityCache.delete(oldest);
+  }
+  entityCache.set(name.toLowerCase(), { results, ts: Date.now() });
+}
+
+/**
  * Resolve entity names from a query to graph nodes.
- * Uses fulltext index + exact name match.
+ * Uses fulltext index + exact name match. Results are LRU-cached.
  */
 export async function resolveEntities(entityNames: string[]): Promise<ResolvedEntity[]> {
   const results: ResolvedEntity[] = [];
 
   for (const name of entityNames) {
+    // Check cache first
+    const cached = getCached(name);
+    if (cached) {
+      results.push(...cached);
+      continue;
+    }
+
+    const nameResults: ResolvedEntity[] = [];
     // 1. Try fulltext search
     try {
       const ftResults = await query(
@@ -27,7 +68,7 @@ export async function resolveEntities(entityNames: string[]): Promise<ResolvedEn
       );
 
       for (const rec of ftResults) {
-        results.push({
+        nameResults.push({
           uid: rec.get("uid"),
           label: rec.get("label"),
           name: rec.get("name"),
@@ -47,7 +88,7 @@ export async function resolveEntities(entityNames: string[]): Promise<ResolvedEn
     );
 
     for (const rec of techResults) {
-      results.push({
+      nameResults.push({
         uid: rec.get("uid"),
         label: rec.get("label"),
         name: rec.get("name"),
@@ -64,13 +105,17 @@ export async function resolveEntities(entityNames: string[]): Promise<ResolvedEn
     );
 
     for (const rec of topicResults) {
-      results.push({
+      nameResults.push({
         uid: rec.get("uid"),
         label: rec.get("label"),
         name: rec.get("name"),
         score: rec.get("score"),
       });
     }
+
+    // Cache and collect
+    setCache(name, nameResults);
+    results.push(...nameResults);
   }
 
   // Deduplicate by uid, keep highest score
