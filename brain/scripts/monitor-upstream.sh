@@ -48,8 +48,12 @@ echo "[$TODAY] Upstream monitor — checking ${#REPOS[@]} repos" >> "$LOG"
 
 UPDATES_FOUND=0
 
+# Cache: store fetched tags in temp file to avoid double API calls
+CACHE_FILE=$(mktemp)
+trap "rm -f $CACHE_FILE" EXIT
+
 for repo in "${REPOS[@]}"; do
-  # Fetch latest release
+  # Fetch latest release (single API call per repo)
   if [[ -n "$AUTH_HEADER" ]]; then
     RESPONSE=$(curl -sS -H "$AUTH_HEADER" "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null)
   else
@@ -74,6 +78,9 @@ for repo in "${REPOS[@]}"; do
     echo "  ⚠ $repo — no releases or tags found" >> "$LOG"
     continue
   fi
+
+  # Cache the tag for state file update (avoids second API call)
+  echo "$repo=$TAG" >> "$CACHE_FILE"
 
   # Compare with saved state
   LAST_TAG=$(cat "$STATE_FILE" | grep "\"$repo\"" | sed 's/.*: "//;s/".*//')
@@ -109,15 +116,11 @@ MDEOF
   fi
 done
 
-# Update state file with all current tags
+# Update state file from cache (no additional API calls)
 echo '{' > "${STATE_FILE}.tmp"
 FIRST=true
 for repo in "${REPOS[@]}"; do
-  if [[ -n "$AUTH_HEADER" ]]; then
-    TAG=$(curl -sS -H "$AUTH_HEADER" "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*: "//;s/".*//')
-  else
-    TAG=$(curl -sS "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*: "//;s/".*//')
-  fi
+  TAG=$(grep "^${repo}=" "$CACHE_FILE" 2>/dev/null | cut -d= -f2)
   [[ -z "$TAG" ]] && continue
   if [[ "$FIRST" == "true" ]]; then
     FIRST=false
