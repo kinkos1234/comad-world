@@ -1,7 +1,7 @@
 <h1 align="center">Comad World</h1>
 
 <p align="center">
-  <strong>Personal knowledge system that crawls RSS, papers & GitHub —<br>then builds a searchable knowledge graph, updated daily.</strong>
+  <strong>A self-evolving personal knowledge system —<br>what you read automatically improves your tools.</strong>
 </p>
 
 <p align="center">
@@ -11,8 +11,9 @@
 </p>
 
 <p align="center">
-  6 AI agents that <b>crawl → understand → simulate → curate → remember → automate</b><br>
-  for any domain you care about. Change one YAML file, get a whole new knowledge system.
+  6 AI agents that <b>crawl → understand → simulate → curate → remember → evolve</b><br>
+  Two feedback loops: the system improves itself, and improves your coding.<br>
+  Change one YAML file, get a whole new knowledge system.
 </p>
 
 <p align="center">

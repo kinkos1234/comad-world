@@ -42,6 +42,33 @@ function estimateEffort(changes: FileChange[]): "trivial" | "moderate" | "signif
 /**
  * Generate adoption plan for a reference card
  */
+/**
+ * Internalization Principle (내재화 원칙)
+ *
+ * All adoptions MUST follow these rules:
+ * ✅ Learn patterns/algorithms and reimplement in our code
+ * ✅ Borrow ideas, implement ourselves
+ * ✅ Allowed: infra deps already in stack (Neo4j, Bun, Python)
+ * ❌ No new npm/pip packages
+ * ❌ No external API/SaaS dependencies
+ * ❌ No framework additions/replacements
+ *
+ * Plans that violate these rules are auto-rejected.
+ */
+const DEPENDENCY_KEYWORDS = [
+  "npm install", "pip install", "bun add", "yarn add",
+  "package.json", "requirements.txt", "import from",
+  "add_dependency", "new dependency",
+];
+
+function violatesInternalization(changes: FileChange[]): boolean {
+  return changes.some(c =>
+    DEPENDENCY_KEYWORDS.some(kw =>
+      c.description.toLowerCase().includes(kw)
+    ) || c.action === "create" && c.file.includes("package.json")
+  );
+}
+
 export function createAdoptionPlan(card: ReferenceCard): AdoptionPlan {
   const elapsed = startTimer();
 
@@ -64,6 +91,15 @@ export function createAdoptionPlan(card: ReferenceCard): AdoptionPlan {
     if (def.risk) {
       risks.push(def.risk);
     }
+  }
+
+  // Internalization gate: reject plans that add external dependencies
+  if (violatesInternalization(changes)) {
+    risks.push({
+      description: "내재화 원칙 위반: 외부 의존성 추가 감지. 패턴만 학습하여 자체 구현해야 함.",
+      severity: "high",
+      mitigation: "패키지 설치 대신 핵심 알고리즘을 직접 구현. 참조 코드를 읽고 패턴만 차용.",
+    });
   }
 
   if (changes.length === 0) {

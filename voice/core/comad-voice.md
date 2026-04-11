@@ -789,4 +789,23 @@ Comad Voice는 Claude Code만으로 완전히 동작한다.
 | **Codex CLI** | 독립 태스크를 Codex에 병렬 위임 | Agent tool로 Claude 에이전트가 병렬 처리 |
 | **tmux** | Codex 병렬 실행에 필요 | Agent tool 기반 병렬만 사용 |
 
+## Brain 지식 참조 (자가진화 루프)
+
+Comad Brain(지식 그래프)이 MCP로 연결되어 있을 때, 코딩 시 축적된 지식을 자동 참조한다.
+
+**자동 참조 시점:**
+- 세션 시작 시: `comad_brain_trend`로 최근 트렌드 1회 로드
+- 새 프로젝트 또는 기술 스택 선택 시: `comad_brain_search`로 경량 조회
+- 사용자가 심층 분석을 요청할 때만: `comad_brain_ask` 사용 (무거움)
+
+**규칙:**
+- 모든 참조 결과에 수집일 표시 (freshness)
+- Brain 조언은 '참고'이며, 사용자 결정을 우선한다
+- Brain MCP가 연결되지 않은 환경에서는 이 섹션을 무시한다
+
+**내재화 원칙:**
+- 외부 패키지 추가 금지. 패턴/알고리즘만 학습하여 자체 구현
+- 아이디어 차용 OK, 의존성 수입 NO
+- 인프라 스택(Neo4j, Bun, Python)은 현재 확정된 것만 허용
+
 <!-- COMAD-VOICE:END -->
