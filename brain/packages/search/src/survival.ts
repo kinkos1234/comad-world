@@ -112,12 +112,38 @@ export async function getSurvivalStats(): Promise<{
     };
   }
 
-  // For now return placeholder -- actual survival checks need file lists from plans
+  // Check survival for each applied adoption's commit
+  let totalFiles = 0;
+  let survived = 0;
+  let modified = 0;
+  let reverted = 0;
+  let totalScore = 0;
+
+  for (const d of applied) {
+    if (!d.commit_hash || !d.date) continue;
+
+    // Get files changed in the adoption commit
+    const filesOutput = await run(
+      `git diff-tree --no-commit-id --name-only -r "${d.commit_hash}" 2>/dev/null`
+    );
+    const files = filesOutput.trim().split("\n").filter(Boolean);
+    if (files.length === 0) continue;
+
+    const checks = await checkSurvival(files, d.date.slice(0, 10));
+    for (const c of checks) {
+      totalFiles++;
+      totalScore += c.survival_score;
+      if (c.reverted) reverted++;
+      else if (c.modified_since) modified++;
+      else survived++;
+    }
+  }
+
   return {
-    total_files: applied.reduce((s, d) => s + d.changes_count, 0),
-    survived: 0,
-    modified: 0,
-    reverted: 0,
-    avg_score: 0,
+    total_files: totalFiles,
+    survived,
+    modified,
+    reverted,
+    avg_score: totalFiles > 0 ? Math.round((totalScore / totalFiles) * 100) / 100 : 0,
   };
 }
