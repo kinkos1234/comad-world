@@ -31,7 +31,7 @@ All Comad MCP tools follow a three-tier stability model. Check the stability lev
 
 | Tool | Purpose | Notes |
 |------|---------|-------|
-| `comad_brain_export` | Export subgraph as JSON | Response format may expand |
+| `comad_brain_export` | Export subgraph (JSON, JSON-LD, CSV) | Stable params, format options may expand |
 | `comad_brain_impact` | Entity impact analysis | Scoring algorithm under tuning |
 | `comad_brain_impact_v2` | Impact v2 (weighted) | May replace v1 |
 | `comad_brain_trend` | Temporal trend detection | Time window params may change |
@@ -86,4 +86,5 @@ All Comad MCP tools follow a three-tier stability model. Check the stability lev
 
 | Date | Change |
 |------|--------|
+| 2026-04-12 | Export tool: add JSON-LD and CSV formats |
 | 2026-04-11 | Initial stability classification |
