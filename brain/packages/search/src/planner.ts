@@ -102,6 +102,16 @@ export function createAdoptionPlan(card: ReferenceCard): AdoptionPlan {
     });
   }
 
+  // Blast radius gate: >3 files requires explicit human approval
+  const MAX_AUTO_FILES = 3;
+  if (changes.length > MAX_AUTO_FILES) {
+    risks.push({
+      description: `변경 파일 ${changes.length}개 — 자동 적용 제한 초과 (최대 ${MAX_AUTO_FILES}). 수동 승인 필요.`,
+      severity: "medium",
+      mitigation: "변경 범위를 좁히거나 단계별로 나눠 적용. 또는 수동 승인 후 진행.",
+    });
+  }
+
   if (changes.length === 0) {
     risks.push({
       description: "참조만 하고 적용할 패턴이 없을 수 있음",
@@ -158,4 +168,33 @@ export function formatPlan(plan: AdoptionPlan): string {
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Save plan as pending approval file.
+ * Users review these in data/pending-adoptions/ and approve/reject.
+ */
+export function savePendingApproval(plan: AdoptionPlan): string {
+  const { writeFileSync, mkdirSync } = require("fs");
+  const { join } = require("path");
+
+  const dir = join(import.meta.dir, "../../../../data/pending-adoptions");
+  mkdirSync(dir, { recursive: true });
+
+  const slug = plan.reference.repo.candidate.name.replace(/\//g, "-");
+  const date = new Date().toISOString().slice(0, 10);
+  const filename = `${date}-${slug}.md`;
+  const filepath = join(dir, filename);
+
+  const hasHighRisk = plan.risks.some(r => r.severity === "high");
+  const needsManualApproval = plan.changes.length > 3 || hasHighRisk;
+
+  let content = `---\nstatus: pending\nauto_applicable: ${!needsManualApproval}\ndate: ${date}\n---\n\n`;
+  content += formatPlan(plan);
+  content += `\n\n---\n`;
+  content += `<!-- To approve: change status to "approved" -->\n`;
+  content += `<!-- To reject: change status to "rejected" or delete this file -->\n`;
+
+  writeFileSync(filepath, content);
+  return filepath;
 }
