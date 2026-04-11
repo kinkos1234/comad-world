@@ -153,8 +153,10 @@ S4_CRON=$((CRON_COUNT * 10))
 echo "  Cron jobs: $CRON_COUNT → $S4_CRON/50"
 
 # Metric 4d: Adoption history (actual loop evidence)
+# plan-decisions.jsonl may be in brain/data/ or brain/brain/data/ depending on search module's cwd
 ADOPTION_COUNT=0
-[[ -f "$BRAIN/data/plan-decisions.jsonl" ]] && ADOPTION_COUNT=$(wc -l < "$BRAIN/data/plan-decisions.jsonl" 2>/dev/null | tr -d ' ')
+DECISION_FILE=$(find "$BRAIN" -name "plan-decisions.jsonl" 2>/dev/null | head -1)
+[[ -n "$DECISION_FILE" ]] && ADOPTION_COUNT=$(wc -l < "$DECISION_FILE" 2>/dev/null | tr -d ' ')
 S4_ADOPT=$((ADOPTION_COUNT * 10))
 [[ $S4_ADOPT -gt 30 ]] && S4_ADOPT=30
 echo "  Adoption history: $ADOPTION_COUNT decisions → $S4_ADOPT/30"
