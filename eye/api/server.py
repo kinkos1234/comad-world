@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -18,6 +19,16 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from api.routes import analysis, graph, pipeline, qa, report  # noqa: E402
 
+
+def _get_allowed_origins() -> list[str]:
+    """Return allowed CORS origins from env, with a safe local default."""
+    raw = os.getenv("CORS_ALLOW_ORIGINS") or os.getenv("COMADEYE_CORS_ALLOW_ORIGINS")
+    if raw is None:
+        return ["http://localhost:3000"]
+
+    origins = [origin.strip() for origin in raw.split(",") if origin.strip()]
+    return origins or ["http://localhost:3000"]
+
 app = FastAPI(
     title="ComadEye API",
     description="Ontology-Native Prediction Simulation Engine",
@@ -26,7 +37,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
