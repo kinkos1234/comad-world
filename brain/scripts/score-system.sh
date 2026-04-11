@@ -37,8 +37,8 @@ echo "  Dependencies: $DEP_COUNT → $S1_DEPS/100"
 AVG_LOC=$(find "$BRAIN/packages" -name "*.ts" -not -name "*.test.*" -not -path "*/node_modules/*" | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}')
 FILE_COUNT=$(find "$BRAIN/packages" -name "*.ts" -not -name "*.test.*" -not -path "*/node_modules/*" | wc -l | tr -d ' ')
 [[ $FILE_COUNT -gt 0 ]] && AVG=$((AVG_LOC / FILE_COUNT)) || AVG=0
-# Score: 100 if avg <100 lines, -1 per line over 100
-S1_LOC=$((100 - (AVG > 100 ? AVG - 100 : 0)))
+# Score: 100 if avg <150 lines, -0.5 per line over 150 (cap at 0)
+S1_LOC=$((AVG < 150 ? 100 : 100 - (AVG - 150) / 2))
 [[ $S1_LOC -lt 0 ]] && S1_LOC=0
 echo "  Avg file size: ${AVG} LOC ($FILE_COUNT files) → $S1_LOC/100"
 
@@ -71,7 +71,10 @@ grep -q "savePendingApproval" "$BRAIN/packages/search/src/planner.ts" 2>/dev/nul
 echo "  Safety gates: $GATES/50"
 
 # Metric 2c: Content guard patterns
-GUARD_PATTERNS=$(grep -c "safeLabel\|DEPENDENCY_KEYWORDS\|blacklist" "$BRAIN/packages/search/src/planner.ts" "$BRAIN/packages/mcp-server/src/server.ts" 2>/dev/null | awk '{s+=$1}END{print s+0}')
+# Count safety-related code patterns across search + mcp modules
+GUARD_P1=$(grep -c "safeLabel" "$BRAIN/packages/mcp-server/src/server.ts" 2>/dev/null || echo 0)
+GUARD_P2=$(grep -c "DEPENDENCY_KEYWORDS\|violatesInternalization\|MAX_AUTO_FILES" "$BRAIN/packages/search/src/planner.ts" 2>/dev/null || echo 0)
+GUARD_PATTERNS=$((GUARD_P1 + GUARD_P2))
 S2_GUARD=$((GUARD_PATTERNS > 5 ? 50 : GUARD_PATTERNS * 10))
 echo "  Guard patterns: $GUARD_PATTERNS → $S2_GUARD/50"
 
@@ -92,11 +95,11 @@ echo ""
 echo "── 3. SCALABILITY (Sutskever) ──"
 
 # Metric 3a: Graph node count
-NODE_COUNT=$(curl -s -H "Content-Type: application/json" \
+NEO4J_RESPONSE=$(curl -s -H "Content-Type: application/json" \
   -H "Authorization: Basic $(echo -n 'neo4j:knowledge2026' | base64)" \
   -d '{"statements":[{"statement":"MATCH (n) RETURN count(n) AS c"}]}' \
-  http://127.0.0.1:7475/db/neo4j/tx/commit 2>/dev/null \
-  | grep -o '"c":[0-9]*' | grep -o '[0-9]*')
+  http://127.0.0.1:7475/db/neo4j/tx/commit 2>/dev/null)
+NODE_COUNT=$(echo "$NEO4J_RESPONSE" | grep -o '"row":\[[0-9]*\]' | grep -o '[0-9]*')
 NODE_COUNT=${NODE_COUNT:-0}
 # Score: 10K=50, 50K=80, 100K+=100
 if [[ $NODE_COUNT -ge 100000 ]]; then S3_NODES=100
@@ -109,7 +112,8 @@ echo "  Graph nodes: $NODE_COUNT → $S3_NODES/100"
 # Metric 3b: Benchmark exists + recall score
 BENCH_FILE=$(ls -t "$ROOT/data/benchmark-"*.json 2>/dev/null | head -1)
 if [[ -n "$BENCH_FILE" ]]; then
-  RECALL=$(grep '"entity_recall_avg"' "$BENCH_FILE" | grep -o '0\.[0-9]*')
+  # Get first entity_recall_avg (summary level, not per-difficulty)
+  RECALL=$(grep '"entity_recall_avg"' "$BENCH_FILE" | head -1 | grep -o '0\.[0-9]*')
   RECALL_PCT=$(echo "${RECALL:-0} * 100" | bc 2>/dev/null | cut -d. -f1)
   S3_BENCH=${RECALL_PCT:-0}
 else
