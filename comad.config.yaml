@@ -86,6 +86,17 @@ sources:
     - { name: "DeepLearning.AI",       url: "https://www.deeplearning.ai/blog/feed/" }
     - { name: "Microsoft Research",    url: "https://www.microsoft.com/en-us/research/feed/" }
     - { name: "NVIDIA AI Blog",        url: "https://blogs.nvidia.com/feed/" }
+    # Scholar blogs
+    - { name: "Andrej Karpathy",      url: "https://karpathy.github.io/feed.xml" }
+    - { name: "Yann LeCun (NYU)",     url: "https://www.cs.nyu.edu/~yann/rss/rss.xml" }
+    - { name: "Colah's Blog",         url: "https://colah.github.io/rss.xml" }
+    - { name: "Distill.pub",          url: "https://distill.pub/rss.xml" }
+    - { name: "Jürgen Schmidhuber",   url: "https://people.idsia.ch/~juergen/rss.xml" }
+    - { name: "Noam Brown (FAIR)",    url: "https://noambrown.github.io/feed.xml" }
+    # Industry research
+    - { name: "Apple ML Research",    url: "https://machinelearning.apple.com/rss.xml" }
+    - { name: "Cohere Research",      url: "https://cohere.com/blog/rss" }
+    - { name: "EleutherAI Blog",      url: "https://blog.eleuther.ai/rss/" }
 
   hn_queries:
     - "LLM"
