@@ -1,7 +1,3 @@
-import { writeFileSync, unlinkSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
-
 export interface AnalyzedQuery {
   entities: string[];
   intent: "search" | "explain" | "compare" | "trend" | "explore";
@@ -12,47 +8,80 @@ export interface AnalyzedQuery {
   };
 }
 
+// Stopwords to filter from entity extraction
+const STOPWORDS = new Set([
+  "은", "는", "이", "가", "의", "를", "을", "에", "에서", "로", "으로", "와", "과",
+  "도", "만", "부터", "까지", "에게", "한테", "에서의", "으로의", "이란", "란",
+  "the", "a", "an", "is", "are", "was", "were", "of", "in", "for", "to", "with",
+  "and", "or", "not", "that", "this", "what", "how", "why", "which", "when",
+  "가장", "어떤", "무엇", "왜", "어떻게", "현재", "최근", "주요",
+]);
+
+// Known tech terms for better extraction
+const KNOWN_ENTITIES = [
+  "Transformer", "GPT", "GPT-4", "GPT-5", "Claude", "BERT", "LLM", "RAG",
+  "PyTorch", "TensorFlow", "CUDA", "NVIDIA", "OpenAI", "Anthropic", "DeepMind",
+  "Google", "Meta", "Microsoft", "Hugging Face", "LangChain", "Neo4j",
+  "LoRA", "QLoRA", "RLHF", "MCP", "Mamba", "RWKV", "Llama", "Mistral",
+  "Constitutional AI", "ReAct", "AutoGPT", "Chinchilla", "EU AI Act",
+  "Knowledge Graph", "Vector DB", "Scaling Law", "Foundation Model",
+];
+
 /**
  * Analyze a user query to extract entities, intent, and filters.
- * Uses Claude Code -p mode for natural language understanding.
+ * Pure parsing — no LLM calls. Internalized from previous claude -p approach.
  */
 export async function analyzeQuery(question: string): Promise<AnalyzedQuery> {
-  const prompt = `사용자 질문을 분석하여 JSON으로만 응답해라. 마크다운 코드블록 없이 순수 JSON만 출력해라.
+  const q = question.toLowerCase();
 
-질문: ${question}
+  // Intent detection
+  let intent: AnalyzedQuery["intent"] = "search";
+  if (/비교|차이|versus|vs\b|differ/i.test(question)) intent = "compare";
+  else if (/설명|explain|뜻|의미|what is/i.test(question)) intent = "explain";
+  else if (/트렌드|trend|변화|발전|evolution|흐름/i.test(question)) intent = "trend";
+  else if (/탐색|explore|관련|연결|구조/i.test(question)) intent = "explore";
 
-응답 형식:
-{"entities":["기술명이나 키워드"],"intent":"search|explain|compare|trend|explore","filters":{"type":"Paper|Repo|Article|Technology|Person|Organization","recency":"recent|all","relevance":"필독|추천|참고"}}
-
-규칙:
-- entities: 질문에서 추출한 기술/개념/인물 이름 (한국어는 영어로 변환)
-- intent: search(찾기), explain(설명), compare(비교), trend(트렌드), explore(탐색)
-- filters: 해당 없으면 필드 생략`;
-
-  const tmpFile = join(tmpdir(), `ko-query-${Date.now()}.txt`);
-
-  try {
-    writeFileSync(tmpFile, prompt);
-    const proc = Bun.spawn(["sh", "-c", `cat "${tmpFile}" | claude -p --model haiku`], {
-      stdout: "pipe",
-      stderr: "pipe",
-      env: { ...process.env, PATH: `${process.env.HOME}/.local/bin:${process.env.HOME}/.bun/bin:${process.env.PATH}` },
-    });
-
-    const stdout = await new Response(proc.stdout).text();
-    await proc.exited;
-
-    const text = stdout.trim();
-    const jsonStart = text.indexOf("{");
-    const jsonEnd = text.lastIndexOf("}");
-    if (jsonStart === -1) {
-      return { entities: [question], intent: "search", filters: {} };
+  // Entity extraction: match known entities first
+  const entities: string[] = [];
+  for (const entity of KNOWN_ENTITIES) {
+    if (q.includes(entity.toLowerCase())) {
+      entities.push(entity);
     }
-
-    return JSON.parse(text.slice(jsonStart, jsonEnd + 1)) as AnalyzedQuery;
-  } catch {
-    return { entities: [question], intent: "search", filters: {} };
-  } finally {
-    try { unlinkSync(tmpFile); } catch {}
   }
+
+  // Then extract capitalized words (likely proper nouns) from original question
+  const words = question.match(/[A-Z][a-zA-Z0-9-]+(?:\s[A-Z][a-zA-Z0-9-]+)*/g) || [];
+  for (const w of words) {
+    if (!entities.some(e => e.toLowerCase() === w.toLowerCase()) && w.length > 1) {
+      entities.push(w);
+    }
+  }
+
+  // Extract Korean nouns (2+ char words not in stopwords)
+  const koreanWords = question.match(/[가-힣]{2,}/g) || [];
+  for (const w of koreanWords) {
+    if (!STOPWORDS.has(w) && w.length >= 2 && !entities.includes(w)) {
+      entities.push(w);
+    }
+  }
+
+  // If pure parsing found few entities, add whole question as fallback
+  // This ensures graph fulltext search can still find relevant nodes
+  if (entities.length === 0) {
+    entities.push(question);
+  } else if (entities.length < 3) {
+    // Add key phrases from question to broaden search
+    const phrases = question.split(/[,?!。？]\s*/).filter(p => p.length > 4);
+    for (const p of phrases.slice(0, 2)) {
+      if (!entities.includes(p)) entities.push(p.trim());
+    }
+  }
+
+  // Filters
+  const filters: AnalyzedQuery["filters"] = {};
+  if (/논문|paper|arXiv/i.test(question)) filters.type = "Paper";
+  if (/레포|repo|github/i.test(question)) filters.type = "Repo";
+  if (/최근|recent|2024|2025|2026/i.test(question)) filters.recency = "recent";
+
+  return { entities: entities.slice(0, 8), intent, filters };
 }
