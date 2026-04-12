@@ -72,7 +72,7 @@ echo "  Safety gates: $GATES/50"
 
 # Metric 2c: Content guard patterns
 # Count safety-related code patterns across search + mcp modules
-GUARD_P1=$(grep -c "safeLabel" "$BRAIN/packages/mcp-server/src/server.ts" 2>/dev/null || echo 0)
+GUARD_P1=$(grep -rc "safeLabel\|safeRel\|ALLOWED_LABELS" "$BRAIN/packages/mcp-server/src/" 2>/dev/null | awk -F: '{s+=$NF}END{print s+0}')
 GUARD_P2=$(grep -c "DEPENDENCY_KEYWORDS\|violatesInternalization\|MAX_AUTO_FILES" "$BRAIN/packages/search/src/planner.ts" 2>/dev/null || echo 0)
 GUARD_PATTERNS=$((GUARD_P1 + GUARD_P2))
 S2_GUARD=$((GUARD_PATTERNS > 5 ? 50 : GUARD_PATTERNS * 10))
