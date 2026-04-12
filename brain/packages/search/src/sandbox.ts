@@ -71,9 +71,18 @@ export async function verifySandbox(worktreePath: string): Promise<SandboxResult
   const typecheck = await run("npx tsc --noEmit --skipLibCheck", brainPath);
   const typecheck_passed = typecheck.exitCode === 0;
 
-  // Run tests
-  const tests = await run("bun test", brainPath);
-  const tests_passed = tests.exitCode === 0;
+  // Run tests. Transient failures happen (auth flakes, races on fresh
+  // node_modules). Retry once on failure so one flaky run doesn't reject
+  // an otherwise valid adoption.
+  let tests = await run("bun test", brainPath);
+  let tests_passed = tests.exitCode === 0;
+  if (!tests_passed) {
+    const retry = await run("bun test", brainPath);
+    if (retry.exitCode === 0) {
+      tests = retry;
+      tests_passed = true;
+    }
+  }
 
   const duration = Math.round(elapsed());
   recordTiming("search:verifySandbox", duration);

@@ -39,7 +39,8 @@ export async function readCachedPlans(
   try {
     const data = await readFile(cachePath(cacheKey(query, constraints)), "utf-8");
     const entry = JSON.parse(data) as { ts: number; plans: AdoptionPlan[] };
-    if (Date.now() - entry.ts > ttlMs) return null;
+    // ttlMs=0 means "no cache" / always expired; use >= so diff of 0 expires.
+    if (Date.now() - entry.ts >= ttlMs) return null;
     return entry.plans;
   } catch {
     return null;
