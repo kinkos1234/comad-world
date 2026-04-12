@@ -14,10 +14,56 @@ import type { RepoCandidate, EvaluatedRepo } from "./types.js";
 
 // ── Anti-signal patterns ──
 
+// Off-topic domain markers — repos that mention these in description or
+// topics are almost certainly for unrelated fields (bio/finance/games/etc).
+// Adopted CRAQ (genome assembly tool) in a prior run because generic
+// keywords like "quality" / "improvement" matched the relevance filter.
+const OFF_TOPIC_MARKERS = [
+  // Bio / chemistry
+  "genome", "genomic", "dna", "rna", "protein", "cell", "bioinform",
+  "chemistry", "molecule", "pharma", "drug discovery",
+  // Finance / trading
+  "stock", "trading", "forex", "cryptocurrency trading", "options pricing",
+  "portfolio optimization",
+  // Games / graphics pipelines
+  "game engine", "shader", "ray trac", "unreal", "unity",
+  // Physics / engineering
+  "cfd", "fluid dynamics", "finite element", "circuit simulation",
+  // Other
+  "ecommerce", "shopping cart", "cms platform",
+];
+
+// Core comad stack — at least one must match for adopt verdict.
+const CORE_COMAD_KEYWORDS = [
+  "knowledge graph", "graph rag", "graphrag", "neo4j", "mcp",
+  "model context protocol", "agent", "llm", "rag", "embedding",
+  "vector db", "retrieval", "rss", "crawler", "ontology",
+  "entity extraction", "semantic search", "anthropic", "claude",
+  "openai", "ollama", "discord bot",
+];
+
+function hasOffTopic(c: RepoCandidate): boolean {
+  const haystack = `${c.description ?? ""} ${c.topics.join(" ")}`.toLowerCase();
+  return OFF_TOPIC_MARKERS.some(m => haystack.includes(m));
+}
+
+function hasCoreMatch(c: RepoCandidate): boolean {
+  const haystack = `${c.description ?? ""} ${c.topics.join(" ")} ${c.readme_preview.slice(0, 500)}`.toLowerCase();
+  return CORE_COMAD_KEYWORDS.some(kw => haystack.includes(kw));
+}
+
 const ANTI_SIGNALS: Array<{ test: (c: RepoCandidate) => boolean; label: string }> = [
   {
     test: (c) => /🚀.*🔥.*⚡|blazing fast|revolutionary/i.test(c.readme_preview),
     label: "마케팅 과잉 README",
+  },
+  {
+    test: hasOffTopic,
+    label: "comad 스택과 무관한 도메인",
+  },
+  {
+    test: (c) => !hasCoreMatch(c),
+    label: "comad 핵심 키워드 미매치",
   },
   {
     test: (c) => !c.license,
@@ -190,10 +236,15 @@ export async function evaluateRepos(
       let verdict: "adopt" | "study" | "skip";
       let reason: string;
 
-      if (totalScore >= 0.5 && antiSignals.length <= 1) {
+      // Hard gate: off-topic or no core-comad match → can't adopt, at best study
+      const offTopic = hasOffTopic(c);
+      const coreMatch = hasCoreMatch(c);
+      const adoptGate = !offTopic && coreMatch;
+
+      if (totalScore >= 0.5 && antiSignals.length <= 1 && adoptGate) {
         verdict = "adopt";
         reason = `높은 종합 점수 (${(totalScore * 100).toFixed(0)}점)${antiSignals.length ? `, 경미한 안티 시그널: ${antiSignals[0]}` : ""}`;
-      } else if (totalScore >= 0.35) {
+      } else if (totalScore >= 0.35 || (totalScore >= 0.5 && !adoptGate)) {
         verdict = "study";
         reason =
           antiSignals.length > 1

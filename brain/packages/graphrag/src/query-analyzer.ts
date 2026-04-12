@@ -1,3 +1,5 @@
+import { query } from "@comad-brain/core";
+
 export interface AnalyzedQuery {
   entities: string[];
   intent: "search" | "explain" | "compare" | "trend" | "explore";
@@ -31,6 +33,8 @@ const KNOWN_ENTITIES = [
 // not the entities directly, expand the entity list so graph fulltext search
 // surfaces nodes the synth actually needs to cite.
 // Keys are matched as lowercase substrings against the question.
+// NOTE: static fallback. Runtime calls also query Neo4j for co-occurring
+// entities (B.4 — Bush: association should live in the graph, not hard-coded).
 const CONCEPT_EXPANSIONS: Array<[string[], string[]]> = [
   // hallucination / grounding → alignment & retrieval approaches
   [["hallucination", "환각", "grounding"], ["RLHF", "Constitutional AI", "RAG"]],
@@ -52,6 +56,77 @@ const CONCEPT_EXPANSIONS: Array<[string[], string[]]> = [
   // Fine-tuning efficiency
   [["fine-tuning", "파인튜닝", "parameter efficient"], ["LoRA", "QLoRA"]],
 ];
+
+// Dynamic concept-expansion cache. Keyed on a lowercase concept phrase
+// extracted from the question. TTL 1h — the graph changes slowly vs query rate.
+const DYN_TTL_MS = 60 * 60 * 1000;
+const DYN_MAX = 200;
+const dynCache = new Map<string, { entities: string[]; ts: number }>();
+
+/**
+ * Ask Neo4j which entities co-occur with a concept phrase in article/paper
+ * content. Returns top `limit` by frequency. Silent on error — the static
+ * map covers the must-have cases, and Neo4j unavailable is not fatal.
+ */
+async function graphExpandConcept(phrase: string, limit = 5): Promise<string[]> {
+  const key = phrase.toLowerCase().trim();
+  if (!key || key.length < 3) return [];
+  const hit = dynCache.get(key);
+  if (hit && Date.now() - hit.ts < DYN_TTL_MS) return hit.entities;
+  try {
+    const rows = await query(
+      `MATCH (a)
+       WHERE (a:Article OR a:Paper)
+         AND (toLower(coalesce(a.title,'')) CONTAINS $kw
+              OR toLower(coalesce(a.summary,'')) CONTAINS $kw)
+       WITH a LIMIT 40
+       MATCH (a)-[:MENTIONS|DISCUSSES|TAGGED_WITH|USES_TECHNOLOGY|DEVELOPS|DEVELOPED_BY]->(e)
+       WHERE (e:Entity OR e:Technology OR e:Topic OR e:Organization OR e:Person)
+       WITH coalesce(e.name, e.title) AS ent, count(a) AS freq
+       WHERE ent IS NOT NULL
+       RETURN ent ORDER BY freq DESC LIMIT toInteger($lim)`,
+      { kw: key, lim: limit }
+    );
+    const entities = rows.map(r => r.get("ent")).filter((x: unknown): x is string => typeof x === "string");
+    if (dynCache.size >= DYN_MAX) {
+      const oldest = dynCache.keys().next().value;
+      if (oldest !== undefined) dynCache.delete(oldest);
+    }
+    dynCache.set(key, { entities, ts: Date.now() });
+    return entities;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Extract concept phrases worth expanding: multi-char Korean noun chunks and
+ * known English concepts from the question. Skips stopwords and already-named
+ * KNOWN_ENTITIES (no self-expansion).
+ */
+function extractConceptPhrases(question: string): string[] {
+  const english: string[] = [];
+  const korean: string[] = [];
+  // English content words first — these carry most of the domain signal
+  // (hallucination, reasoning, alignment, ...)
+  for (const w of question.match(/\b[a-zA-Z][a-zA-Z-]{3,}\b/g) ?? []) {
+    const wl = w.toLowerCase();
+    if (STOPWORDS.has(wl)) continue;
+    if (KNOWN_ENTITIES.some(e => e.toLowerCase() === wl)) continue;
+    if (!english.includes(wl)) english.push(wl);
+  }
+  // Korean nouns 3+ chars (shorter ones are too noisy for graph search)
+  for (const w of question.match(/[가-힣]{3,}/g) ?? []) {
+    if (STOPWORDS.has(w)) continue;
+    if (!korean.includes(w)) korean.push(w);
+  }
+  // English-first, then Korean. Cap at 3 total to keep Neo4j round-trips cheap.
+  return [...english, ...korean].slice(0, 3);
+}
+
+export function clearConceptCache(): void {
+  dynCache.clear();
+}
 
 /**
  * Analyze a user query to extract entities, intent, and filters.
@@ -75,11 +150,23 @@ export async function analyzeQuery(question: string): Promise<AnalyzedQuery> {
     }
   }
 
-  // Concept expansion: add related entities when the question discusses a
-  // concept without naming the entities directly.
+  // Static concept expansion (fallback / domain knowledge the graph may lack)
   for (const [keys, expanded] of CONCEPT_EXPANSIONS) {
     if (keys.some(k => q.includes(k.toLowerCase()))) {
       for (const e of expanded) {
+        if (!entities.includes(e)) entities.push(e);
+      }
+    }
+  }
+
+  // Dynamic expansion: ask the graph for entities that co-occur with the
+  // concept phrases in this question. Runs in parallel across phrases; any
+  // individual failure silently skips. Bounded to keep the analyzer fast.
+  const phrases = extractConceptPhrases(question);
+  if (phrases.length > 0) {
+    const results = await Promise.all(phrases.map(p => graphExpandConcept(p, 3)));
+    for (const group of results) {
+      for (const e of group) {
         if (!entities.includes(e)) entities.push(e);
       }
     }
