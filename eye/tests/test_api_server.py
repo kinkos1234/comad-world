@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib
+import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -281,6 +283,28 @@ class TestCORS:
             },
         )
         assert resp.headers.get("access-control-allow-origin") != "http://evil.com"
+
+    def test_cors_headers_respect_env_allowlist(self, monkeypatch):
+        monkeypatch.setenv(
+            "CORS_ALLOW_ORIGINS",
+            "https://eye.example.com, https://ops.example.com",
+        )
+        sys.modules.pop("api.server", None)
+        server = importlib.import_module("api.server")
+        client = TestClient(server.app, raise_server_exceptions=False)
+
+        resp = client.options(
+            "/api/health",
+            headers={
+                "Origin": "https://ops.example.com",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        assert resp.headers.get("access-control-allow-origin") == "https://ops.example.com"
+
+        monkeypatch.delenv("CORS_ALLOW_ORIGINS", raising=False)
+        sys.modules.pop("api.server", None)
+        importlib.import_module("api.server")
 
 
 # ---------------------------------------------------------------------------

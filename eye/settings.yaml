@@ -1,5 +1,5 @@
 neo4j:
-  uri: "bolt://localhost:7688"
+  uri: "bolt://localhost:7687"
   user: "neo4j"
   # password: set via NEO4J_PASSWORD env var (see .env.example)
   database: "neo4j"
