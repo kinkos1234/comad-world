@@ -27,6 +27,32 @@ const KNOWN_ENTITIES = [
   "Knowledge Graph", "Vector DB", "Scaling Law", "Foundation Model",
 ];
 
+// Concept → related entities. When a question mentions the concept (key) but
+// not the entities directly, expand the entity list so graph fulltext search
+// surfaces nodes the synth actually needs to cite.
+// Keys are matched as lowercase substrings against the question.
+const CONCEPT_EXPANSIONS: Array<[string[], string[]]> = [
+  // hallucination / grounding → alignment & retrieval approaches
+  [["hallucination", "환각", "grounding"], ["RLHF", "Constitutional AI", "RAG"]],
+  // MCP protocol → Anthropic
+  [["mcp 프로토콜", "mcp protocol", "mcp 목적", "mcp 구조"], ["Anthropic", "MCP"]],
+  // AI Agent architecture → agent frameworks
+  [["ai agent", "agent 아키텍처", "agent 구성", "에이전트 아키텍처", "에이전트 구성"],
+   ["LangChain", "AutoGPT", "ReAct"]],
+  // Transformer alternatives → SSM family
+  [["transformer 대안", "attention 대안", "이후 등장한", "대안 아키텍처"], ["Mamba", "RWKV"]],
+  // GPU shortage / inference → hardware vendors
+  [["gpu 부족", "gpu shortage", "gpu 대응", "inference 최적화"], ["NVIDIA", "CUDA"]],
+  // AI safety orgs
+  [["ai 안전성", "ai safety", "alignment 연구"], ["Anthropic", "OpenAI", "DeepMind"]],
+  // Open-source LLM ecosystem
+  [["오픈소스 llm", "open source llm", "open-source llm"], ["Llama", "Mistral"]],
+  // Scaling law
+  [["scaling law", "스케일링"], ["Chinchilla"]],
+  // Fine-tuning efficiency
+  [["fine-tuning", "파인튜닝", "parameter efficient"], ["LoRA", "QLoRA"]],
+];
+
 /**
  * Analyze a user query to extract entities, intent, and filters.
  * Pure parsing — no LLM calls. Internalized from previous claude -p approach.
@@ -46,6 +72,16 @@ export async function analyzeQuery(question: string): Promise<AnalyzedQuery> {
   for (const entity of KNOWN_ENTITIES) {
     if (q.includes(entity.toLowerCase())) {
       entities.push(entity);
+    }
+  }
+
+  // Concept expansion: add related entities when the question discusses a
+  // concept without naming the entities directly.
+  for (const [keys, expanded] of CONCEPT_EXPANSIONS) {
+    if (keys.some(k => q.includes(k.toLowerCase()))) {
+      for (const e of expanded) {
+        if (!entities.includes(e)) entities.push(e);
+      }
     }
   }
 

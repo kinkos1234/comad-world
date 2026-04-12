@@ -160,6 +160,72 @@ export const BENCHMARK_QUESTIONS: BenchmarkQuestion[] = [
     expected_topics: ["emergence", "scaling", "capability"],
     difficulty: "hard",
   },
+
+  // Easy expansion (b21-b30): direct entity lookups
+  { id: "b21", question: "BERT 모델을 개발한 회사는?",
+    expected_entities: ["BERT", "Google"], expected_topics: ["NLP"], difficulty: "easy" },
+  { id: "b22", question: "Llama 모델 시리즈는 어느 회사에서 만들었나?",
+    expected_entities: ["Llama", "Meta"], expected_topics: ["open source", "LLM"], difficulty: "easy" },
+  { id: "b23", question: "Neo4j는 어떤 종류의 데이터베이스인가?",
+    expected_entities: ["Neo4j"], expected_topics: ["graph database", "knowledge graph"], difficulty: "easy" },
+  { id: "b24", question: "Claude를 개발한 회사는?",
+    expected_entities: ["Claude", "Anthropic"], expected_topics: ["LLM"], difficulty: "easy" },
+  { id: "b25", question: "Mistral AI의 대표 모델은?",
+    expected_entities: ["Mistral"], expected_topics: ["open source", "LLM"], difficulty: "easy" },
+  { id: "b26", question: "DeepMind는 어느 기업 산하에 있는가?",
+    expected_entities: ["DeepMind", "Google"], expected_topics: ["AI research"], difficulty: "easy" },
+  { id: "b27", question: "Hugging Face에서 제공하는 라이브러리 중 하나는?",
+    expected_entities: ["Hugging Face"], expected_topics: ["transformers", "NLP"], difficulty: "easy" },
+  { id: "b28", question: "LangChain은 어떤 목적의 프레임워크인가?",
+    expected_entities: ["LangChain"], expected_topics: ["agent", "LLM application"], difficulty: "easy" },
+  { id: "b29", question: "Vector DB의 대표적인 예시는?",
+    expected_entities: ["Vector DB"], expected_topics: ["embedding", "similarity search"], difficulty: "easy" },
+  { id: "b30", question: "ReAct 프롬프팅 기법은 무엇인가?",
+    expected_entities: ["ReAct"], expected_topics: ["agent", "reasoning"], difficulty: "easy" },
+
+  // Medium expansion (b31-b40): relationship & concept questions
+  { id: "b31", question: "RLHF와 Constitutional AI의 공통점과 차이는?",
+    expected_entities: ["RLHF", "Constitutional AI"], expected_topics: ["alignment"], difficulty: "medium" },
+  { id: "b32", question: "PyTorch가 TensorFlow를 대체하게 된 이유는?",
+    expected_entities: ["PyTorch", "TensorFlow"], expected_topics: ["dynamic graph", "research"], difficulty: "medium" },
+  { id: "b33", question: "GPU 메모리가 LLM 추론에 미치는 영향은?",
+    expected_entities: ["NVIDIA", "CUDA"], expected_topics: ["inference", "memory"], difficulty: "medium" },
+  { id: "b34", question: "Hugging Face Hub에서 모델을 받는 방법은?",
+    expected_entities: ["Hugging Face"], expected_topics: ["model hub", "transformers"], difficulty: "medium" },
+  { id: "b35", question: "Chinchilla 논문이 제시한 scaling law의 핵심 결과는?",
+    expected_entities: ["Chinchilla"], expected_topics: ["scaling", "compute optimal"], difficulty: "medium" },
+  { id: "b36", question: "Foundation Model과 Scaling Law의 관계는?",
+    expected_entities: ["Foundation Model", "Scaling Law"], expected_topics: ["scaling"], difficulty: "medium" },
+  { id: "b37", question: "AutoGPT와 LangChain의 접근법 차이는?",
+    expected_entities: ["AutoGPT", "LangChain"], expected_topics: ["agent"], difficulty: "medium" },
+  { id: "b38", question: "MCP 프로토콜이 LangChain과 경쟁하는 부분은?",
+    expected_entities: ["MCP", "LangChain"], expected_topics: ["tool use"], difficulty: "medium" },
+  { id: "b39", question: "EU AI Act가 Foundation Model에 미치는 영향은?",
+    expected_entities: ["EU AI Act", "Foundation Model"], expected_topics: ["regulation"], difficulty: "medium" },
+  { id: "b40", question: "Vector DB와 Knowledge Graph를 함께 쓰는 이유는?",
+    expected_entities: ["Vector DB", "Knowledge Graph"], expected_topics: ["hybrid retrieval"], difficulty: "medium" },
+
+  // Hard expansion (b41-b50): multi-hop reasoning
+  { id: "b41", question: "OpenAI와 Anthropic의 alignment 접근 방식 차이는?",
+    expected_entities: ["OpenAI", "Anthropic", "RLHF", "Constitutional AI"], expected_topics: ["alignment"], difficulty: "hard" },
+  { id: "b42", question: "Transformer 등장 이후 NVIDIA 주가가 오른 이유를 아키텍처 관점에서 설명하라",
+    expected_entities: ["Transformer", "NVIDIA", "CUDA"], expected_topics: ["GPU", "parallelism"], difficulty: "hard" },
+  { id: "b43", question: "오픈소스 LLM 생태계에서 Llama와 Mistral의 포지셔닝 차이는?",
+    expected_entities: ["Llama", "Mistral", "Meta"], expected_topics: ["open source", "licensing"], difficulty: "hard" },
+  { id: "b44", question: "RAG과 Knowledge Graph 기반 검색의 정확성 트레이드오프는?",
+    expected_entities: ["RAG", "Knowledge Graph", "Vector DB"], expected_topics: ["retrieval"], difficulty: "hard" },
+  { id: "b45", question: "LoRA 계열 fine-tuning 기법이 Foundation Model 생태계에 미친 영향은?",
+    expected_entities: ["LoRA", "QLoRA", "Foundation Model"], expected_topics: ["fine-tuning"], difficulty: "hard" },
+  { id: "b46", question: "Mamba와 RWKV가 Transformer의 O(n²) 한계를 어떻게 우회하나?",
+    expected_entities: ["Mamba", "RWKV", "Transformer"], expected_topics: ["SSM", "attention alternative"], difficulty: "hard" },
+  { id: "b47", question: "DeepMind의 AlphaGo 계보가 현재 LLM 연구에 남긴 유산은?",
+    expected_entities: ["DeepMind"], expected_topics: ["RL", "search"], difficulty: "hard" },
+  { id: "b48", question: "MCP가 OpenAI Function Calling 대비 갖는 구조적 장점은?",
+    expected_entities: ["MCP", "OpenAI", "Anthropic"], expected_topics: ["tool use", "protocol"], difficulty: "hard" },
+  { id: "b49", question: "ReAct 논문이 AutoGPT 류 시스템 설계에 미친 영향은?",
+    expected_entities: ["ReAct", "AutoGPT"], expected_topics: ["agent", "reasoning"], difficulty: "hard" },
+  { id: "b50", question: "Constitutional AI가 기존 RLHF 대비 해결한 문제는?",
+    expected_entities: ["Constitutional AI", "RLHF", "Anthropic"], expected_topics: ["alignment", "self-critique"], difficulty: "hard" },
 ];
 
 export interface BenchmarkResult {
@@ -167,6 +233,11 @@ export interface BenchmarkResult {
   entities_found: string[];
   entities_expected: string[];
   entity_recall: number; // found/expected
+  // Grounding: of entity-like tokens cited in the answer, what fraction
+  // actually exists as nodes in the graph? Catches hallucinated citations.
+  grounded_entities: number;
+  cited_entities: number;
+  grounding_rate: number; // grounded/cited (1.0 if no citations made)
   context_relevant: boolean;
   answer_quality: "good" | "partial" | "poor" | "no_answer";
   latency_ms: number;
@@ -179,6 +250,7 @@ export interface BenchmarkReport {
   summary: {
     total: number;
     entity_recall_avg: number;
+    grounding_rate_avg: number;
     good_answers: number;
     partial_answers: number;
     poor_answers: number;

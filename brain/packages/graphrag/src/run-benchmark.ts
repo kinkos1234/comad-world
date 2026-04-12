@@ -25,6 +25,45 @@ async function getGraphSize(): Promise<{ nodes: number; edges: number }> {
   };
 }
 
+/**
+ * Extract candidate entity citations from an answer: known-entity mentions
+ * plus capitalized multi-char tokens. Does not include Korean nouns — those
+ * are too noisy to ground-check reliably.
+ */
+function extractCitedEntities(answer: string): string[] {
+  const caps = answer.match(/\b[A-Z][A-Za-z0-9-]{1,}(?:\s[A-Z][A-Za-z0-9-]+)*\b/g) ?? [];
+  const unique = new Set<string>();
+  for (const c of caps) {
+    if (c.length < 2) continue;
+    // Skip stop words that often appear capitalized
+    if (/^(The|A|An|And|Or|Is|Was|In|On|For|To|By)$/i.test(c)) continue;
+    unique.add(c);
+  }
+  return [...unique];
+}
+
+/**
+ * For each cited entity, check whether a node exists in the graph whose
+ * name/title/label matches (case-insensitive substring). A single Cypher
+ * per batch keeps this cheap.
+ */
+async function checkGrounding(cited: string[]): Promise<number> {
+  if (cited.length === 0) return 0;
+  const result = await query(
+    `UNWIND $names AS name
+     OPTIONAL MATCH (n)
+     WHERE toLower(coalesce(n.name, n.title, n.label, '')) CONTAINS toLower(name)
+     WITH name, count(n) AS hits
+     RETURN name, hits`,
+    { names: cited }
+  );
+  let grounded = 0;
+  for (const row of result) {
+    if ((row?.get("hits") ?? 0) > 0) grounded++;
+  }
+  return grounded;
+}
+
 async function runBenchmark(): Promise<void> {
   console.log("GraphRAG Benchmark — Starting...\n");
 
@@ -62,6 +101,11 @@ async function runBenchmark(): Promise<void> {
       ).length;
       const contextRelevant = topicHits > 0 || q.expected_topics.length === 0;
 
+      // Grounding: fraction of cited entities that exist in the graph
+      const cited = extractCitedEntities(answer);
+      const grounded = await checkGrounding(cited);
+      const groundingRate = cited.length > 0 ? grounded / cited.length : 1;
+
       // Quality assessment
       if (entityRecall >= 0.8 && contextRelevant) {
         answerQuality = "good";
@@ -76,6 +120,9 @@ async function runBenchmark(): Promise<void> {
         entities_found: entitiesFound,
         entities_expected: q.expected_entities,
         entity_recall: entityRecall,
+        grounded_entities: grounded,
+        cited_entities: cited.length,
+        grounding_rate: groundingRate,
         context_relevant: contextRelevant,
         answer_quality: answerQuality,
         latency_ms: latency,
@@ -84,7 +131,7 @@ async function runBenchmark(): Promise<void> {
       results.push(result);
 
       const icon = answerQuality === "good" ? "✓" : answerQuality === "partial" ? "~" : "✗";
-      console.log(`${icon} ${latency}ms (recall: ${Math.round(entityRecall * 100)}%)`);
+      console.log(`${icon} ${latency}ms (recall: ${Math.round(entityRecall * 100)}%, grounding: ${Math.round(groundingRate * 100)}%)`);
     } catch (e) {
       const latency = Math.round(performance.now() - start);
       results.push({
@@ -92,6 +139,9 @@ async function runBenchmark(): Promise<void> {
         entities_found: [],
         entities_expected: q.expected_entities,
         entity_recall: 0,
+        grounded_entities: 0,
+        cited_entities: 0,
+        grounding_rate: 0,
         context_relevant: false,
         answer_quality: "no_answer",
         latency_ms: latency,
@@ -125,6 +175,9 @@ async function runBenchmark(): Promise<void> {
     summary: {
       total: results.length,
       entity_recall_avg: Math.round(avgRecall * 100) / 100,
+      grounding_rate_avg: Math.round(
+        (results.reduce((s, r) => s + r.grounding_rate, 0) / results.length) * 100
+      ) / 100,
       good_answers: good,
       partial_answers: partial,
       poor_answers: poor,
@@ -145,6 +198,7 @@ async function runBenchmark(): Promise<void> {
   console.log(`  Graph: ${graphSize.nodes.toLocaleString()} nodes`);
   console.log(`  Good: ${good}  Partial: ${partial}  Poor: ${poor}  No Answer: ${noAnswer}`);
   console.log(`  Entity Recall: ${Math.round(avgRecall * 100)}%`);
+  console.log(`  Grounding Rate: ${Math.round(report.summary.grounding_rate_avg * 100)}%`);
   console.log(`  Avg Latency: ${avgLatency}ms`);
   console.log("───────────────────────────────────────");
   for (const [diff, stats] of Object.entries(byDifficulty)) {
