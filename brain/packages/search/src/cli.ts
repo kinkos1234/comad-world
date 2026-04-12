@@ -11,6 +11,7 @@ import { search, searchAndPlan, formatResults } from "./index.js";
 import { formatPlan } from "./planner.js";
 import { createSandbox, verifySandbox } from "./sandbox.js";
 import { recordDecision, getPatternConfidence } from "./plan-tracker.js";
+import { readCachedPlans, writeCachedPlans } from "./plan-cache.js";
 import { getMetricsTrend } from "./metrics.js";
 import { getSurvivalStats } from "./survival.js";
 
@@ -134,20 +135,28 @@ const constraints = {
 };
 
 if (applyIndex !== null) {
-  // Phase 3: --apply mode
-  const result = await searchAndPlan(query, constraints, planCount);
+  // Phase 3: --apply mode. Cache plans so repeated --apply N calls for the
+  // same query don't re-run search each time (previously 30-120s per call).
+  let plans = await readCachedPlans(query, constraints);
+  if (plans) {
+    console.log(`[cache] Reusing ${plans.length} plans for "${query}"`);
+  } else {
+    const result = await searchAndPlan(query, constraints, planCount);
+    plans = result.plans;
+    if (plans.length > 0) await writeCachedPlans(query, constraints, plans);
+  }
 
-  if (result.plans.length === 0) {
+  if (plans.length === 0) {
     console.error("Error: no adoption plans generated. Nothing to apply.");
     process.exit(1);
   }
 
-  if (applyIndex < 1 || applyIndex > result.plans.length) {
-    console.error(`Error: --apply index must be 1-${result.plans.length} (got ${applyIndex})`);
+  if (applyIndex < 1 || applyIndex > plans.length) {
+    console.error(`Error: --apply index must be 1-${plans.length} (got ${applyIndex})`);
     process.exit(1);
   }
 
-  const plan = result.plans[applyIndex - 1];
+  const plan = plans[applyIndex - 1];
   console.log(formatPlan(plan));
 
   if (dryRun) {
