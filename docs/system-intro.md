@@ -126,6 +126,17 @@ Discord 메시지 감지
 | **LightRAG** | 이중 검색 (Local+Global) | Temporal 축 추가 → 3갈래 검색. Claim 신뢰도 스코어링. ear 필독 연동 (+0.2 부스트) |
 | **GraphRAG (MS)** | 커뮤니티 기반 요약 | Leiden → 3단계 계층 (22개 커뮤니티). 한국어 최적화 |
 
+**품질 지표 (2026-04-13, 50문항 벤치마크):**
+- **Entity Recall 93%** — 기대 엔티티가 답변에 등장하는 비율 (이전 83%)
+- **Grounding Rate 93%** — 답변 인용 엔티티가 실제 그래프에 존재하는 비율 (신규)
+- **Avg Latency 13.8s** — 질문당 p50 (이전 20.7s)
+- **Hard 난이도 Good 72%** — 다중 홉 추론 질문도 대부분 정답 (이전 25%)
+
+**최근 품질 개선 (Phase A/B):**
+- **Concept Expansion** — 질문에 엔티티가 직접 나타나지 않아도 연관 엔티티를 그래프 공동등장 기반으로 자동 확장. "hallucination 해결법" → RLHF, Constitutional AI, RAG 추가.
+- **3KB Context Cap** — 프롬프트 토큰이 synth 지연의 주요 원인. 컨텍스트를 3KB로 제한하여 레이턴시 33% 감소.
+- **Grounding Rate 지표** — 답변의 인용 엔티티가 그래프에 실제 존재하는지 검증하는 hallucination-resistant 메트릭 도입.
+
 **애로사항 & 해결:**
 - **CRLF 문제:** Windows에서 작성된 크롤러 스크립트 5개가 macOS cron에서 실행 실패. → 전체 LF 변환으로 해결.
 - **크롤러 토큰 낭비:** 크론 스크립트가 `claude -p`(Sonnet)로 WebSearch를 호출 → 이미 구현된 직접 API 크롤러(HN/arXiv/GitHub)가 있었지만 사용되지 않고 있었음. → 크론 스크립트를 bun 크롤러로 교체하여 **크롤링 토큰 100% 절감 (15K/일 → 0)**.
@@ -299,13 +310,16 @@ Discord 메시지 감지
 comad-ear (아카이브)  ──────────→  comad-brain (지식 그래프)
   184건 기사                         60,827 노드
   3단계 관련성                        150,988 관계
-                                     12 MCP 도구
-                                         │
-                                         ▼
-                                    comad-eye (시뮬레이션)
-                                      10 분석 렌즈
-                                      전파 시뮬레이션
-                                      보고서 생성
+  ├── 일일 digest HTML                12 MCP 도구
+  └── ear-ingest (daily 07:00)            │
+         │                                 ▼
+         ▼                             comad-eye (시뮬레이션)
+      /search 파이프라인                  10 분석 렌즈
+      GitHub/npm/PyPI/arXiv 탐색           전파 시뮬레이션
+      → 오프토픽 게이트                      보고서 생성
+      → adoption plan
+      → sandbox 검증
+      → plan-decisions.jsonl
 
 comad-photo (보정)  ←── Claude Vision + Photoshop MCP
   PIL → Camera Raw → 고급 보정
@@ -319,6 +333,12 @@ comad-voice (오케스트레이션)  ←── CLAUDE.md 트리거
   6개 자동 워크플로우
   비개발자 친화적 인터페이스
 ```
+
+**자가진화 피드백 루프 (2026-04-13 완성):**
+- `ear/archive/*.md` 필독 기사 → 기술 토큰 추출 → `/search` 쿼리 자동 생성
+- `/search` 평가기 → 오프토픽(genome/finance/game)·저품질 레포 차단 게이트
+- 통과한 후보 → `git worktree` sandbox → `bun install + tsc + bun test` (transient fail 시 1회 재시도)
+- 결과 → `plan-decisions.jsonl`에 누적 → 다음 evolution-loop의 trend 입력
 
 ---
 

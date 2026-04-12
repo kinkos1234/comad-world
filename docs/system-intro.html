@@ -453,10 +453,25 @@
     </div>
 
     <div class="sub-section">
+      <h4>GraphRAG 품질 벤치마크 <span style="color:var(--text-dim);font-size:0.7rem;font-weight:400">(50문항, 2026-04-13)</span></h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.6rem;margin-bottom:1rem;">
+        <div style="background:var(--surface2);border-radius:6px;padding:0.8rem;text-align:center;"><div style="font-size:1.3rem;font-weight:800;color:var(--green)">93%</div><div style="font-size:0.68rem;color:var(--text-dim)">Entity Recall</div></div>
+        <div style="background:var(--surface2);border-radius:6px;padding:0.8rem;text-align:center;"><div style="font-size:1.3rem;font-weight:800;color:var(--green)">93%</div><div style="font-size:0.68rem;color:var(--text-dim)">Grounding Rate</div></div>
+        <div style="background:var(--surface2);border-radius:6px;padding:0.8rem;text-align:center;"><div style="font-size:1.3rem;font-weight:800;color:var(--teal)">13.8s</div><div style="font-size:0.68rem;color:var(--text-dim)">Avg Latency</div></div>
+        <div style="background:var(--surface2);border-radius:6px;padding:0.8rem;text-align:center;"><div style="font-size:1.3rem;font-weight:800;color:var(--text-bright)">72%</div><div style="font-size:0.68rem;color:var(--text-dim)">Hard Good Rate</div></div>
+      </div>
+      <p style="font-size:0.82rem;line-height:1.7;color:var(--text-dim);">
+        이전 대비 Recall <span style="color:var(--green)">83% &rarr; 93%</span>, Latency <span style="color:var(--teal)">20.7s &rarr; 13.8s</span>. Grounding Rate는 답변에 인용된 엔티티가 실제 그래프에 존재하는 비율을 측정하는 hallucination-resistant 메트릭(신규).
+      </p>
+    </div>
+
+    <div class="sub-section">
       <h4>아이디어 차용 & 고도화</h4>
       <div class="borrow-grid">
         <div class="borrow-card"><div class="origin">LightRAG</div><div class="point">이중 검색 (Local + Global)</div><div class="improve">&rarr; Temporal 축 추가. Claim 스코어링. ear 필독 연동</div></div>
         <div class="borrow-card"><div class="origin">GraphRAG (MS)</div><div class="point">커뮤니티 기반 요약</div><div class="improve">&rarr; Leiden 3단계 계층 (22개). 한국어 최적화</div></div>
+        <div class="borrow-card"><div class="origin">Karpathy (심플리시티)</div><div class="point">"프롬프트 토큰이 지연의 주원인"</div><div class="improve">&rarr; 3KB context cap 한 줄 수정으로 레이턴시 33% 감소</div></div>
+        <div class="borrow-card"><div class="origin">Vannevar Bush (Memex)</div><div class="point">연상(association)은 그래프에 살아야</div><div class="improve">&rarr; 정적 concept 매핑 + Neo4j 공동등장 기반 동적 확장</div></div>
       </div>
     </div>
 
@@ -525,8 +540,8 @@
     <div class="compact-card reveal">
       <h3 style="color:var(--teal)">comad-ear</h3>
       <p class="one-liner">Discord에서 기술 뉴스를 자동 감지하여 아카이브</p>
-      <div class="detail">관련성 3단계 분류 (필독 13% / 추천 65% / 참고 22%)<br>YAML frontmatter, brain 인제스터 자동 연동</div>
-      <div class="highlight">초기 필독 40% &rarr; 엄격 기준 후 13%</div>
+      <div class="detail">관련성 3단계 분류 (필독 13% / 추천 65% / 참고 22%)<br>YAML frontmatter, brain 인제스터 자동 연동<br>일일 digest HTML 자동 생성 + 필독 기사 &rarr; /search 자동 피드</div>
+      <div class="highlight">자가진화 루프 완성: ear 필독 &rarr; /search &rarr; adoption</div>
     </div>
     <div class="compact-card reveal">
       <h3 style="color:var(--pink)">comad-photo</h3>

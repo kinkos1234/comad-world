@@ -186,7 +186,9 @@ All modules are accessible via natural language — no slash commands needed. 4 
 Neo4j-based knowledge graph that crawls, extracts entities, and answers questions via MCP.
 
 - **20+ MCP tools** for querying, searching, and analyzing the graph
-- **Dual-retriever GraphRAG** — Local + Global + Temporal 3-way search with quality benchmark (20 fixed questions)
+- **Dual-retriever GraphRAG** — Local + Global + Temporal 3-way search. Benchmark (50 questions): **93% entity recall, 93% grounding rate, 13.8s p50 latency**
+- **Graph-driven query expansion** — concept keywords (hallucination, agent, GPU, …) expanded via Neo4j co-occurrence + static fallback; 1h LRU cache
+- **Grounded synthesis** — every cited entity is verified to exist in the graph (hallucination-resistant answer metric)
 - **MetaEdge engine** — 10 rules for automated relationship inference
 - **Entity & claim confidence** — every node scored 0.0–1.0 (explicit mention=0.9+, inferred=0.6–0.8, uncertain=0.3–0.5)
 - **Claim tracking** — fact/opinion/prediction with confidence scores, decay, and timelines
@@ -207,7 +209,8 @@ Discord bot that detects articles, classifies relevance, and archives with struc
 
 - **3-tier relevance**: Must-Read (~15%) → Recommended (~65%) → Reference (~20%)
 - **Configurable categories** from `comad.config.yaml`
-- **Daily digest** auto-generation in HTML (generated on bot session start)
+- **Daily digest** auto-generation in HTML — nightly cron writes `ear/digests/YYYY-MM-DD-digest.html`
+- **Auto-ingest to /search** — must-read articles in core categories (AI/LLM, Tool, OpenSource, …) are fed into the search pipeline daily, closing the loop ear → brain → /search → adoption
 - **YAML frontmatter** for every archived article
 
 ### Eye — Prediction Simulation Engine
@@ -287,12 +290,15 @@ GitHub repo discovery → evaluation → adoption planning → sandbox testing. 
 
 - **Multi-source search**: GitHub, npm, PyPI, and arXiv (papers with code) searched in parallel
 - **3-axis evaluation**: trust (stars/forks/activity), quality (tests/CI/README), relevance (config-driven keywords from `comad.config.yaml`)
+- **Off-topic adoption gate**: hard filter against unrelated domains (genome/finance/game/physics/…) + required overlap with the comad stack (knowledge graph, MCP, Neo4j, agent, LLM, RAG, …)
 - **Neo4j graph storage**: reference cards stored as graph nodes for cross-referencing with brain entities
 - **Adoption planning**: maps discovered patterns to concrete file changes with risk assessment
-- **Sandbox testing**: git worktree isolation for safe verification before merging
+- **Sandbox testing**: git worktree isolation for safe verification. `bun install` + `tsc --noEmit` + `bun test` with automatic retry on transient failure
+- **Plan cache**: `--apply N` calls reuse prior `searchAndPlan` output (SHA1-keyed, 1h TTL) so repeated adoption of the same query doesn't re-hit external APIs
 - **Self-supervised learning**: git survival analysis tracks whether adopted patterns survive or get reverted
+- **Ear → /search feed**: nightly cron reads new must-read articles, extracts tech tokens from title+summary, and runs them through the search pipeline
 - **Weekly CRON**: automatic PUSH mode diagnosis every Monday
-- **6 anti-signals**: marketing README, no license, abandoned repos, star manipulation
+- **8 anti-signals**: marketing README, no license, abandoned repos, star manipulation, off-topic domain, missing core-stack match, missing getting-started section, imbalanced star/issue ratio
 
 ```bash
 cd brain
