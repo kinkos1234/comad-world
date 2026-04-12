@@ -175,6 +175,7 @@ export async function analyzeQuery(question: string): Promise<AnalyzedQuery> {
   // Then extract capitalized words (likely proper nouns) from original question
   const words = question.match(/[A-Z][a-zA-Z0-9-]+(?:\s[A-Z][a-zA-Z0-9-]+)*/g) || [];
   for (const w of words) {
+    if (STOPWORDS.has(w.toLowerCase())) continue;
     if (!entities.some(e => e.toLowerCase() === w.toLowerCase()) && w.length > 1) {
       entities.push(w);
     }
