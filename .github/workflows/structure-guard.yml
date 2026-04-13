@@ -1,0 +1,84 @@
+name: Structure Guard
+
+# Enforces ADR 0001 — the umbrella tracks *wiring*, never shadow copies of
+# files that belong to a module. Runs on every PR/push so drift is caught
+# at review time, not months later.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  duplicate-file-guard:
+    name: No orphan duplicates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: eye — no root-level YAML that shadows config/
+        run: |
+          fail=0
+          for f in eye/*.yaml; do
+            [ -f "$f" ] || continue
+            base=$(basename "$f")
+            case "$base" in
+              docker-compose.yaml) continue ;;   # legitimately at root
+              settings.yaml)       continue ;;   # user-local override tolerated
+            esac
+            if [ -f "eye/config/$base" ]; then
+              echo "::error file=$f::eye/$base duplicates eye/config/$base — delete the root copy (ADR 0001 §1)"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: eye — no root-level test_*.py (they belong under eye/tests/)
+        run: |
+          shopt -s nullglob
+          roots=(eye/test_*.py)
+          if [ "${#roots[@]}" -gt 0 ]; then
+            printf "::error::found %d orphan test files at eye/ root — move them under eye/tests/ (refact.md §7.2)\n" "${#roots[@]}"
+            printf '  %s\n' "${roots[@]}"
+            exit 1
+          fi
+
+      - name: comad.lock — every listed module directory exists
+        run: |
+          [ -f comad.lock ] || { echo "comad.lock missing"; exit 1; }
+          fail=0
+          for m in brain ear eye photo sleep voice; do
+            if grep -q "^  $m:" comad.lock; then
+              if [ ! -d "$m" ]; then
+                echo "::error file=comad.lock::module '$m' pinned but directory missing"
+                fail=1
+              fi
+            fi
+          done
+          exit $fail
+
+      - name: VERSION must be semver
+        run: |
+          v=$(cat VERSION 2>/dev/null | tr -d ' \n')
+          echo "$v" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$' || {
+            echo "::error file=VERSION::not a valid semver: '$v'"
+            exit 1
+          }
+
+  generated-artifact-guard:
+    name: No build artifacts in git
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject tracked __pycache__ / node_modules / .next / tsbuildinfo
+        run: |
+          fail=0
+          for pattern in '**/__pycache__/**' '**/node_modules/**' '**/.next/**' '**/tsbuildinfo' '**/*.pyc'; do
+            hits=$(git ls-files -- "$pattern" 2>/dev/null | head -10 || true)
+            if [ -n "$hits" ]; then
+              echo "::error::tracked paths matching $pattern — add to .gitignore and remove from index"
+              echo "$hits" | sed 's/^/    /'
+              fail=1
+            fi
+          done
+          exit $fail
