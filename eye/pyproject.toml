@@ -1,0 +1,23 @@
+# eye/pyproject.toml — canonical src/ layout for comad_eye (ADR 0005).
+#
+# Today this file declares the package so `pip install -e eye/` picks up
+# eye/src/comad_eye. Modules migrate into src/comad_eye/ one-at-a-time;
+# top-level eye/*.py stay importable until the migration finishes.
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comad_eye"
+version = "0.3.0.dev0"
+description = "Ontology-Native Prediction Simulation Engine"
+requires-python = ">=3.13"
+dynamic = ["dependencies"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["comad_eye*"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
