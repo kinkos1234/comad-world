@@ -10,14 +10,13 @@
 # placeholders; this script will pick them up.
 set -euo pipefail
 
+# shellcheck source=scripts/lib/common.sh
+. "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-if [ -t 1 ]; then
-  GREEN='\033[0;32m'; YELLOW='\033[1;33m'; DIM='\033[2m'; NC='\033[0m'
-else
-  GREEN=''; YELLOW=''; DIM=''; NC=''
-fi
+GREEN="$COMAD_GREEN"; YELLOW="$COMAD_YELLOW"; DIM="$COMAD_DIM"; NC="$COMAD_NC"
 
 rendered=0
 skipped=0

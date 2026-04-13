@@ -11,7 +11,11 @@
 #
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=scripts/lib/common.sh
+. "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
+
+ROOT_DIR="$(comad_resolve_script_dir "${BASH_SOURCE[0]}")/.."
+ROOT_DIR="$(cd "$ROOT_DIR" && pwd)"
 cd "$ROOT_DIR"
 
 APPLY=0; DEEP=0
@@ -21,15 +25,12 @@ for arg in "$@"; do
     --deep)  DEEP=1 ;;
     -h|--help)
       sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) echo "Unknown arg: $arg" >&2; exit 1 ;;
+    *) die "Unknown arg: $arg" ;;
   esac
 done
 
-if [ -t 1 ]; then
-  GREEN='\033[0;32m'; YELLOW='\033[1;33m'; DIM='\033[2m'; NC='\033[0m'
-else
-  GREEN=''; YELLOW=''; DIM=''; NC=''
-fi
+# Color aliases used below (local scope, pointing to COMAD_* from lib/common.sh)
+GREEN="$COMAD_GREEN"; YELLOW="$COMAD_YELLOW"; DIM="$COMAD_DIM"; NC="$COMAD_NC"
 
 # Targets: caches + build artifacts + logs (not tracked, not source)
 TARGETS=(
