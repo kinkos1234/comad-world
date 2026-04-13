@@ -369,6 +369,13 @@ comad-voice (오케스트레이션)  ←── CLAUDE.md 트리거
 - E2E 테스트 60건 + brain 90개 + eye 1,332개 = **1,482개 테스트**
 - CI 파이프라인: brain (TypeScript + Bun), eye (Python + Next.js), voice (BATS + markdownlint)
 
+### 배포/업그레이드 전략 (v0.2.0, 2026-04-13)
+- 루트 `VERSION` 파일(semver) + `comad.lock` (6개 모듈 branch+SHA 고정, `package-lock.json` 방식)
+- `scripts/upgrade.sh`: Pre-flight(dirty tree abort, 실행 중 서비스 감지, `.env` 새 키 diff) → Snapshot(`.comad/backups/<ts>/`) → Pull(main + 6 modules) → Deps(bun/pip/npm) → Agents(voice marker 영역만 in-place 교체) → Summary + CHANGELOG 발췌. 플래그: `--dry-run`, `--force`, `--rollback <ts>`, `--list-backups`, `--lock`.
+- `scripts/comad` 전역 dispatcher가 `~/.local/bin/comad` 심링크로 설치 → 어느 디렉터리에서도 `comad upgrade`, `comad status`, `comad backups`, `comad rollback <ts>` 동작.
+- 설계 과정에서 8 석학 페르소나(Linus/Karpathy/House/Bach/Kondo/Rams/PG/Bush) 리뷰로 Option A/B/C 비교: B(마이그레이션 파이프라인)는 YAGNI로 첫 파괴적 변경 때 승급, C(npm 패키지)는 사용자 1,000+ 시 재고. 현재 Option A' 경량 안전 버전으로 출발.
+- CI(`upgrade-smoke.yml`)가 PR마다 `--dry-run --force`, `comad help/version/where/status/backups`까지 검증.
+
 ---
 
 ## 5. 주요 애로사항 & 해결 종합
