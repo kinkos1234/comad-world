@@ -144,6 +144,7 @@ Discord 메시지 감지
 - **추출 비용:** 엔티티 추출이 Sonnet으로 실행되어 일일 ~$4.50. → 구조화 추출 4곳을 Haiku로 전환, 답변 합성만 Sonnet 유지. **일일 비용 ~87% 절감**.
 - **소스 편향:** HN + OpenAI Blog 편중. → 25개 RSS 균등 배분 + 다양성 캡(단일 소스 최대 30%) 적용.
 - **Neo4j 메모리 부족:** 61K 노드 그래프와 eye 공유 시 트랜잭션 메모리 초과. → 힙 2GB + 트랜잭션 1GB로 확대.
+- **macOS cron이 `claude -p` 인증 실패 (2026-04-13):** cron은 Aqua 세션 밖이라 OAuth keychain을 읽을 수 없어 모든 LLM 호출이 exit 1. → **크로스플랫폼 스케줄러**로 해결: macOS는 LaunchAgent(gui/uid 세션 상속), Linux/WSL은 cron(세션 keychain 전파), Windows는 Task Scheduler(`LogonType=Interactive`). 단일 `schedule-install.sh`가 OS 감지해서 라우팅. Max 구독 OAuth 그대로 사용, 추가 API 키 불필요.
 
 **실제 시연 테스트 결과 (2026-04-04):**
 

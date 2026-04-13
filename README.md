@@ -89,6 +89,24 @@ bun run crawl:hn && bun run crawl:ingest   # crawl & ingest
 bun run mcp                                 # start MCP server
 ```
 
+### Scheduled jobs (cross-platform)
+
+Crawlers, ingest, benchmark, and ear-ingest run on a schedule. One command
+auto-detects your OS and picks the right scheduler:
+
+```bash
+zsh brain/scripts/schedule-install.sh
+```
+
+| OS | Scheduler | Why this route |
+|---|---|---|
+| macOS | LaunchAgents (`gui/<uid>`) | cron runs outside the Aqua session → `claude -p` can't reach the OAuth keychain and fails silently. LaunchAgents inherit the GUI session. |
+| Linux / WSL | cron | Session keychain propagates to cron; no macOS-style lockout. |
+| Windows | Task Scheduler (`LogonType=Interactive`) | Tasks only fire while the user is logged on, so DPAPI/OAuth stays unlocked. Uses bun directly — no shell needed. |
+
+All three routes use the existing Claude Max subscription — no extra API key
+needed. See `brain/scripts/launchd/README.md` for the macOS diagnosis.
+
 ---
 
 ## Demo: Swap a Preset, Change Everything
