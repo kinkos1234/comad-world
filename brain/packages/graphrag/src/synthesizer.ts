@@ -1,6 +1,10 @@
-import { writeFileSync, unlinkSync } from "fs";
+import { writeFileSync, unlinkSync, appendFileSync, mkdirSync } from "fs";
 import { tmpdir } from "os";
-import { join } from "path";
+import { join, resolve } from "path";
+import {
+  classifyQuestionComplexity,
+  type Classification,
+} from "./synth-classifier.js";
 
 // Opt-in Ollama path via USE_OLLAMA=1. Default is claude -p: benchmarking
 // (2026-04-13) showed qwen3.5:9b doubles latency, qwen2.5:3b collapses recall.
@@ -67,6 +71,38 @@ export function clearSynthCache(): void {
   synthCache.clear();
 }
 
+// ─── Routing log (ADR 0003) ──────────────────────────────────────────────────
+function logRoutingDecision(r: {
+  question: string;
+  graphContext: string;
+  answer: string;
+  classification: Classification;
+  latencyMs: number;
+}): void {
+  if ((process.env.SYNTH_ROUTING ?? "off") === "off") return;
+  try {
+    const logPath = resolve(
+      process.cwd(),
+      process.env.SYNTH_ROUTING_LOG ?? "brain/data/logs/synth-routing.jsonl"
+    );
+    mkdirSync(join(logPath, ".."), { recursive: true });
+    appendFileSync(
+      logPath,
+      JSON.stringify({
+        ts: Date.now(),
+        tier: r.classification.tier,
+        reasons: r.classification.reasons,
+        question_len: r.question.length,
+        context_len: r.graphContext.length,
+        latency_ms: r.latencyMs,
+        answer_len: r.answer.length,
+      }) + "\n"
+    );
+  } catch {
+    // Logging is best-effort; never fail a user request because of it.
+  }
+}
+
 /**
  * Synthesize an answer using Claude with graph context.
  * Results are cached to avoid repeated LLM calls.
@@ -102,8 +138,30 @@ ${trimmedContext}
 
   const tmpFile = join(tmpdir(), `ko-synth-${Date.now()}.txt`);
 
+  const routing = process.env.SYNTH_ROUTING ?? "off";
+  const classification =
+    routing === "off"
+      ? ({ tier: "hard" as const, reasons: ["routing-off"] } satisfies Classification)
+      : classifyQuestionComplexity(question, graphContext.length);
+
   try {
-    const answer = await synthesizeOllama(prompt) ?? await synthesizeClaudeCLI(prompt, tmpFile);
+    const t0 = Date.now();
+    // Easy tier: try Ollama (short timeout), fall back to claude -p.
+    // Hard tier: go straight to claude -p. Matches today's behavior
+    // exactly when SYNTH_ROUTING=off.
+    const answer =
+      classification.tier === "easy"
+        ? (await synthesizeOllama(prompt)) ?? (await synthesizeClaudeCLI(prompt, tmpFile))
+        : await synthesizeClaudeCLI(prompt, tmpFile);
+    const latencyMs = Date.now() - t0;
+
+    logRoutingDecision({
+      question,
+      graphContext,
+      answer,
+      classification,
+      latencyMs,
+    });
 
     // Cache the answer
     if (synthCache.size >= SYNTH_CACHE_MAX) {
