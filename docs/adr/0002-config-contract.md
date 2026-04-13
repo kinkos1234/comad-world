@@ -1,6 +1,6 @@
 # ADR 0002 — `comad.config.yaml` Contract
 
-- **Status:** Proposed
+- **Status:** Accepted (PR 1 landed 2026-04-14)
 - **Date:** 2026-04-14
 - **Deciders:** Comad World maintainer (@kinkos1234)
 - **Depends on:** ADR 0001 (Repository Strategy)
@@ -181,6 +181,16 @@ build-time concern (a Makefile target, not a runtime requirement).
 
 ## Decision
 
-**Not yet decided.** This ADR is posted as **Proposed** for review. It will
-move to **Accepted** once the schema is drafted and the first validation
-gate lands (PR 1 above).
+**Accepted.** PR 1 landed in `2026-04-14`:
+
+- `schema/comad.config.schema.json` — canonical JSON Schema (draft-2020-12).
+  Validated against the live `comad.config.yaml` and all four
+  `presets/*.yaml`.
+- `scripts/validate-config.sh` — local/CI validator (python3+PyYAML →
+  JSON → `ajv-cli@5`).
+- `make validate-config` — Makefile entrypoint.
+- `.github/workflows/structure-guard.yml` — new `config-schema-validation`
+  job runs the validator on every push/PR.
+
+Remaining work tracked under Phase 3 of `refact.md`: PR 2 (apply-config
+generalization), PR 3 (per-module typed loaders), PR 4 (type codegen).

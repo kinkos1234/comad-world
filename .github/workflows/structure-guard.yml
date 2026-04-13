@@ -65,6 +65,17 @@ jobs:
             exit 1
           }
 
+  config-schema-validation:
+    name: comad.config.yaml matches schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install pyyaml
+      - run: bash scripts/validate-config.sh
+
   generated-artifact-guard:
     name: No build artifacts in git
     runs-on: ubuntu-latest

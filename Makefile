@@ -75,3 +75,8 @@ clean-deep:
 .PHONY: render
 render:
 	@bash scripts/render-templates.sh
+
+# ─── Config validation ───
+.PHONY: validate-config
+validate-config:
+	@bash scripts/validate-config.sh

@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kinkos1234/comad-world/blob/main/schema/comad.config.schema.json",
+  "title": "Comad World config contract",
+  "description": "Schema for comad.config.yaml. Authored by ADR 0002. The canonical source of truth for the shape — the Python/TypeScript loaders are generated from this file.",
+  "type": "object",
+  "required": ["profile", "interests", "categories", "sources"],
+  "additionalProperties": false,
+  "properties": {
+    "profile": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name":        { "type": "string", "minLength": 1 },
+        "language":    { "type": "string", "pattern": "^[a-z]{2}(-[A-Z]{2})?$", "default": "en" },
+        "description": { "type": "string" }
+      }
+    },
+
+    "interests": {
+      "type": "object",
+      "description": "Domain anchor — high/medium/low priority buckets of interest.",
+      "additionalProperties": false,
+      "properties": {
+        "high":   { "$ref": "#/$defs/interestList" },
+        "medium": { "$ref": "#/$defs/interestList" },
+        "low":    { "$ref": "#/$defs/interestList" }
+      }
+    },
+
+    "categories": {
+      "type": "array",
+      "description": "Classification bucket names used by ear. Strings for now; may evolve to objects (see ADR 0002 open questions).",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+
+    "sources": {
+      "type": "object",
+      "description": "What to crawl. Each source type is optional; at least one must be present for the system to produce output.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "rss_feeds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "url"],
+            "additionalProperties": false,
+            "properties": {
+              "name":   { "type": "string", "minLength": 1 },
+              "url":    { "type": "string", "pattern": "^https?://" },
+              "weight": { "type": "number", "minimum": 0, "maximum": 10 }
+            }
+          }
+        },
+        "hn_queries": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "arxiv": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["category"],
+            "additionalProperties": false,
+            "properties": {
+              "category":    { "type": "string", "pattern": "^[a-zA-Z-]+(\\.[a-zA-Z]+)?$" },
+              "keywords":    { "type": "array", "items": { "type": "string" } },
+              "max_results": { "type": "integer", "minimum": 1, "maximum": 10000 }
+            }
+          }
+        },
+        "github": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "topics":         { "type": "array", "items": { "type": "string" } },
+            "search_queries": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "news": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "pattern"],
+            "additionalProperties": false,
+            "properties": {
+              "name":    { "type": "string" },
+              "pattern": { "type": "string" },
+              "type":    { "type": "string", "enum": ["link_detect", "rss", "scrape"] }
+            }
+          }
+        }
+      }
+    },
+
+    "must_read_stack": {
+      "type": "array",
+      "description": "Technology names a user considers must-read. ear uses this as a relevance boost signal.",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+
+    "brain": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "neo4j": { "$ref": "#/$defs/neo4jConn" },
+        "entity_extraction": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "domain_hint":        { "type": "string" },
+            "relationship_types": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+
+    "eye": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "neo4j": { "$ref": "#/$defs/neo4jConn" },
+        "llm": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "base_url": { "type": "string", "pattern": "^https?://" },
+            "model":    { "type": "string" }
+          }
+        },
+        "embeddings": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "model":  { "type": "string" },
+            "device": { "type": "string", "enum": ["cpu", "cuda", "mps"] }
+          }
+        }
+      }
+    },
+
+    "ear": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "ear's classification ratios. Three numbers should sum to 1.0 but we warn rather than error (operators often tune these by hand).",
+      "properties": {
+        "must_read_ratio":    { "type": "number", "minimum": 0, "maximum": 1 },
+        "recommended_ratio":  { "type": "number", "minimum": 0, "maximum": 1 },
+        "reference_ratio":    { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  },
+
+  "$defs": {
+    "interestList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "keywords"],
+        "additionalProperties": false,
+        "properties": {
+          "name":     { "type": "string", "minLength": 1 },
+          "keywords": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+          "examples": {
+            "description": "Free-form examples, may be a single string or an array.",
+            "oneOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          }
+        }
+      }
+    },
+    "neo4jConn": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "uri":  { "type": "string", "pattern": "^(bolt|bolt\\+s|neo4j|neo4j\\+s)://" },
+        "user": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

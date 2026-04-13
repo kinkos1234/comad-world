@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **ADR 0002 — `comad.config.yaml` Contract** (`docs/adr/0002-config-contract.md`, **Accepted**): canonical JSON Schema (`schema/comad.config.schema.json`) validated against the live config plus all four presets. `make validate-config` (local) and a new CI job (`config-schema-validation` inside Structure Guard) catch typos, missing required fields, and type drift in under two seconds. Follow-up PRs 2–4 (apply-config generalization, per-module typed loaders, codegen) tracked in the ADR.
 - **ADR 0001 — Repository Strategy** (`docs/adr/0001-repository-strategy.md`): ratifies "documented hybrid" (nested module `.git` repos kept; umbrella owns wiring + `comad.lock`). Defines the Root=wiring / Module=owned-by-its-git / `comad.lock`=authoritative contract plus three trigger conditions that would force a revisit.
 - **Structure Guard CI** (`.github/workflows/structure-guard.yml`): enforces ADR 0001 at PR time — rejects root-level `eye/*.yaml` that shadow `eye/config/`, rejects `eye/test_*.py` orphans, validates `VERSION` semver, checks `comad.lock` module directories exist, and blocks any tracked `__pycache__` / `node_modules` / `.next` / `*.tsbuildinfo` / `*.pyc`.
 - **`scripts/lib/common.sh`**: shared shell helpers (colors, `info`/`warn`/`fail`/`step`/`die`, `comad_resolve_script_dir`, git/tool helpers) sourced by `clean-runtime.sh` and `render-templates.sh`. Upgrader and installer will migrate in a follow-up.
