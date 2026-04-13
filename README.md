@@ -65,47 +65,33 @@ photo (edit)    sleep (remember)    voice (automate)
 
 ---
 
+## Who is this for?
+
+- **Knowledge workers** who want a persistent, queryable memory of what they've read.
+- **Developers** building on Claude Code who want an MCP-powered knowledge graph.
+- **Domain experts** (AI/ML, finance, biotech, web dev) who need a focused research assistant — swap a YAML preset, the whole stack adapts.
+
 ## Quickstart
 
-### Prerequisites
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Claude Max subscription recommended)
-- [Docker](https://docker.com/) (for Neo4j)
-- [Bun](https://bun.sh/) (for brain module)
-- [Python 3.13+](https://python.org/) (for eye module)
+Prerequisites: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Docker](https://docker.com/), [Bun](https://bun.sh/), [Python 3.13+](https://python.org/).
 
 ```bash
-git clone https://github.com/kinkos1234/comad-world.git
-cd comad-world
-cp presets/ai-ml.yaml comad.config.yaml   # or: web-dev, finance, biotech
-./install.sh
-```
-
-Then start collecting knowledge:
-
-```bash
-cd brain && docker compose up -d && bun install && bun run setup
-bun run crawl:hn && bun run crawl:ingest   # crawl & ingest
-bun run mcp                                 # start MCP server
+git clone https://github.com/kinkos1234/comad-world.git && cd comad-world
+cp presets/ai-ml.yaml comad.config.yaml   # or web-dev / finance / biotech
+./install.sh                               # deps + Neo4j schema
+cd brain && bun run setup && bun run mcp   # start MCP server
+zsh brain/scripts/schedule-install.sh      # OS-aware scheduler (below)
 ```
 
 ### Scheduled jobs (cross-platform)
 
-Crawlers, ingest, benchmark, and ear-ingest run on a schedule. One command
-auto-detects your OS and picks the right scheduler:
-
-```bash
-zsh brain/scripts/schedule-install.sh
-```
-
-| OS | Scheduler | Why this route |
+| OS | Scheduler | Why |
 |---|---|---|
-| macOS | LaunchAgents (`gui/<uid>`) | cron runs outside the Aqua session → `claude -p` can't reach the OAuth keychain and fails silently. LaunchAgents inherit the GUI session. |
-| Linux / WSL | cron | Session keychain propagates to cron; no macOS-style lockout. |
-| Windows | Task Scheduler (`LogonType=Interactive`) | Tasks only fire while the user is logged on, so DPAPI/OAuth stays unlocked. Uses bun directly — no shell needed. |
+| macOS | LaunchAgents (`gui/<uid>`) | cron runs outside Aqua → keychain-locked; LaunchAgents inherit the GUI session. |
+| Linux / WSL | cron | Session keychain propagates. |
+| Windows | Task Scheduler (`LogonType=Interactive`) | DPAPI/OAuth stays unlocked while logged on. Uses bun directly — no shell. |
 
-All three routes use the existing Claude Max subscription — no extra API key
-needed. See `brain/scripts/launchd/README.md` for the macOS diagnosis.
+All three reuse the existing Claude Max OAuth — no extra API key. Details: `brain/scripts/launchd/README.md`.
 
 ---
 
@@ -341,65 +327,29 @@ cp presets/biotech.yaml comad.config.yaml    # Biotech / Life Sciences
 
 ### Custom: Edit comad.config.yaml
 
-The config file has 5 main sections:
-
-#### 1. Interests (drives ear relevance + brain filtering)
+The config has 5 sections. Minimal shape (see `presets/*.yaml` for full examples):
 
 ```yaml
 interests:
-  high:
-    - name: "Your Core Topic"
-      keywords: ["keyword1", "keyword2", "keyword3"]
-      examples: ["Tool A, Tool B, Framework C"]
-  medium:
-    - name: "Secondary Interest"
-      keywords: ["keyword4", "keyword5"]
-  low:
-    - name: "Filter This Out"
-      keywords: ["noise1", "noise2"]
-```
-
-#### 2. Sources (drives brain crawlers)
-
-```yaml
+  high:   [{ name: "Core Topic", keywords: ["k1", "k2"] }]
+  medium: [{ name: "Secondary",  keywords: ["k3"] }]
+  low:    [{ name: "Filter Out", keywords: ["noise"] }]
 sources:
-  rss_feeds:
-    - { name: "Blog Name", url: "https://example.com/feed.xml" }
-  arxiv:
-    - { category: "cs.CL", keywords: ["relevant", "terms"], max_results: 500 }
-  github:
-    topics: ["your-topic", "another-topic"]
-    search_queries: ["your search query"]
-```
-
-#### 3. Categories (drives ear tagging)
-
-```yaml
-categories:
-  - "Category A"
-  - "Category B"
-  - "Category C"
-```
-
-#### 4. Must-Read Stack (drives ear priority)
-
-```yaml
-must_read_stack:
-  - "Tool you use daily"
-  - "Framework you depend on"
-```
-
-#### 5. Entity Extraction (drives brain knowledge modeling)
-
-```yaml
+  rss_feeds: [{ name: "Blog", url: "https://example.com/feed.xml" }]
+  arxiv:     [{ category: "cs.CL", keywords: ["term"], max_results: 500 }]
+  github:    { topics: ["mcp"], search_queries: ["knowledge graph"] }
+categories: ["AI/LLM", "Tool", "OpenSource"]
+must_read_stack: ["Claude Code", "Neo4j", "Bun"]
 brain:
   entity_extraction:
-    domain_hint: "describe your domain in one sentence"
-    relationship_types:
-      - "USES_TECHNOLOGY"
-      - "COMPETES_WITH"
-      - "YOUR_CUSTOM_RELATION"
+    domain_hint: "one sentence describing your domain"
+    relationship_types: ["USES_TECHNOLOGY", "COMPETES_WITH"]
 ```
+
+- **`interests`** drives ear relevance + brain filtering.
+- **`sources`** drives brain crawlers.
+- **`categories`** drives ear tagging; **`must_read_stack`** drives ear priority.
+- **`brain.entity_extraction`** drives knowledge modeling in brain.
 
 ### Create Your Own Preset
 

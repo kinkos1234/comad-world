@@ -18,7 +18,7 @@
 macOS cron runs outside the user's Aqua session, so `claude -p`
 (which reads OAuth from keychain) fails with exit 1. We tested this:
 
-- **cron → claude -p**: `⚠ claude -p exited with code 1: ` (empty stderr)
+- **cron → claude -p**: `⚠ claude -p exited with code 1:` (empty stderr)
 - **launchd user agent → claude -p**: full authenticated response
 
 LaunchAgents in `gui/<uid>` inherit the GUI session, so the existing
