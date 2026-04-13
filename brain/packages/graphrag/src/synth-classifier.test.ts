@@ -41,4 +41,58 @@ describe("classifyQuestionComplexity", () => {
     expect(c.tier).toBe("hard");
     expect(c.reasons).toContain("long-question");
   });
+
+  it("boundary: exactly 80 chars + 1200 ctx + no hop words → easy", () => {
+    const q = "x".repeat(80);
+    const c = classifyQuestionComplexity(q, 1200);
+    expect(c.tier).toBe("easy");
+  });
+
+  it("boundary: 81 chars → hard", () => {
+    const q = "x".repeat(81);
+    const c = classifyQuestionComplexity(q, 500);
+    expect(c.tier).toBe("hard");
+  });
+
+  it("boundary: 1201 ctx → hard", () => {
+    const c = classifyQuestionComplexity("What is LLaMA?", 1201);
+    expect(c.tier).toBe("hard");
+  });
+
+  it("case-insensitive hop keywords (EXPLAIN)", () => {
+    const c = classifyQuestionComplexity("EXPLAIN backprop", 500);
+    expect(c.tier).toBe("hard");
+  });
+
+  it("trade-off keyword variants", () => {
+    const c1 = classifyQuestionComplexity("trade-off of MoE", 500);
+    const c2 = classifyQuestionComplexity("tradeoff of MoE", 500);
+    expect(c1.tier).toBe("hard");
+    expect(c2.tier).toBe("hard");
+  });
+
+  it("Korean multi-clause with 비교", () => {
+    const c = classifyQuestionComplexity("LLaMA와 Mistral 비교", 500);
+    expect(c.tier).toBe("hard");
+  });
+
+  it("empty question edge case", () => {
+    const c = classifyQuestionComplexity("", 100);
+    // Empty string → tier defaults to easy per heuristic; not a bug,
+    // the synthesizer will short-circuit upstream. Lock the behavior in
+    // so future changes don't silently reroute.
+    expect(c.tier).toBe("easy");
+  });
+
+  it("only-whitespace question after trim is empty → easy", () => {
+    const c = classifyQuestionComplexity("   \n\t  ", 100);
+    expect(c.tier).toBe("easy");
+  });
+
+  it("single punctuation is allowed in easy tier", () => {
+    // "What is LLaMA?" has exactly 1 `?` and is easy — regression
+    // guard so tightening punct threshold is a conscious change.
+    const c = classifyQuestionComplexity("What is LLaMA?", 500);
+    expect(c.tier).toBe("easy");
+  });
 });
