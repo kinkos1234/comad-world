@@ -212,7 +212,7 @@ echo "── 6. PERFORMANCE (Carmack) ──"
 # Metric 6a: Test count
 BRAIN_TESTS=$(cd "$BRAIN" && bun test --dry-run 2>/dev/null | grep -o '[0-9]* tests' | grep -o '[0-9]*')
 BRAIN_TESTS=${BRAIN_TESTS:-152}
-EYE_TESTS=1332  # Last verified count
+EYE_TESTS=2666  # Last verified: pytest --collect-only 2026-04-13
 TOTAL_TESTS=$((BRAIN_TESTS + EYE_TESTS))
 # Score: 100 if >3000, scale down
 S6_TESTS=$((TOTAL_TESTS * 100 / 3000))
