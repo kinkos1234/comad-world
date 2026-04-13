@@ -148,9 +148,12 @@ echo "  Feedback tracking: $SURVIVAL/40"
 
 # Metric 4c: Cron automation coverage
 CRON_COUNT=$(crontab -l 2>/dev/null | grep -v "^#" | grep -c "comad-world")
-S4_CRON=$((CRON_COUNT * 10))
+# LaunchAgents count too — they replaced cron for OAuth access (see launchd/README.md).
+LAUNCHD_COUNT=$(launchctl list 2>/dev/null | grep -c "com.comad.")
+SCHED_COUNT=$((CRON_COUNT + LAUNCHD_COUNT))
+S4_CRON=$((SCHED_COUNT * 10))
 [[ $S4_CRON -gt 50 ]] && S4_CRON=50
-echo "  Cron jobs: $CRON_COUNT → $S4_CRON/50"
+echo "  Scheduled jobs: $SCHED_COUNT (cron: $CRON_COUNT, launchd: $LAUNCHD_COUNT) → $S4_CRON/50"
 
 # Metric 4d: Adoption history (actual loop evidence)
 # plan-decisions.jsonl may be in brain/data/ or brain/brain/data/ depending on search module's cwd
