@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
   getClaimsAt, getEntityClaimTimeline, findStaleClaims, calculateTemporalConfidence,
+  suggestPruning,
 } from "@comad-brain/core";
 import { toolError } from "./utils.js";
 

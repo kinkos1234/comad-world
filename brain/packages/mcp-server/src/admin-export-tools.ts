@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { query } from "@comad-brain/core";
-import { toolError } from "./utils.js";
+import { toolError, safeLabel } from "./utils.js";
 
 /** Multi-format graph export (JSON, JSON-LD, CSV). */
 export function registerAdminExportTools(server: McpServer) {
