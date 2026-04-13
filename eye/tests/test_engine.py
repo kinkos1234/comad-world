@@ -5,8 +5,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from simulation.engine import SimulationEngine, SimulationResult
-from simulation.event_chain import SimEvent
+from comad_eye.simulation.engine import SimulationEngine, SimulationResult
+from comad_eye.simulation.event_chain import SimEvent
 
 
 # ---------------------------------------------------------------------------

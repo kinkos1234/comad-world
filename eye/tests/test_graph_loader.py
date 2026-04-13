@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from graph.loader import GraphLoader, _get_parent_category, _SAFE_LABELS, _SAFE_REL_TYPES
-from ontology.schema import (
+from comad_eye.graph.loader import GraphLoader, _get_parent_category, _SAFE_LABELS, _SAFE_REL_TYPES
+from comad_eye.ontology.schema import (
     DomainOntology,
     Entity,
     ObjectType,

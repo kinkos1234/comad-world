@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import inspect
 
-from utils.config import LLMSettings, TaskLLMOverrides
-from utils.llm_client import LLMClient
+from comad_eye.config import LLMSettings, TaskLLMOverrides
+from comad_eye.llm_client import LLMClient
 
 
 class TestTaskOverrides:

@@ -7,7 +7,7 @@ import os
 import pytest
 import yaml
 
-from utils.config import (
+from comad_eye.config import (
     Settings,
     Neo4jSettings,
     LLMSettings,

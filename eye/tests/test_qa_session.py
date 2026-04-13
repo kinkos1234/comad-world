@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from narration.qa_session import QASession, QuestionType
+from comad_eye.narration.qa_session import QASession, QuestionType
 
 
 # ───────────────────── Fixtures ─────────────────────

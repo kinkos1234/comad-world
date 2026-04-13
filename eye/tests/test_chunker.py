@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import tempfile
 from pathlib import Path
-from ingestion.chunker import TextChunk, TextChunker
+from comad_eye.ingestion.chunker import TextChunk, TextChunker
 
 
 # ---------------------------------------------------------------------------

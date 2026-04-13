@@ -7,7 +7,7 @@ from typing import Any
 
 import networkx as nx
 
-from analysis.base import AnalysisSpace
+from comad_eye.analysis.base import AnalysisSpace
 
 
 class CausalSpace(AnalysisSpace):

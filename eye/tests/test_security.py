@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from graph.neo4j_client import _validate_property_name, _SAFE_PROPERTY_NAMES
-from graph.loader import _SAFE_LABELS, _SAFE_REL_TYPES
+from comad_eye.graph.neo4j_client import _validate_property_name, _SAFE_PROPERTY_NAMES
+from comad_eye.graph.loader import _SAFE_LABELS, _SAFE_REL_TYPES
 
 
 class TestPropertyNameValidation:

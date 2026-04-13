@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from utils.config import _deep_merge, load_settings
+from comad_eye.config import _deep_merge, load_settings
 
 
 def test_deep_merge_overwrites_leaves_and_preserves_siblings() -> None:

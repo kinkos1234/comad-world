@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-from analysis.base import SimulationData
-from analysis.space_hierarchy import HierarchySpace
+from comad_eye.analysis.base import SimulationData
+from comad_eye.analysis.space_hierarchy import HierarchySpace
 
 
 def _make_sim_data(

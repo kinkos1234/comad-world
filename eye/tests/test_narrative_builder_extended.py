@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from narration.narrative_builder import NarrativeBuilder
+from comad_eye.narration.narrative_builder import NarrativeBuilder
 
 
 # ───────────────────── Fixtures ─────────────────────

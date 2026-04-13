@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from graph.neo4j_client import Neo4jClient
-from ontology.action_registry import ActionRegistry
+from comad_eye.graph.neo4j_client import Neo4jClient
+from comad_eye.ontology.action_registry import ActionRegistry
 
 logger = logging.getLogger("comadeye")
 

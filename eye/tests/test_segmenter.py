@@ -6,7 +6,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from ingestion.segmenter import Segment, TextSegmenter, _make_id
+from comad_eye.ingestion.segmenter import Segment, TextSegmenter, _make_id
 
 
 # ---------------------------------------------------------------------------

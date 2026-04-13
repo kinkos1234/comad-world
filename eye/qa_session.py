@@ -9,9 +9,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from graph.neo4j_client import Neo4jClient
-from utils.embeddings import EmbeddingService
-from utils.llm_client import LLMClient
+from comad_eye.graph.neo4j_client import Neo4jClient
+from comad_eye.embeddings import EmbeddingService
+from comad_eye.llm_client import LLMClient
 
 logger = logging.getLogger("comadeye")
 

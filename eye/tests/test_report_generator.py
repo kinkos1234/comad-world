@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from narration.report_generator import ReportGenerator
+from comad_eye.narration.report_generator import ReportGenerator
 
 
 # ───────────────────── Fixtures ─────────────────────

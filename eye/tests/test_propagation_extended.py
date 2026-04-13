@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from simulation.propagation import PropagationEffect, PropagationEngine
+from comad_eye.simulation.propagation import PropagationEffect, PropagationEngine
 
 
 # ---------------------------------------------------------------------------

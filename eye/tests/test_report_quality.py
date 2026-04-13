@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from narration.report_generator import ReportGenerator
+from comad_eye.narration.report_generator import ReportGenerator
 
 
 class TestQualityGate:

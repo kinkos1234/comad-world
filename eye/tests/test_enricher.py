@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 
-from ingestion.enricher import VectorEnricher
+from comad_eye.ingestion.enricher import VectorEnricher
 
 
 def _make_ontology(entities=None):

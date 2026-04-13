@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 
 import numpy as np
 
-from analysis.base import SimulationData
-from analysis.space_temporal import TemporalSpace
+from comad_eye.analysis.base import SimulationData
+from comad_eye.analysis.space_temporal import TemporalSpace
 
 
 def _make_sim_data(

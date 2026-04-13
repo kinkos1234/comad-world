@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from simulation.propagation import PropagationEffect
+from comad_eye.simulation.propagation import PropagationEffect
 
 
 class TestPropagationEffect:

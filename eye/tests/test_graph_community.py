@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from graph.community import CommunityDetector
+from comad_eye.graph.community import CommunityDetector
 
 
 # ---------------------------------------------------------------------------

@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from ontology.schema import ActionType, Effect, Precondition
-from utils.config import load_yaml, project_root
+from comad_eye.ontology.schema import ActionType, Effect, Precondition
+from comad_eye.config import load_yaml, project_root
 
 logger = logging.getLogger("comadeye")
 

@@ -13,9 +13,9 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock
 
-from ingestion.extractor import EntityExtractor
-from ingestion.chunker import TextChunk
-from ingestion.segmenter import Segment
+from comad_eye.ingestion.extractor import EntityExtractor
+from comad_eye.ingestion.chunker import TextChunk
+from comad_eye.ingestion.segmenter import Segment
 
 
 # ───────────────────── Fixtures ─────────────────────

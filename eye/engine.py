@@ -9,16 +9,16 @@ from typing import Any
 from rich.console import Console
 from rich.panel import Panel
 
-from graph.community import CommunityDetector
-from graph.neo4j_client import Neo4jClient
-from ontology.action_registry import ActionRegistry
-from ontology.meta_edge_engine import MetaEdgeEngine
-from simulation.action_resolver import ActionResolver
-from simulation.event_chain import EventChain, SimEvent
-from simulation.propagation import PropagationEngine
-from simulation.snapshot import SnapshotWriter
-from utils.active_metadata import ActiveMetadataBus
-from utils.config import SimulationSettings, load_settings
+from comad_eye.graph.community import CommunityDetector
+from comad_eye.graph.neo4j_client import Neo4jClient
+from comad_eye.ontology.action_registry import ActionRegistry
+from comad_eye.ontology.meta_edge_engine import MetaEdgeEngine
+from comad_eye.simulation.action_resolver import ActionResolver
+from comad_eye.simulation.event_chain import EventChain, SimEvent
+from comad_eye.simulation.propagation import PropagationEngine
+from comad_eye.simulation.snapshot import SnapshotWriter
+from comad_eye.active_metadata import ActiveMetadataBus
+from comad_eye.config import SimulationSettings, load_settings
 
 logger = logging.getLogger("comadeye")
 console = Console()

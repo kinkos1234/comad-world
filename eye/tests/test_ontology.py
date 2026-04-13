@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ontology.schema import (
+from comad_eye.ontology.schema import (
     DomainOntology,
     Entity,
     ObjectType,

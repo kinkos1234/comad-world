@@ -7,7 +7,7 @@ import time
 
 import pytest
 
-from utils.cache import TTLCache, _SENTINEL
+from comad_eye.cache import TTLCache, _SENTINEL
 
 
 # ---------------------------------------------------------------------------

@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ontology.schema import Precondition
-from ontology.action_registry import ActionRegistry
+from comad_eye.ontology.schema import Precondition
+from comad_eye.ontology.action_registry import ActionRegistry
 
 
 # ---------------------------------------------------------------------------

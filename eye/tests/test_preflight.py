@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from utils.preflight import PreflightResult, run_preflight
+from comad_eye.preflight import PreflightResult, run_preflight
 
 
 # ---------------------------------------------------------------------------

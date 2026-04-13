@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from narration.narrative_builder import NarrativeBuilder
+from comad_eye.narration.narrative_builder import NarrativeBuilder
 
 
 def _make_builder(**overrides) -> NarrativeBuilder:

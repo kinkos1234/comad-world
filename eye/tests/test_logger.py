@@ -6,7 +6,7 @@ import json
 import logging
 from io import StringIO
 
-from utils.logger import _JsonFormatter, get_console, log_llm_call, setup_logger
+from comad_eye.logger import _JsonFormatter, get_console, log_llm_call, setup_logger
 
 
 # ---------------------------------------------------------------------------

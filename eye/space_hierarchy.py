@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from analysis.base import AnalysisSpace
+from comad_eye.analysis.base import AnalysisSpace
 
 
 class HierarchySpace(AnalysisSpace):

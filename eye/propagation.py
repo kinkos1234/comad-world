@@ -7,8 +7,8 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Any
 
-from graph.neo4j_client import Neo4jClient, _validate_property_name
-from utils.config import load_yaml, project_root
+from comad_eye.graph.neo4j_client import Neo4jClient, _validate_property_name
+from comad_eye.config import load_yaml, project_root
 
 logger = logging.getLogger("comadeye")
 

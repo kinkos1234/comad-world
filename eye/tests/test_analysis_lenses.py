@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from analysis.lenses import (
+from comad_eye.analysis.lenses import (
     ALL_LENS_IDS,
     DEFAULT_LENS_IDS,
     LENS_CATALOG,

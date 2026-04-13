@@ -12,9 +12,9 @@ import re
 from pathlib import Path
 from typing import Any
 
-from narration.helpers import clean_name as _clean_name, fmt_pct as _fmt_pct, fmt_score as _fmt_score
-from narration.narrative_builder import NarrativeBuilder
-from utils.llm_client import LLMClient
+from comad_eye.narration.helpers import clean_name as _clean_name, fmt_pct as _fmt_pct, fmt_score as _fmt_score
+from comad_eye.narration.narrative_builder import NarrativeBuilder
+from comad_eye.llm_client import LLMClient
 
 logger = logging.getLogger("comadeye")
 

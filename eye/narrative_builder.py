@@ -12,7 +12,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from narration.helpers import clean_name as _clean, fmt_pct as _pct, fmt_score
+from comad_eye.narration.helpers import clean_name as _clean, fmt_pct as _pct, fmt_score
 
 logger = logging.getLogger("comadeye")
 

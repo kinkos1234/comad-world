@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from graph.neo4j_client import Neo4jClient, _validate_property_name, _SAFE_PROPERTY_NAMES
+from comad_eye.graph.neo4j_client import Neo4jClient, _validate_property_name, _SAFE_PROPERTY_NAMES
 
 
 # ---------------------------------------------------------------------------

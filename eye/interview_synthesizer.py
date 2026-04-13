@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from graph.neo4j_client import Neo4jClient
+from comad_eye.graph.neo4j_client import Neo4jClient
 
 logger = logging.getLogger("comadeye")
 

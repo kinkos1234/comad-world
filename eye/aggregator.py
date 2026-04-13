@@ -8,15 +8,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
-from analysis.base import AnalysisSpace, SimulationData
-from analysis.lenses import LensEngine, compute_lens_budget
-from analysis.space_causal import CausalSpace
-from analysis.space_cross import CrossSpace
-from analysis.space_hierarchy import HierarchySpace
-from analysis.space_recursive import RecursiveSpace
-from analysis.space_structural import StructuralSpace
-from analysis.space_temporal import TemporalSpace
-from utils.llm_client import LLMClient
+from comad_eye.analysis.base import AnalysisSpace, SimulationData
+from comad_eye.analysis.lenses import LensEngine, compute_lens_budget
+from comad_eye.analysis.space_causal import CausalSpace
+from comad_eye.analysis.space_cross import CrossSpace
+from comad_eye.analysis.space_hierarchy import HierarchySpace
+from comad_eye.analysis.space_recursive import RecursiveSpace
+from comad_eye.analysis.space_structural import StructuralSpace
+from comad_eye.analysis.space_temporal import TemporalSpace
+from comad_eye.llm_client import LLMClient
 
 logger = logging.getLogger("comadeye")
 

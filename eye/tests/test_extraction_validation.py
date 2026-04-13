@@ -1,7 +1,7 @@
 """Tests for extraction validation — entity/relationship schema enforcement."""
 from __future__ import annotations
 
-from ingestion.extractor import EntityExtractor
+from comad_eye.ingestion.extractor import EntityExtractor
 
 
 class TestEntityValidation:

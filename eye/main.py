@@ -9,8 +9,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from utils.config import load_settings
-from utils.logger import setup_logger
+from comad_eye.config import load_settings
+from comad_eye.logger import setup_logger
 
 app = typer.Typer(
     name="comadeye",
@@ -212,7 +212,7 @@ def report(
 # --- Internal Pipeline Functions (delegate to pipeline.orchestrator) ---
 # Kept as thin wrappers for backward compatibility with any external scripts.
 
-from pipeline.orchestrator import (
+from comad_eye.pipeline.orchestrator import (
     run_ingestion as _run_ingestion,
     run_graph_loading as _run_graph_loading,
     run_community_detection as _run_community_detection,

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from utils.device import (
+from comad_eye.device import (
     DeviceInfo,
     ModelRecommendation,
     _estimate_required_ram,

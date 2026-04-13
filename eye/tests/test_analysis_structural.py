@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 
 import networkx as nx
 
-from analysis.base import SimulationData
-from analysis.space_structural import StructuralSpace
+from comad_eye.analysis.base import SimulationData
+from comad_eye.analysis.space_structural import StructuralSpace
 
 
 def _make_sim_data(

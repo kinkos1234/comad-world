@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from utils.active_metadata import ActiveMetadataBus, ChangeEvent, _count_by
+from comad_eye.active_metadata import ActiveMetadataBus, ChangeEvent, _count_by
 
 
 # ---------------------------------------------------------------------------

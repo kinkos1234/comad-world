@@ -6,7 +6,7 @@ from typing import Any
 
 import numpy as np
 
-from analysis.base import AnalysisSpace
+from comad_eye.analysis.base import AnalysisSpace
 
 
 class TemporalSpace(AnalysisSpace):

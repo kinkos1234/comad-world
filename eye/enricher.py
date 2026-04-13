@@ -9,8 +9,8 @@ from typing import Any
 
 import numpy as np
 
-from ontology.schema import DomainOntology
-from utils.embeddings import EmbeddingService
+from comad_eye.ontology.schema import DomainOntology
+from comad_eye.embeddings import EmbeddingService
 
 logger = logging.getLogger("comadeye")
 

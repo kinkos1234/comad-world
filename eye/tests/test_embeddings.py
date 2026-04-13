@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from utils.embeddings import EmbeddingService
+from comad_eye.embeddings import EmbeddingService
 
 
 # ---------------------------------------------------------------------------

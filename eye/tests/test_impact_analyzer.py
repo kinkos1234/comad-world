@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from utils.impact_analyzer import ImpactAnalyzer, ImpactReport
+from comad_eye.impact_analyzer import ImpactAnalyzer, ImpactReport
 
 
 # ---------------------------------------------------------------------------

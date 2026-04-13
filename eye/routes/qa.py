@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 
 from api.models import QARequest, QAResponse
-from utils.config import load_settings
+from comad_eye.config import load_settings
 
 router = APIRouter()
 logger = logging.getLogger("comadeye")

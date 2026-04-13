@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from utils.config import load_yaml, project_root
+from comad_eye.config import load_yaml, project_root
 
 logger = logging.getLogger("comadeye")
 

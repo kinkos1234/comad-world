@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from analysis.aggregator import AnalysisAggregator
-from analysis.base import SimulationData
+from comad_eye.analysis.aggregator import AnalysisAggregator
+from comad_eye.analysis.base import SimulationData
 
 
 def _empty_sim_data() -> SimulationData:

@@ -12,7 +12,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from utils.llm_client import LLMClient
+from comad_eye.llm_client import LLMClient
 
 logger = logging.getLogger("comadeye")
 

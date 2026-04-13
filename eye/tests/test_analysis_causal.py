@@ -7,8 +7,8 @@ from typing import Any
 import networkx as nx
 import pytest
 
-from analysis.base import SimulationData
-from analysis.space_causal import CausalSpace
+from comad_eye.analysis.base import SimulationData
+from comad_eye.analysis.space_causal import CausalSpace
 
 
 def _make_sim_data(snapshots: list[dict[str, Any]] | None = None) -> SimulationData:

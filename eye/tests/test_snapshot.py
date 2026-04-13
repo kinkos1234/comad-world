@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from simulation.snapshot import SnapshotWriter
+from comad_eye.simulation.snapshot import SnapshotWriter
 
 
 # ---------------------------------------------------------------------------

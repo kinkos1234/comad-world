@@ -13,9 +13,9 @@ import logging
 from pathlib import Path
 from typing import Any, Callable
 
-from ingestion.chunker import TextChunk
-from ingestion.segmenter import Segment
-from ontology.schema import (
+from comad_eye.ingestion.chunker import TextChunk
+from comad_eye.ingestion.segmenter import Segment
+from comad_eye.ontology.schema import (
     BASE_LINK_TYPES,
     BASE_OBJECT_TYPES,
     DomainOntology,
@@ -23,7 +23,7 @@ from ontology.schema import (
     ObjectType,
     Relationship,
 )
-from utils.llm_client import LLMClient
+from comad_eye.llm_client import LLMClient
 
 logger = logging.getLogger("comadeye")
 

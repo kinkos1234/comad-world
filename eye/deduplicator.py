@@ -15,7 +15,7 @@ import logging
 from collections import defaultdict
 from pathlib import Path
 
-from ontology.schema import DomainOntology, Entity, Relationship
+from comad_eye.ontology.schema import DomainOntology, Entity, Relationship
 
 logger = logging.getLogger("comadeye")
 

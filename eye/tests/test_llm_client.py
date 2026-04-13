@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from utils.llm_client import LLMClient
+from comad_eye.llm_client import LLMClient
 
 
 class TestExtractJsonFromText:

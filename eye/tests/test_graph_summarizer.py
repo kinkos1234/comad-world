@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from graph.summarizer import CommunitySummarizer, SUMMARY_SYSTEM_PROMPT
+from comad_eye.graph.summarizer import CommunitySummarizer, SUMMARY_SYSTEM_PROMPT
 
 
 # ---------------------------------------------------------------------------

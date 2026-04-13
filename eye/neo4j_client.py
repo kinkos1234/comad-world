@@ -7,8 +7,8 @@ from typing import Any
 
 from neo4j import GraphDatabase, ManagedTransaction
 
-from utils.cache import graph_counts_cache, graph_stats_cache
-from utils.config import Neo4jSettings, load_settings
+from comad_eye.cache import graph_counts_cache, graph_stats_cache
+from comad_eye.config import Neo4jSettings, load_settings
 
 logger = logging.getLogger("comadeye")
 

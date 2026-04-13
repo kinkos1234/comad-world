@@ -7,7 +7,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
 
-from utils.cache import _SENTINEL, analysis_file_cache
+from comad_eye.cache import _SENTINEL, analysis_file_cache
 
 router = APIRouter()
 

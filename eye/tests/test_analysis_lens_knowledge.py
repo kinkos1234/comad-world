@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from analysis.lens_knowledge import (
+from comad_eye.analysis.lens_knowledge import (
     LENS_PRINCIPLES,
     format_principles_for_prompt,
     load_lens_knowledge_to_graph,

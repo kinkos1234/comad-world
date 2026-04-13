@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from ingestion.deduplicator import Deduplicator
-from ontology.schema import DomainOntology, Entity, Relationship
+from comad_eye.ingestion.deduplicator import Deduplicator
+from comad_eye.ontology.schema import DomainOntology, Entity, Relationship
 
 
 def _make_entity(uid: str, name: str, object_type: str = "Actor") -> Entity:

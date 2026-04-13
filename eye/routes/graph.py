@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from utils.config import load_settings
+from comad_eye.config import load_settings
 
 logger = logging.getLogger("comadeye")
 

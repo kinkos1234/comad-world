@@ -10,7 +10,7 @@ from typing import Any
 import igraph as ig
 import leidenalg
 
-from graph.neo4j_client import Neo4jClient
+from comad_eye.graph.neo4j_client import Neo4jClient
 
 logger = logging.getLogger("comadeye")
 

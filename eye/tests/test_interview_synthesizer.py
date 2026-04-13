@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from narration.interview_synthesizer import InterviewSynthesizer
+from comad_eye.narration.interview_synthesizer import InterviewSynthesizer
 
 
 def _make_synth(entities=None, neighbors=None):

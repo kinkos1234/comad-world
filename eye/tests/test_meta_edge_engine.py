@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ontology.meta_edge_engine import (
+from comad_eye.ontology.meta_edge_engine import (
     MetaEdgeAction,
     MetaEdgeCondition,
     MetaEdgeEngine,

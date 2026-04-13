@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from utils.llm_client import CircuitBreaker
+from comad_eye.llm_client import CircuitBreaker
 
 
 class TestCircuitBreaker:

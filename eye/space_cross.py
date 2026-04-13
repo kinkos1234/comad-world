@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from analysis.base import AnalysisSpace, SimulationData
+from comad_eye.analysis.base import AnalysisSpace, SimulationData
 
 
 class CrossSpace(AnalysisSpace):

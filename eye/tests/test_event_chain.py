@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from simulation.event_chain import EventChain, SimEvent
+from comad_eye.simulation.event_chain import EventChain, SimEvent
 
 
 class TestSimEvent:

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from simulation.action_resolver import ActionResolver
+from comad_eye.simulation.action_resolver import ActionResolver
 
 
 # ---------------------------------------------------------------------------
