@@ -1,6 +1,19 @@
-# Launchd migration
+# Launchd migration (macOS only)
 
-## Why
+> **Platform note:** LaunchAgents are macOS-specific. Cross-platform entry
+> point is `brain/scripts/schedule-install.sh` — it auto-detects OS and
+> routes to:
+>
+> - **macOS** → this directory (`launchd/install.sh`)
+> - **Linux / WSL** → `brain/scripts/cron-install.sh`
+> - **Windows (native)** → `brain/scripts/win-install.ps1` (Task Scheduler)
+>
+> On Linux cron inherits the session keychain and the OAuth issue doesn't
+> occur. On Windows, tasks are registered with `LogonType Interactive` so
+> they only fire when the user is logged in — same reason: OAuth/DPAPI
+> access needs an interactive session.
+
+## Why (macOS)
 
 macOS cron runs outside the user's Aqua session, so `claude -p`
 (which reads OAuth from keychain) fails with exit 1. We tested this:
