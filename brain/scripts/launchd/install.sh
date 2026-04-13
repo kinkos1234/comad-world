@@ -12,11 +12,30 @@ set -e
 
 UID_NUM=$(id -u)
 AGENTS="$HOME/Library/LaunchAgents"
-PROJECT="$HOME/Programmer/01-comad/comad-world"
+
+# Resolve PROJECT from this script's location (brain/scripts/launchd/install.sh
+# → ../../../). Works regardless of where the repo lives on disk.
+SCRIPT_DIR="${0:A:h}"   # zsh: absolute, symlink-resolved dirname
+PROJECT="${SCRIPT_DIR%/brain/scripts/launchd}"
+if [[ "$PROJECT" == "$SCRIPT_DIR" ]]; then
+  echo "ERROR: could not derive PROJECT from $SCRIPT_DIR" >&2
+  exit 1
+fi
+
 LOG="$PROJECT/brain/crawl.log"
 DIGEST_LOG="$PROJECT/ear/digest.log"
-BUN="$HOME/.bun/bin/bun"
-NODE="/Users/jhkim/.nvm/versions/node/v24.13.0/bin/node"
+
+# Detect Bun and Node from the current shell, with sensible fallbacks.
+BUN="$(command -v bun 2>/dev/null || echo "$HOME/.bun/bin/bun")"
+NODE="$(command -v node 2>/dev/null)"
+if [[ -z "$NODE" ]]; then
+  echo "ERROR: 'node' not found on PATH. Install Node (or nvm) and re-run." >&2
+  exit 1
+fi
+
+echo "Project root: $PROJECT"
+echo "Bun:          $BUN"
+echo "Node:         $NODE"
 
 mkdir -p "$AGENTS"
 
@@ -71,7 +90,7 @@ $weekday_xml  </dict>
   <key>StandardErrorPath</key><string>$log_path</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>/Users/jhkim/.local/bin:/Users/jhkim/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>PATH</key><string>$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
     <key>HOME</key><string>$HOME</string>
   </dict>
 </dict>

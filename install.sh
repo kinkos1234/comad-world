@@ -114,6 +114,12 @@ else
     echo "    Run ./scripts/apply-config.sh after installing yq"
 fi
 
+# Render path-aware templates (sleep/.mcp.json, etc.) so the repo works
+# regardless of where it lives on disk.
+if [ -f "$ROOT_DIR/scripts/render-templates.sh" ]; then
+    bash "$ROOT_DIR/scripts/render-templates.sh"
+fi
+
 # ─── Step 4: Install agents ───
 step "[4/6] Installing Claude Code agents..."
 

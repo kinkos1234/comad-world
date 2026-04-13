@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "comad-sleep": {
+      "command": "bun",
+      "args": ["run", "--cwd", "{{COMAD_ROOT}}/sleep/mcp-server", "start"]
+    }
+  }
+}

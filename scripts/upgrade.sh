@@ -351,6 +351,16 @@ else
   warn "yq not installed — skipping config regeneration"
 fi
 
+# Render path-aware templates so the repo keeps working at its current location
+# (handles e.g. sleep/.mcp.json which embeds the absolute repo path).
+if [ -f scripts/render-templates.sh ]; then
+  if [ "$DRY_RUN" = "1" ]; then
+    dim "    would run scripts/render-templates.sh"
+  else
+    timed "render-templates.sh" -- bash scripts/render-templates.sh >/dev/null 2>&1 || warn "render-templates.sh failed"
+  fi
+fi
+
 # ─── Step 6: Summary ───
 step "[6/6] Summary"
 
