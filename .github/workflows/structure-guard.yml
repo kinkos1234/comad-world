@@ -36,6 +36,19 @@ jobs:
           done
           exit $fail
 
+      - name: eye — no root-level .py that duplicates eye/utils/
+        run: |
+          fail=0
+          for f in eye/*.py; do
+            [ -f "$f" ] || continue
+            base=$(basename "$f")
+            if [ -f "eye/utils/$base" ]; then
+              echo "::error file=$f::eye/$base duplicates eye/utils/$base — delete the root copy (ADR 0001 §1; Tier 3 Phase 2)"
+              fail=1
+            fi
+          done
+          exit $fail
+
       - name: eye — no root-level test_*.py (they belong under eye/tests/)
         run: |
           shopt -s nullglob

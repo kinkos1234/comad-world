@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from config import _deep_merge, load_settings
+from utils.config import _deep_merge, load_settings
 
 
 def test_deep_merge_overwrites_leaves_and_preserves_siblings() -> None:
@@ -34,7 +34,7 @@ def test_load_settings_merges_overrides(tmp_path: Path, monkeypatch: pytest.Monk
           model: "qwen3.5:9b"
     """))
 
-    import config as cfg
+    import utils.config as cfg
     monkeypatch.setattr(cfg, "_OVERRIDES_PATH", overrides_path)
     # Ensure env vars don't leak into this assertion.
     for env in ("LLM_MODEL", "NEO4J_URI"):
@@ -50,7 +50,7 @@ def test_load_settings_without_overrides(tmp_path: Path, monkeypatch: pytest.Mon
     settings_path = tmp_path / "settings.yaml"
     settings_path.write_text("neo4j:\n  uri: \"bolt://localhost:7687\"\n  user: \"neo4j\"\n")
 
-    import config as cfg
+    import utils.config as cfg
     monkeypatch.setattr(cfg, "_OVERRIDES_PATH", tmp_path / "missing.yaml")
     monkeypatch.delenv("NEO4J_URI", raising=False)
 
