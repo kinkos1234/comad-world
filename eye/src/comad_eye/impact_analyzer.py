@@ -9,7 +9,7 @@ import networkx as nx
 from rich.console import Console
 from rich.tree import Tree
 
-from utils.config import load_yaml, project_root
+from comad_eye.config import load_yaml, project_root
 
 
 @dataclass
