@@ -16,6 +16,9 @@ on:
       - 'VERSION'
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   upgrade-smoke:
     name: Upgrade path smoke test
