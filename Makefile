@@ -85,3 +85,8 @@ validate-config:
 	@bash scripts/validate-config.sh
 schema-sync-check:
 	@bash scripts/check-loaders-in-sync.sh
+
+# ─── Phase C — synth routing (ADR 0003) ───
+.PHONY: synth-routing-report
+synth-routing-report:
+	@bash scripts/synth-routing-report.sh
