@@ -27,6 +27,7 @@
 - **분석 기록 영속화** — `data/jobs/`에 JSON 저장. 서버 재시작해도 유지됨
 - **Ollama 모델 자동 감지** — 설치된 모델 자동 인식 + 디바이스 적합도 배지 표시
 - **환경변수 오버라이드** — `.env` 파일로 settings.yaml 안 건드리고 설정 변경
+- **AI 크롤러 친화적 프런트엔드** — `/analysis`, `/report` 페이지가 서버 컴포넌트에서 데이터를 SSR해 HTML에 직접 포함. per-page OpenGraph/JSON-LD + `robots.txt`로 GPTBot·ClaudeBot·PerplexityBot 명시 허용. AI에게 URL만 던져도 전체 보고서를 읽고 요약 가능
 
 ---
 

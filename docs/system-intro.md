@@ -208,6 +208,7 @@ Discord 메시지 감지
 - **venv 깨짐:** Python 3.13 업그레이드 후 기존 venv가 동작하지 않음. → venv 재생성 + shebang 수정.
 - **Neo4j 포트 충돌:** brain(7688)과 eye(7687)가 동일 머신에서 운영 → settings.yaml 포트 분리.
 - **장입력 안정화:** 큰 문서 처리 시 OOM 우려 → Preflight 진단, 청크 캐싱, 커뮤니티 요약 분할, 보고서 폴백 구현 (확인 결과 이미 완료 상태였음).
+- **AI가 링크를 못 읽음:** 초기 프런트엔드는 모든 페이지가 `"use client"` + `useEffect` 기반이라 AI 크롤러가 빈 스켈레톤만 받았음. → `/analysis`·`/report`를 서버 컴포넌트로 전환해 백엔드 API를 SSR에서 호출, `sr-only` section에 분석 결과·전체 보고서 마크다운을 인라인. per-page `generateMetadata`로 key_findings 기반 description 생성. OpenGraph·JSON-LD·`robots.txt`(GPTBot/ClaudeBot/PerplexityBot 명시 허용) 추가. 결과: report 페이지 SSR 본문 18B → 32,297B, AI에 링크만 던져도 전체 보고서 요약 가능.
 
 ---
 

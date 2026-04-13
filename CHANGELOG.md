@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Eye frontend: AI-crawler-readable pages. `/analysis` and `/report` are now server components that inline the analysis data into the initial HTML via a `sr-only` preview (32 KB full report SSR-rendered), with per-page `generateMetadata` driven by the actual findings. OpenGraph + JSON-LD (`SoftwareApplication`) emitted from the root layout. `public/robots.txt` added with explicit Allow for GPTBot, ChatGPT-User, ClaudeBot, Claude-Web, PerplexityBot, Google-Extended. Paste a report URL into any AI and it can read and summarize it without JS execution.
 - Eye MCP server: 7 tools (analyze, preflight, Q&A, jobs, report, lenses, status)
 - Photo auto-launch: Photoshop opens automatically via computer-use when needed
 - All modules now auto-trigger via natural language (no slash commands required)

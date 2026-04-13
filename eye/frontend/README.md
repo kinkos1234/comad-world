@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ComadEye Frontend
+
+Next.js 16 (App Router) UI for ComadEye. Talks to the FastAPI backend at `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`).
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Environment variables (optional):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_SITE_URL=https://your-public-host        # used for metadataBase / OG URLs
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Routes
 
-## Learn More
+| Path | Purpose |
+|---|---|
+| `/` | Dashboard — recent jobs, system status |
+| `/new` | Start a new analysis |
+| `/analysis?job=<id>` | Multi-space analysis result + entity graph |
+| `/report?job=<id>` | Full narrative report (markdown) |
+| `/qa?job=<id>` | Interactive Q&A session |
 
-To learn more about Next.js, take a look at the following resources:
+## AI / Crawler Readability
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`/analysis` and `/report` are server components that fetch data from the backend and inline it into the initial HTML (inside a visually-hidden `sr-only` section). This means:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- AI tools (ChatGPT, Claude, Perplexity) can read a shared report URL without executing JavaScript.
+- Per-page `generateMetadata` produces unique `<title>` and `description` derived from the actual analysis — the description of `/analysis?job=abc` surfaces the top key findings, `/report?job=abc` surfaces the first 280 characters of the report.
+- OpenGraph, Twitter Card, and JSON-LD (`SoftwareApplication`) tags are emitted from `app/layout.tsx`.
+- `public/robots.txt` explicitly allows `GPTBot`, `ChatGPT-User`, `ClaudeBot`, `Claude-Web`, `PerplexityBot`, `Google-Extended`.
 
-## Deploy on Vercel
+Server-side data fetches live in `lib/server-api.ts` (`server-only` guard, 30-second `revalidate`, silent `null` fallback when the API is down — the page still renders the interactive client without the SSR preview).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Directory Layout
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/
+  layout.tsx                 # Root layout, global metadata + JSON-LD
+  page.tsx                   # Dashboard
+  new/
+    layout.tsx               # Per-route static metadata
+    page.tsx
+  analysis/
+    page.tsx                 # Server component: generateMetadata + SSR preview
+    AnalysisClient.tsx       # Client component: interactive dashboard
+  report/
+    page.tsx                 # Server component: generateMetadata + SSR markdown
+    ReportClient.tsx         # Client component: live re-fetch + ReactMarkdown
+  qa/
+    layout.tsx
+    page.tsx
+components/                  # Shared UI (Sidebar, EntityGraph, Loading, …)
+lib/
+  api.ts                     # Client-side API (fetchWithRetry)
+  server-api.ts              # Server-only fetch helpers used by generateMetadata/SSR
+public/
+  robots.txt                 # AI crawler allow list
+```
+
+## Quality Gates
+
+```bash
+npm run lint
+npx tsc --noEmit
+```

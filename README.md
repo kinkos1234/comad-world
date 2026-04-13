@@ -227,6 +227,7 @@ Ontology-based simulation that converts text to knowledge graph and runs multi-r
 - **Full pipeline**: ingestion → graph → community → simulation → analysis → report
 - **7 MCP tools**: analyze, preflight, Q&A, jobs, report, lenses, status — all callable via natural language
 - **Web UI**: FastAPI backend + Next.js frontend
+- **AI-readable pages**: server-side rendered report/analysis content, per-page OG + JSON-LD metadata, explicit `robots.txt` allow for GPTBot / ClaudeBot / PerplexityBot / Google-Extended — paste a report URL into any AI and it can read and summarize it without browser tools
 
 ```bash
 cd eye
