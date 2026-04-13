@@ -375,6 +375,7 @@ comad-voice (오케스트레이션)  ←── CLAUDE.md 트리거
 - `scripts/comad` 전역 dispatcher가 `~/.local/bin/comad` 심링크로 설치 → 어느 디렉터리에서도 `comad upgrade`, `comad status`, `comad backups`, `comad rollback <ts>` 동작.
 - 설계 과정에서 8 석학 페르소나(Linus/Karpathy/House/Bach/Kondo/Rams/PG/Bush) 리뷰로 Option A/B/C 비교: B(마이그레이션 파이프라인)는 YAGNI로 첫 파괴적 변경 때 승급, C(npm 패키지)는 사용자 1,000+ 시 재고. 현재 Option A' 경량 안전 버전으로 출발.
 - CI(`upgrade-smoke.yml`)가 PR마다 `--dry-run --force`, `comad help/version/where/status/backups`까지 검증.
+- **경로 무관 설치 (path-agnostic)**: 레포를 어느 폴더/어느 이름으로 클론하든 동작. `scripts/comad`는 자기 심링크를 따라가서 repo root 자동 결정, `scripts/upgrade.sh`는 `BASH_SOURCE` 기준, `brain/scripts/launchd/install.sh`는 `${0:A:h}`로 PROJECT 역산 + `command -v node/bun`으로 인터프리터 감지. `scripts/render-templates.sh`가 `*.example` 안의 `{{COMAD_ROOT}}` 플레이스홀더를 install/upgrade 시점에 절대경로로 치환(첫 사례: `sleep/.mcp.json.example` → `sleep/.mcp.json`, 후자는 gitignore되어 머신별 경로가 커밋 안 됨). `/Users/<author>` 하드코딩 0건.
 
 ---
 

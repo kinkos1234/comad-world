@@ -137,6 +137,18 @@ The version contract is `VERSION` (root) + `comad.lock` (pins every module SHA).
 
 If you want to pin your install to a known-good combination, commit `comad.lock` and treat it like `package-lock.json`.
 
+### Where can I clone the repo?
+
+Anywhere. The repo is path-agnostic — pick any folder, any name:
+
+```bash
+git clone https://github.com/kinkos1234/comad-world.git ~/Desktop/my-agents
+cd ~/Desktop/my-agents && ./install.sh
+comad status   # shows the new path
+```
+
+`scripts/comad` follows its own symlink (`~/.local/bin/comad`) to derive the repo root. `scripts/upgrade.sh` uses `BASH_SOURCE`, `brain/scripts/launchd/install.sh` uses `${0:A:h}`, and `scripts/render-templates.sh` rewrites `{{COMAD_ROOT}}` placeholders in `*.example` files (currently `sleep/.mcp.json.example`) into per-machine absolute paths at install/upgrade time. There are no `/Users/<author>` hardcodes left.
+
 ---
 
 ## Demo: Swap a Preset, Change Everything
