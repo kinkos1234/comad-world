@@ -10,6 +10,7 @@
 import { search, searchAndPlan, formatResults } from "./index.js";
 import { formatPlan } from "./planner.js";
 import { createSandbox, verifySandbox } from "./sandbox.js";
+import { recordAdoptedRepo } from "./record-adopted.js";
 import { recordDecision, getPatternConfidence } from "./plan-tracker.js";
 import { readCachedPlans, writeCachedPlans } from "./plan-cache.js";
 import { getMetricsTrend } from "./metrics.js";
@@ -188,6 +189,12 @@ if (applyIndex !== null) {
       }
     } else {
       console.log(`\n[PASS] All checks passed. Worktree ready for merge.`);
+      // ADR 0004 — feed the adoption back into brain's ingest surface.
+      // Env-gated; a no-op until the operator opts in.
+      const feedback = await recordAdoptedRepo(plan, verification);
+      if (!feedback.skipped) {
+        console.log(`  Brain feedback written: ${feedback.path}`);
+      }
     }
 
     // Record decision in plan tracker
