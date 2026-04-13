@@ -95,7 +95,7 @@ All three reuse the existing Claude Max OAuth — no extra API key. Details: `br
 
 ### Upgrading
 
-Already have Comad World installed? After `./install.sh` you get a `comad` command on your PATH (symlink into `~/.local/bin/`):
+Already have Comad World installed? After `./install.sh` you get a `comad` command on your PATH (symlink into `~/.local/bin/`) plus a root `Makefile` with matching shortcuts:
 
 ```bash
 comad status          # show VERSION + module SHAs (any module dirty?)
@@ -105,7 +105,21 @@ comad backups         # list snapshots created by previous upgrades
 comad rollback <ts>   # restore an earlier snapshot
 comad lock            # regenerate comad.lock from current SHAs
 comad help
+
+# Makefile equivalents
+make status
+make upgrade
+make upgrade-check          # = comad upgrade --dry-run
+make backups
+make rollback TS=<ts>
+make test                   # full suite (brain + eye)
+make clean                  # dry-run: preview runtime artifacts to remove
+make clean-apply            # actually remove caches, logs, build artifacts
+make clean-deep             # also nuke node_modules / .venv (slow, ~3.6 GB)
+make render                 # regenerate path-aware templates
 ```
+
+Repository strategy is documented in [ADR 0001 — Repository Strategy](docs/adr/0001-repository-strategy.md). The short version: the umbrella owns the wiring (installer, scripts, `Makefile`, `VERSION`, `comad.lock`, `docs/`), each module directory is owned by its own nested `.git`, and `comad.lock` pins the combination. A `Structure Guard` CI job rejects PRs that duplicate module files at the root or track build artifacts.
 
 If you installed Comad World before the `comad` command existed, bootstrap it once:
 
