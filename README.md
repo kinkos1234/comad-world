@@ -117,7 +117,10 @@ make clean                  # dry-run: preview runtime artifacts to remove
 make clean-apply            # actually remove caches, logs, build artifacts
 make clean-deep             # also nuke node_modules / .venv (slow, ~3.6 GB)
 make render                 # regenerate path-aware templates
+make validate-config        # check comad.config.yaml + presets against the schema
 ```
+
+Configuration rules are documented in [ADR 0002 — `comad.config.yaml` Contract](docs/adr/0002-config-contract.md). The canonical JSON Schema lives at `schema/comad.config.schema.json` and is validated by the `config-schema-validation` CI job on every push.
 
 Repository strategy is documented in [ADR 0001 — Repository Strategy](docs/adr/0001-repository-strategy.md). The short version: the umbrella owns the wiring (installer, scripts, `Makefile`, `VERSION`, `comad.lock`, `docs/`), each module directory is owned by its own nested `.git`, and `comad.lock` pins the combination. A `Structure Guard` CI job rejects PRs that duplicate module files at the root or track build artifacts.
 
