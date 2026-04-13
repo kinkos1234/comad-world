@@ -33,6 +33,17 @@ dist/
 *.pyc
 .coverage
 .pytest_cache/
+*.tsbuildinfo
+**/tsconfig.tsbuildinfo
+
+# Runtime logs / experiment outputs (keep fixtures under docs/examples/)
+data/scores/
+data/benchmarks/
+data/runtime/
+eye/run*.log
+brain/benchmark.log
+brain/crawl.log
+ear/digest.log
 
 # Local MCP configs (contain absolute paths)
 **/.mcp.json
