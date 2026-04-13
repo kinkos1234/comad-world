@@ -115,7 +115,11 @@ class Settings(BaseModel):
 
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DEFAULT_SETTINGS_PATH = _PROJECT_ROOT / "config" / "settings.yaml"
+# Eye lives at <repo>/eye/ — module settings are co-located.
+_DEFAULT_SETTINGS_PATH = Path(__file__).resolve().parent / "config" / "settings.yaml"
+# Overrides emitted by scripts/apply-config.sh from the umbrella
+# comad.config.yaml `eye.*` section (ADR 0002 PR 3).
+_OVERRIDES_PATH = Path(__file__).resolve().parent / "config" / "overrides.yaml"
 
 # 환경변수 → settings 매핑 (ENV_VAR: (section, key, type))
 _ENV_MAP: dict[str, tuple[str, str, type]] = {
@@ -134,6 +138,30 @@ _ENV_MAP: dict[str, tuple[str, str, type]] = {
     "COMADEYE_NEO4J_URI": ("neo4j", "uri", str),
     "COMADEYE_OLLAMA_URL": ("llm", "base_url", str),
 }
+
+
+def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
+    """Recursively merge overlay into base; overlay wins on leaf conflicts."""
+    for key, value in overlay.items():
+        if (
+            key in base
+            and isinstance(base[key], dict)
+            and isinstance(value, dict)
+        ):
+            base[key] = _deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
+
+
+def _apply_config_overrides(raw: dict[str, Any]) -> dict[str, Any]:
+    """Merge eye/config/overrides.yaml (generated from comad.config.yaml)
+    over the module-owned settings.yaml. Env vars still win afterwards."""
+    if not _OVERRIDES_PATH.exists():
+        return raw
+    with open(_OVERRIDES_PATH, encoding="utf-8") as f:
+        overlay: dict[str, Any] = yaml.safe_load(f) or {}
+    return _deep_merge(raw, overlay)
 
 
 def _apply_env_overrides(raw: dict[str, Any]) -> dict[str, Any]:
@@ -155,6 +183,7 @@ def load_settings(path: Path | str | None = None) -> Settings:
             raw: dict[str, Any] = yaml.safe_load(f) or {}
     else:
         raw = {}
+    raw = _apply_config_overrides(raw)
     raw = _apply_env_overrides(raw)
     return Settings(**raw)
 

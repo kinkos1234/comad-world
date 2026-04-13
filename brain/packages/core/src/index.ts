@@ -12,3 +12,4 @@ export * from "./temporal-query.js";
 export * from "./graph-refiner.js";
 export * from "./perf.js";
 export * from "./content-guard.js";
+export * from "./config/loader.js";
