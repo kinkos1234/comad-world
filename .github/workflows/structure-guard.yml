@@ -42,6 +42,7 @@ jobs:
           for f in eye/*.py; do
             [ -f "$f" ] || continue
             base=$(basename "$f")
+            [ "$base" = "__init__.py" ] && continue   # legit package markers
             if [ -f "eye/utils/$base" ]; then
               echo "::error file=$f::eye/$base duplicates eye/utils/$base — delete the root copy (ADR 0001 §1; Tier 3 Phase 2)"
               fail=1
