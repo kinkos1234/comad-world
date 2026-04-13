@@ -194,3 +194,10 @@ build-time concern (a Makefile target, not a runtime requirement).
 
 Remaining work tracked under Phase 3 of `refact.md`: PR 2 (apply-config
 generalization), PR 3 (per-module typed loaders), PR 4 (type codegen).
+
+**Update 2026-04-14 (later):** PR 2, PR 3, and PR 4 landed. PR 4 was
+reframed from full codegen to a parity gate (`make schema-sync-check`,
+`scripts/check-loaders-in-sync.sh`) that fails CI whenever the
+hand-authored zod/pydantic loaders drift from the JSON Schema. Full
+codegen via `json-schema-to-zod` / `datamodel-code-generator` remains an
+option if the hand-authored loaders become burdensome to maintain.

@@ -106,12 +106,17 @@ export type ComadConfig = z.infer<typeof ComadConfigSchema>;
 // ─── Path resolution ─────────────────────────────────────────────────────────
 
 function findProjectRoot(startFrom: string): string {
+  // COMAD_CONFIG_DIR lets tests (and the schema-sync check) point the loader
+  // at a staged directory without chdir hacks.
+  const envDir = process.env.COMAD_CONFIG_DIR;
+  if (envDir && existsSync(resolve(envDir, "comad.config.yaml"))) return envDir;
+
   const candidates = [
+    resolve(process.cwd(), "."),               // most specific first
+    resolve(process.cwd(), ".."),
     resolve(startFrom, "../../../../.."),      // brain/packages/core/src/config/
     resolve(startFrom, "../../../.."),         // brain/packages/core/src/
     resolve(startFrom, "../../.."),            // brain/packages/core/
-    resolve(process.cwd(), "."),
-    resolve(process.cwd(), ".."),
   ];
   for (const c of candidates) {
     if (existsSync(resolve(c, "comad.config.yaml"))) return c;

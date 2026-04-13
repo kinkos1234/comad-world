@@ -29,6 +29,9 @@ help:
 	@echo ""
 	@echo "  make render           regenerate path-aware templates (e.g. sleep/.mcp.json)"
 	@echo ""
+	@echo "  make validate-config  JSON Schema validation"
+	@echo "  make schema-sync-check verify zod/pydantic loaders stay in sync"
+	@echo ""
 
 # ─── comad wrapper passthroughs ───
 .PHONY: status upgrade upgrade-check backups rollback lock
@@ -77,6 +80,8 @@ render:
 	@bash scripts/render-templates.sh
 
 # ─── Config validation ───
-.PHONY: validate-config
+.PHONY: validate-config schema-sync-check
 validate-config:
 	@bash scripts/validate-config.sh
+schema-sync-check:
+	@bash scripts/check-loaders-in-sync.sh

@@ -79,6 +79,19 @@ jobs:
       - run: pip install pyyaml
       - run: bash scripts/validate-config.sh
 
+  schema-loader-parity:
+    name: Loaders in sync with JSON Schema (ADR 0002 PR 4)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install pyyaml
+      - uses: oven-sh/setup-bun@v2
+      - run: cd brain && bun install --frozen-lockfile
+      - run: bash scripts/check-loaders-in-sync.sh
+
   generated-artifact-guard:
     name: No build artifacts in git
     runs-on: ubuntu-latest
