@@ -9,6 +9,9 @@ import {
 import type { ExtractedEntities } from "@comad-brain/core";
 
 const ARCHIVE_DIR = process.env.ARCHIVE_DIR ?? `${process.env.HOME}/Programmer/01-comad/comad-world/ear/archive`;
+// ADR 0004 — adopted-repo feedback records live here. ingest second so
+// adopted facts overlay article knowledge rather than being masked by it.
+const ADOPTED_DIR = process.env.ADOPTED_DIR ?? `${process.env.HOME}/Programmer/01-comad/comad-world/brain/data/adopted`;
 const STATE_FILE = join(import.meta.dir, "../../.last-ingest-time");
 
 // ============================================
@@ -29,7 +32,7 @@ interface ParsedArticle {
   full_content: string;
 }
 
-function parseArchiveFile(filename: string, raw: string): ParsedArticle {
+function parseArchiveFile(filename: string, raw: string, slugPrefix = ""): ParsedArticle {
   const { data: fm, content } = matter(raw);
 
   // Extract title from first # heading
@@ -49,7 +52,7 @@ function parseArchiveFile(filename: string, raw: string): ParsedArticle {
 
   return {
     filename,
-    slug: slugFromFilename(filename),
+    slug: slugPrefix + slugFromFilename(filename),
     date: fm.date instanceof Date ? fm.date.toISOString().split("T")[0] : String(fm.date ?? ""),
     title,
     relevance,
@@ -261,10 +264,69 @@ function findEntityUid(name: string, entities: ExtractedEntities): string | null
 // Main
 // ============================================
 
+async function ingestDirectory(
+  dir: string,
+  slugPrefix: string,
+  incremental: boolean,
+  lastIngestTime: number,
+  label: string
+): Promise<{ imported: number; skipped: number }> {
+  let files: string[];
+  try {
+    files = (await readdir(dir)).filter((f) => f.endsWith(".md")).sort();
+  } catch {
+    console.log(`[${label}] skipped: ${dir} does not exist`);
+    return { imported: 0, skipped: 0 };
+  }
+
+  console.log(`\n[${label}] scanning ${dir} (${files.length} files)`);
+  let imported = 0;
+  let skipped = 0;
+
+  for (const filename of files) {
+    const filepath = join(dir, filename);
+    const stat = await Bun.file(filepath).stat();
+
+    if (incremental && stat.mtimeMs <= lastIngestTime) {
+      skipped++;
+      continue;
+    }
+
+    const raw = await readFile(filepath, "utf-8");
+    const article = parseArchiveFile(filename, raw, slugPrefix);
+
+    console.log(`[${label} ${imported + 1}/${files.length}] ${article.title}`);
+
+    let entities: ExtractedEntities;
+    try {
+      entities = await extractEntities(article.title, article.full_content);
+      console.log(
+        `  → ${entities.technologies.length} techs, ${entities.people.length} people, ` +
+        `${entities.organizations.length} orgs, ${entities.topics.length} topics, ` +
+        `${entities.claims?.length ?? 0} claims`
+      );
+    } catch {
+      entities = {
+        technologies: [],
+        people: [],
+        organizations: [],
+        topics: article.categories.map((c) => ({ name: c, context: "" })),
+        claims: [],
+        relationships: [],
+      };
+      console.log(`  → fallback: ${article.categories.length} categories as topics (entity extraction unavailable)`);
+    }
+
+    await mergeArticle(article, entities);
+    imported++;
+  }
+
+  return { imported, skipped };
+}
+
 async function main() {
   const incremental = process.argv.includes("--incremental");
 
-  // Get last ingest time
   let lastIngestTime = 0;
   if (incremental) {
     try {
@@ -275,59 +337,20 @@ async function main() {
     }
   }
 
-  // Setup schema
   await setupSchema();
 
-  // Read archive files
-  const files = (await readdir(ARCHIVE_DIR)).filter((f) => f.endsWith(".md")).sort();
-  let imported = 0;
-  let skipped = 0;
+  const archive = await ingestDirectory(ARCHIVE_DIR, "", incremental, lastIngestTime, "archive");
+  // ADR 0004 — adopted records use a distinct slug prefix so the
+  // Article UID never collides with the archive corpus even if the
+  // filename dates happen to match.
+  const adopted = await ingestDirectory(ADOPTED_DIR, "adopted-", incremental, lastIngestTime, "adopted");
 
-  for (const filename of files) {
-    const filepath = join(ARCHIVE_DIR, filename);
-    const stat = await Bun.file(filepath).stat();
-
-    if (incremental && stat.mtimeMs <= lastIngestTime) {
-      skipped++;
-      continue;
-    }
-
-    const raw = await readFile(filepath, "utf-8");
-    const article = parseArchiveFile(filename, raw);
-
-    console.log(`[${imported + 1}/${files.length}] ${article.title}`);
-
-    // Extract entities using Claude (graceful fallback if unavailable)
-    let entities: ExtractedEntities;
-    try {
-      entities = await extractEntities(article.title, article.full_content);
-      console.log(
-        `  → ${entities.technologies.length} techs, ${entities.people.length} people, ` +
-        `${entities.organizations.length} orgs, ${entities.topics.length} topics, ` +
-        `${entities.claims?.length ?? 0} claims`
-      );
-    } catch {
-      // Fallback: ingest with metadata only (categories as topics)
-      entities = {
-        technologies: [],
-        people: [],
-        organizations: [],
-        topics: article.categories.map(c => ({ name: c, context: "" })),
-        claims: [],
-        relationships: [],
-      };
-      console.log(`  → fallback: ${article.categories.length} categories as topics (entity extraction unavailable)`);
-    }
-
-    // Merge into Neo4j
-    await mergeArticle(article, entities);
-    imported++;
-  }
-
-  // Save ingest timestamp
   await writeFile(STATE_FILE, Date.now().toString());
 
-  console.log(`\nImport complete: ${imported} imported, ${skipped} skipped`);
+  console.log(
+    `\nImport complete: archive ${archive.imported} imported / ${archive.skipped} skipped, ` +
+    `adopted ${adopted.imported} imported / ${adopted.skipped} skipped`
+  );
   await close();
 }
 
