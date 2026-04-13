@@ -1,0 +1,19 @@
+# brain/config/runtime.yaml
+# Auto-generated from comad.config.yaml (section: brain).
+# Regenerate with: ./scripts/apply-config.sh
+# Owner (ADR 0002): brain
+
+neo4j:
+  uri: "bolt://localhost:7688"
+  user: "neo4j"
+entity_extraction:
+  domain_hint: "AI/ML research papers, technical articles, and open source repositories"
+  relationship_types:
+    - "USES_TECHNOLOGY"
+    - "BUILT_ON"
+    - "ALTERNATIVE_TO"
+    - "DEVELOPED_BY"
+    - "TRAINED_ON"
+    - "OUTPERFORMS"
+    - "EXTENDS"
+    - "INFLUENCES"

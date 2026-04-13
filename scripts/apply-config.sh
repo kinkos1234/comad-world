@@ -6,11 +6,15 @@
 #   list of regeneration targets. This script walks the ownership matrix and
 #   regenerates only what each present section requires.
 #
-# Today only the `interests` / `categories` / `must_read_stack` / `ear`
-# sections drive generation (ear/interests.md + ear/CLAUDE.md). Brain reads
-# `sources` / `brain.*` directly at runtime. Eye reads `eye.*` directly. The
-# skeleton below makes it easy to add new generators without another
-# structural refactor.
+# Current generators (ADR 0002 PR 2):
+#   ear:   interests + ear.* → ear/interests.md, ear/CLAUDE.md
+#   brain: sources, interests, brain.* → brain/config/{sources.yaml,
+#          keywords.json, runtime.yaml}
+#   eye:   eye.* → eye/config/overrides.yaml (merged over settings.yaml by
+#          the pydantic loader in PR 3)
+#
+# Add a function here + call it below when a new module needs generated
+# config. photo/sleep/voice are domain-agnostic and ingest nothing.
 #
 # Usage:
 #   scripts/apply-config.sh             # regenerate
@@ -155,19 +159,97 @@ EOF
   info "ear/CLAUDE.md"
 }
 
-# ─── Skeleton: future generators (no-op today, kept for discoverability) ─────
-# Add a function here + call it below when the module needs generated config.
+# ─── Section: sources + interests + brain → brain/config/*.{yaml,json} ───────
+#
+# Per ADR 0002 ownership matrix:
+#   sources.*   → brain/config/sources.yaml
+#   interests.* → brain/config/keywords.json
+#   brain.*     → brain/config/runtime.yaml
+#
+# These artifacts are forward-compatible with the typed loaders landing in
+# ADR 0002 PR 3 (zod/pydantic). Today brain's crawlers still read
+# comad.config.yaml directly; the generated files are additive and safe.
 generate_brain_configs() {
-  # Placeholder for ADR 0002 PR 3. Brain reads comad.config.yaml directly
-  # today; when per-module typed loaders land, this function will emit
-  # brain/config/runtime.yaml.
-  :
+  local BRAIN_DIR="$ROOT_DIR/brain/config"
+  local SOURCES_FILE="$BRAIN_DIR/sources.yaml"
+  local KEYWORDS_FILE="$BRAIN_DIR/keywords.json"
+  local RUNTIME_FILE="$BRAIN_DIR/runtime.yaml"
+
+  if [ "$DRY_RUN" = "1" ]; then
+    dim "    would regenerate: $SOURCES_FILE"
+    dim "    would regenerate: $KEYWORDS_FILE"
+    dim "    would regenerate: $RUNTIME_FILE"
+    return 0
+  fi
+
+  mkdir -p "$BRAIN_DIR"
+
+  {
+    echo "# brain/config/sources.yaml"
+    echo "# Auto-generated from comad.config.yaml (section: sources)."
+    echo "# Regenerate with: ./scripts/apply-config.sh"
+    echo "# Owner (ADR 0002): brain"
+    echo ""
+    yq '{"sources": .sources}' "$CONFIG"
+  } > "$SOURCES_FILE"
+  info "brain/config/sources.yaml"
+
+  # keywords.json — flat deduped list across high/medium/low for crawler scoring.
+  yq -o=json '
+    [
+      (.interests.high   // [])[] | .keywords[]?,
+      (.interests.medium // [])[] | .keywords[]?,
+      (.interests.low    // [])[] | .keywords[]?
+    ] | unique
+  ' "$CONFIG" > "$KEYWORDS_FILE"
+  info "brain/config/keywords.json"
+
+  {
+    echo "# brain/config/runtime.yaml"
+    echo "# Auto-generated from comad.config.yaml (section: brain)."
+    echo "# Regenerate with: ./scripts/apply-config.sh"
+    echo "# Owner (ADR 0002): brain"
+    echo ""
+    if [ "$(yq '.brain // "" | length' "$CONFIG")" != "0" ]; then
+      yq '.brain' "$CONFIG"
+    else
+      echo "{}"
+    fi
+  } > "$RUNTIME_FILE"
+  info "brain/config/runtime.yaml"
 }
 
+# ─── Section: eye → eye/config/overrides.yaml ────────────────────────────────
+#
+# Per ADR 0002 the `eye.*` section carries overrides that layer on top of the
+# module-owned defaults in eye/config/settings.yaml. PR 3 will wire the
+# pydantic loader to merge these; for now we emit the file so humans and CI
+# can diff the effective override set.
 generate_eye_configs() {
-  # Placeholder for ADR 0002 PR 3. Eye overrides (.eye.*) will emit
-  # eye/config/overrides.yaml once the eye loader accepts them.
-  :
+  local EYE_DIR="$ROOT_DIR/eye/config"
+  local OVERRIDES_FILE="$EYE_DIR/overrides.yaml"
+
+  if [ "$DRY_RUN" = "1" ]; then
+    dim "    would regenerate: $OVERRIDES_FILE"
+    return 0
+  fi
+
+  mkdir -p "$EYE_DIR"
+
+  {
+    echo "# eye/config/overrides.yaml"
+    echo "# Auto-generated from comad.config.yaml (section: eye)."
+    echo "# Regenerate with: ./scripts/apply-config.sh"
+    echo "# Owner (ADR 0002): eye. Merged over eye/config/settings.yaml by the"
+    echo "# pydantic loader (ADR 0002 PR 3)."
+    echo ""
+    if [ "$(yq '.eye // "" | length' "$CONFIG")" != "0" ]; then
+      yq '.eye' "$CONFIG"
+    else
+      echo "{}"
+    fi
+  } > "$OVERRIDES_FILE"
+  info "eye/config/overrides.yaml"
 }
 
 # ─── Dispatch ────────────────────────────────────────────────────────────────
@@ -177,5 +259,6 @@ generate_eye_configs
 
 echo ""
 info "apply-config complete"
-dim "  Brain crawlers read comad.config.yaml directly at runtime."
-dim "  Eye, photo, sleep, voice are domain-agnostic (no generation needed today)."
+dim "  Brain: sources.yaml, keywords.json, runtime.yaml regenerated."
+dim "  Eye: overrides.yaml regenerated (merged over eye/config/settings.yaml)."
+dim "  photo, sleep, voice are domain-agnostic (no generation needed)."

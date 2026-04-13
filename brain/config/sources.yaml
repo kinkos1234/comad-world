@@ -1,0 +1,99 @@
+# brain/config/sources.yaml
+# Auto-generated from comad.config.yaml (section: sources).
+# Regenerate with: ./scripts/apply-config.sh
+# Owner (ADR 0002): brain
+
+sources:
+  rss_feeds:
+    - {name: "OpenAI Blog", url: "https://openai.com/blog/rss.xml"}
+    - {name: "Anthropic Blog", url: "https://www.anthropic.com/rss.xml"}
+    - {name: "Google AI Blog", url: "https://blog.google/technology/ai/rss/"}
+    - {name: "Meta AI Blog", url: "https://ai.meta.com/blog/rss/"}
+    - {name: "xAI Blog", url: "https://x.ai/blog/rss.xml"}
+    - {name: "DeepSeek Blog", url: "https://api-docs.deepseek.com/blog/rss.xml"}
+    - {name: "Mistral AI Blog", url: "https://mistral.ai/feed.xml"}
+    - {name: "Hugging Face Blog", url: "https://huggingface.co/blog/feed.xml"}
+    - {name: "LangChain Blog", url: "https://blog.langchain.dev/rss/"}
+    - {name: "LlamaIndex Blog", url: "https://www.llamaindex.ai/blog/rss.xml"}
+    - {name: "Simon Willison", url: "https://simonwillison.net/atom/everything/"}
+    - {name: "Lilian Weng", url: "https://lilianweng.github.io/index.xml"}
+    - {name: "Sebastian Raschka", url: "https://sebastianraschka.com/rss_feed.xml"}
+    - {name: "Chip Huyen", url: "https://huyenchip.com/feed.xml"}
+    - {name: "Eugene Yan", url: "https://eugeneyan.com/rss/"}
+    - {name: "Jay Alammar", url: "https://jalammar.github.io/feed.xml"}
+    - {name: "The Gradient", url: "https://thegradient.pub/rss/"}
+    - {name: "Latent.Space", url: "https://www.latent.space/feed"}
+    - {name: "a16z AI", url: "https://a16z.com/category/ai/feed/"}
+    - {name: "DeepLearning.AI", url: "https://www.deeplearning.ai/blog/feed/"}
+    - {name: "Microsoft Research", url: "https://www.microsoft.com/en-us/research/feed/"}
+    - {name: "NVIDIA AI Blog", url: "https://blogs.nvidia.com/feed/"}
+    # Scholar blogs
+    - {name: "Andrej Karpathy", url: "https://karpathy.github.io/feed.xml"}
+    - {name: "Yann LeCun (NYU)", url: "https://www.cs.nyu.edu/~yann/rss/rss.xml"}
+    - {name: "Colah's Blog", url: "https://colah.github.io/rss.xml"}
+    - {name: "Distill.pub", url: "https://distill.pub/rss.xml"}
+    - {name: "Jürgen Schmidhuber", url: "https://people.idsia.ch/~juergen/rss.xml"}
+    - {name: "Noam Brown (FAIR)", url: "https://noambrown.github.io/feed.xml"}
+    # Industry research
+    - {name: "Apple ML Research", url: "https://machinelearning.apple.com/rss.xml"}
+    - {name: "Cohere Research", url: "https://cohere.com/blog/rss"}
+    - {name: "EleutherAI Blog", url: "https://blog.eleuther.ai/rss/"}
+  hn_queries:
+    - "LLM"
+    - "GPT"
+    - "Claude AI"
+    - "transformer neural"
+    - "RAG retrieval"
+    - "AI agent"
+    - "deep learning"
+    - "diffusion model"
+  arxiv:
+    - {category: "cs.CL", keywords: ["language model", "transformer", "attention", "NLP", "LLM", "BERT", "GPT"], max_results: 800}
+    - {category: "cs.AI", keywords: ["artificial intelligence", "reasoning", "planning", "agent", "reinforcement learning"], max_results: 600}
+    - {category: "cs.LG", keywords: ["deep learning", "neural network", "optimization", "representation learning"], max_results: 500}
+    - {category: "cs.CV", keywords: ["image", "object detection", "vision transformer", "diffusion", "generative"], max_results: 400}
+    - {category: "cs.IR", keywords: ["information retrieval", "search", "recommendation", "embedding", "RAG"], max_results: 200}
+    - {category: "cs.SE", keywords: ["software engineering", "code generation", "program synthesis"], max_results: 150}
+    - {category: "cs.RO", keywords: ["robotics", "manipulation", "navigation", "embodied"], max_results: 100}
+    - {category: "cs.CR", keywords: ["security", "adversarial", "privacy", "alignment", "safety"], max_results: 100}
+    - {category: "cs.SD", keywords: ["speech", "audio", "voice", "TTS", "ASR"], max_results: 100}
+    - {category: "stat.ML", keywords: ["Bayesian", "probabilistic", "causal", "statistical learning"], max_results: 50}
+  github:
+    topics:
+      - "machine-learning"
+      - "deep-learning"
+      - "llm"
+      - "large-language-model"
+      - "natural-language-processing"
+      - "computer-vision"
+      - "reinforcement-learning"
+      - "transformer"
+      - "diffusion-model"
+      - "rag"
+      - "knowledge-graph"
+      - "ai-agents"
+      - "prompt-engineering"
+      - "fine-tuning"
+      - "neural-network"
+      - "generative-ai"
+      - "langchain"
+      - "llama"
+      - "gpt"
+      - "stable-diffusion"
+    search_queries:
+      - "language model"
+      - "machine learning"
+      - "deep learning"
+      - "artificial intelligence"
+      - "neural network"
+      - "transformer model"
+      - "diffusion model"
+      - "RAG retrieval augmented"
+      - "knowledge graph"
+      - "AI agent"
+      - "prompt engineering"
+      - "fine-tuning LLM"
+      - "code generation AI"
+  news:
+    - {name: "GeekNews", pattern: "news.hada.io", type: "link_detect"}
+    - {name: "Hacker News", pattern: "news.ycombinator.com", type: "link_detect"}

@@ -1,0 +1,15 @@
+# eye/config/overrides.yaml
+# Auto-generated from comad.config.yaml (section: eye).
+# Regenerate with: ./scripts/apply-config.sh
+# Owner (ADR 0002): eye. Merged over eye/config/settings.yaml by the
+# pydantic loader (ADR 0002 PR 3).
+
+neo4j:
+  uri: "bolt://localhost:7687"
+  user: "neo4j"
+llm:
+  base_url: "http://localhost:11434/v1"
+  model: "llama3.1:8b"
+embeddings:
+  model: "BAAI/bge-m3"
+  device: "mps"
