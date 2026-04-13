@@ -6,7 +6,7 @@
 # the GUI session and have keychain access — the OAuth Max subscription works
 # without any extra API key.
 #
-# Usage: zsh install.sh
+# Usage: zsh install.sh   (bash also works — path resolution is POSIX-portable)
 
 set -e
 
@@ -14,11 +14,23 @@ UID_NUM=$(id -u)
 AGENTS="$HOME/Library/LaunchAgents"
 
 # Resolve PROJECT from this script's location (brain/scripts/launchd/install.sh
-# → ../../../). Works regardless of where the repo lives on disk.
-SCRIPT_DIR="${0:A:h}"   # zsh: absolute, symlink-resolved dirname
+# → ../../../). Works regardless of where the repo lives on disk and regardless
+# of which shell invokes the script (zsh ${0:A:h} or bash $(cd ... && pwd)).
+SOURCE="$0"
+# Follow symlinks (POSIX-portable, no readlink -f dependency).
+while [ -L "$SOURCE" ]; do
+  DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
+  SOURCE=$(readlink "$SOURCE")
+  case "$SOURCE" in
+    /*) ;;                       # absolute, keep as-is
+    *)  SOURCE="$DIR/$SOURCE" ;; # relative → resolve against link's dir
+  esac
+done
+SCRIPT_DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
 PROJECT="${SCRIPT_DIR%/brain/scripts/launchd}"
-if [[ "$PROJECT" == "$SCRIPT_DIR" ]]; then
+if [ "$PROJECT" = "$SCRIPT_DIR" ] || [ -z "$PROJECT" ]; then
   echo "ERROR: could not derive PROJECT from $SCRIPT_DIR" >&2
+  echo "       expected layout: <repo>/brain/scripts/launchd/install.sh" >&2
   exit 1
 fi
 
