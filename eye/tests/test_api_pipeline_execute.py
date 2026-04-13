@@ -288,8 +288,8 @@ class TestExecutePipeline:
 # ── retry_job ──
 
 class TestRetryJob:
-    def test_retry_creates_new_job(self, tmp_path):
-        import asyncio
+    @pytest.mark.asyncio
+    async def test_retry_creates_new_job(self, tmp_path):
         with patch("api.routes.pipeline._JOBS_DIR", tmp_path):
             from api.routes.pipeline import retry_job, _jobs
 
@@ -306,22 +306,24 @@ class TestRetryJob:
             bg = MagicMock()
             bg.add_task = MagicMock()
 
-            result = asyncio.get_event_loop().run_until_complete(retry_job("old123", bg))
+            result = await retry_job("old123", bg)
 
             assert result.status == JobStatus.PENDING
             assert result.job_id != "old123"
+            # New job has the old job's settings
             new_job = _jobs[result.job_id]
             assert new_job["seed_text"] == "retry text"
             assert new_job["lenses"] == ["L1"]
 
+            # Cleanup
             del _jobs["old123"]
             del _jobs[result.job_id]
 
-    def test_retry_nonexistent_job(self, tmp_path):
-        import asyncio
+    @pytest.mark.asyncio
+    async def test_retry_nonexistent_job(self, tmp_path):
         with patch("api.routes.pipeline._JOBS_DIR", tmp_path):
             from api.routes.pipeline import retry_job
 
             bg = MagicMock()
-            result = asyncio.get_event_loop().run_until_complete(retry_job("nonexistent", bg))
+            result = await retry_job("nonexistent", bg)
             assert result.status == JobStatus.FAILED

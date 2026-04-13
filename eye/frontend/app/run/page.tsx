@@ -78,7 +78,7 @@ function RunPageContent() {
         setStats((prev) => ({ ...prev, ...update.data }));
       }
     },
-    [jobId]
+    []
   );
 
   useEffect(() => {
@@ -119,7 +119,7 @@ function RunPageContent() {
       {/* Pipeline Stages */}
       <div>
         <p className="font-mono text-[11px] text-text-secondary/80 mb-3">
-          // pipeline_stages
+          {"// pipeline_stages"}
         </p>
         <div className="flex items-center gap-2 flex-wrap">
           {STAGES.map((stage, i) => {
@@ -156,7 +156,7 @@ function RunPageContent() {
         <div className="bg-bg-card rounded-2xl p-5 space-y-3">
           <div className="flex items-center justify-between">
             <p className="font-mono text-[11px] text-text-secondary/80">
-              // chunk_progress
+              {"// chunk_progress"}
             </p>
             <div className="flex items-center gap-3">
               <span className="font-mono text-[11px] text-text-primary">
@@ -196,7 +196,7 @@ function RunPageContent() {
         {/* Log Panel */}
         <div className="flex-1 bg-bg-card rounded-2xl p-6 space-y-3">
           <p className="font-mono text-[11px] text-text-secondary/80">
-            // real_time_log
+            {"// real_time_log"}
           </p>
           <div
             ref={logRef}
@@ -227,7 +227,7 @@ function RunPageContent() {
         {/* Stats Panel */}
         <div className="w-[320px] space-y-4">
           <p className="font-mono text-[11px] text-text-secondary/80">
-            // round_summary
+            {"// round_summary"}
           </p>
           <div className="bg-bg-card rounded-2xl p-5 space-y-3">
             <div className="grid grid-cols-2 gap-2">

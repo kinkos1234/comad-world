@@ -24,7 +24,7 @@ export default function Loading({
       >
         {label && (
           <p className="font-mono text-[11px] text-text-secondary/80 mb-2">
-            // {label}
+            {"// {label}"}
           </p>
         )}
         <div className="w-full h-48 bg-bg-elevated rounded-xl animate-pulse" />
@@ -44,7 +44,7 @@ export default function Loading({
     >
       {label && (
         <p className="font-mono text-[11px] text-text-secondary/80 mb-2">
-          // {label}
+          {"// {label}"}
         </p>
       )}
       {Array.from({ length: rows }).map((_, i) => (

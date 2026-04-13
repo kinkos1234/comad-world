@@ -147,6 +147,7 @@ export default function NewAnalysis() {
   useEffect(() => {
     if (preflightTimer.current) clearTimeout(preflightTimer.current);
     if (seedText.trim().length < 10) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreflight(null);
       return;
     }
@@ -222,7 +223,7 @@ export default function NewAnalysis() {
         {/* Seed Data */}
         <div className="flex-1 space-y-3">
           <p className="font-mono text-xs text-text-secondary">
-            // seed_data
+            {"// seed_data"}
           </p>
           <textarea
             className="w-full h-[400px] bg-bg-card rounded-2xl p-6 font-mono text-sm text-text-primary resize-none focus:outline-none focus:ring-2 focus:ring-accent-orange/50 placeholder:text-bg-placeholder"
@@ -247,7 +248,7 @@ export default function NewAnalysis() {
             <div className="mt-3 bg-bg-card rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="font-mono text-[11px] text-text-secondary/80">
-                  // preflight_diagnosis
+                  {"// preflight_diagnosis"}
                 </p>
                 {preflightLoading && (
                   <span className="inline-block w-2 h-4 bg-accent-teal animate-pulse" />
@@ -309,7 +310,7 @@ export default function NewAnalysis() {
           {/* Analysis Prompt */}
           <div className="mt-4 space-y-2">
             <p className="font-mono text-xs text-text-secondary">
-              // analysis_prompt (optional)
+              {"// analysis_prompt (optional)"}
             </p>
             <textarea
               className="w-full h-[100px] bg-bg-card rounded-2xl p-4 font-mono text-sm text-text-primary resize-none focus:outline-none focus:ring-2 focus:ring-accent-teal/50 placeholder:text-bg-placeholder"
@@ -331,7 +332,7 @@ export default function NewAnalysis() {
                 className="flex items-center gap-2 font-mono text-xs text-text-secondary hover:text-text-primary transition"
               >
                 <span className="text-accent-teal">{showLenses ? "▼" : "▶"}</span>
-                // analysis_lenses ({selectedLenses.size > 0 ? `${selectedLenses.size}/${lenses.length}` : "auto"})
+                {`// analysis_lenses (${selectedLenses.size > 0 ? `${selectedLenses.size}/${lenses.length}` : "auto"})`}
               </button>
 
               {showLenses && (
@@ -420,7 +421,7 @@ export default function NewAnalysis() {
         {/* Config Panel */}
         <div className="w-[320px] space-y-3">
           <p className="font-mono text-xs text-text-secondary">
-            // simulation_config
+            {"// simulation_config"}
           </p>
           <div className="bg-bg-card rounded-2xl p-6 space-y-5">
             {/* Model Selector */}

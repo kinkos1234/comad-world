@@ -65,6 +65,10 @@ function AnalysisContent() {
   }, [jobId]);
 
   useEffect(() => {
+    // Initial data fetch — fetchAll triggers setState; this is intentional
+    // because the effect deliberately reruns when jobId (captured in fetchAll)
+    // changes. Silencing the React 19 "set-state-in-effect" rule here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
   }, [fetchAll]);
 
@@ -207,7 +211,7 @@ function AnalysisContent() {
       {/* Analysis Spaces Grid */}
       <div>
         <p className="font-mono text-[11px] text-text-secondary/80 mb-3">
-          // analysis_spaces
+          {"// analysis_spaces"}
         </p>
         <div className="grid grid-cols-3 gap-4">
           {spaces.map(([name, space]) => {
@@ -258,7 +262,7 @@ function AnalysisContent() {
       {/* Key Findings */}
       <div>
         <p className="font-mono text-[11px] text-text-secondary/80 mb-3">
-          // key_findings
+          {"// key_findings"}
         </p>
         <div className="bg-bg-card rounded-2xl p-5 space-y-2">
           {data.key_findings.slice(0, 5).map((f: KeyFinding) => (
@@ -290,7 +294,7 @@ function AnalysisContent() {
       {data.lens_insights && (
         <div>
           <p className="font-mono text-[11px] text-text-secondary/80 mb-3">
-            // lens_deep_filters
+            {"// lens_deep_filters"}
           </p>
           {Object.entries(data.lens_insights).map(([spaceName, insights]) => (
             <div key={spaceName} className="mb-4">
@@ -350,7 +354,7 @@ function AnalysisContent() {
       {data.lens_cross_insights && data.lens_cross_insights.length > 0 && (
         <div>
           <p className="font-mono text-[11px] text-text-secondary/80 mb-3">
-            // lens_cross_synthesis
+            {"// lens_cross_synthesis"}
           </p>
           <div className="space-y-3">
             {data.lens_cross_insights.map((cross, i) => (

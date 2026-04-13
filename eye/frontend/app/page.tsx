@@ -60,7 +60,7 @@ export default function Dashboard() {
       {/* System Status */}
       <div>
         <p className="font-mono text-[11px] text-text-secondary/80 mb-3">
-          // system_status
+          {"// system_status"}
         </p>
         <div className="grid grid-cols-4 gap-4">
           <StatusCard
@@ -93,7 +93,7 @@ export default function Dashboard() {
       {/* Recent Analyses */}
       <div>
         <p className="font-mono text-[11px] text-text-secondary/80 mb-3">
-          // recent_analyses
+          {"// recent_analyses"}
         </p>
         {jobs.length === 0 ? (
           <div className="bg-bg-card rounded-2xl p-8 text-center">

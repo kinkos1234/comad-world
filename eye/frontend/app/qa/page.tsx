@@ -312,7 +312,7 @@ function QAContent() {
 
         <div>
           <p className="font-mono text-[11px] text-text-secondary/80 mb-2">
-            // related_spaces
+            {"// related_spaces"}
           </p>
           <div className="space-y-2">
             {spaces.map((s) => (
@@ -329,7 +329,7 @@ function QAContent() {
         {spaces.length > 0 && (
           <div>
             <p className="font-mono text-[11px] text-text-secondary/80 mb-2">
-              // space_summaries
+              {"// space_summaries"}
             </p>
             <div className="space-y-3">
               {spaces.slice(0, 3).map((s) => (
