@@ -29,7 +29,7 @@ echo -e "${CYAN}��═══════════════════�
 echo ""
 
 # ─── Step 1: Prerequisites ───
-step "[1/5] Checking prerequisites..."
+step "[1/6] Checking prerequisites..."
 
 # Claude Code
 if command -v claude &> /dev/null; then
@@ -72,7 +72,7 @@ else
 fi
 
 # ─── Step 2: Config ───
-step "[2/5] Setting up configuration..."
+step "[2/6] Setting up configuration..."
 
 if [ -f "$ROOT_DIR/comad.config.yaml" ]; then
     PROFILE_NAME=$(grep "name:" "$ROOT_DIR/comad.config.yaml" | head -1 | sed 's/.*name: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
@@ -105,7 +105,7 @@ else
 fi
 
 # ─── Step 3: Generate module configs ───
-step "[3/5] Generating module configs..."
+step "[3/6] Generating module configs..."
 
 if command -v yq &> /dev/null; then
     bash "$ROOT_DIR/scripts/apply-config.sh"
@@ -115,7 +115,7 @@ else
 fi
 
 # ─── Step 4: Install agents ───
-step "[4/5] Installing Claude Code agents..."
+step "[4/6] Installing Claude Code agents..."
 
 mkdir -p "$HOME/.claude/agents"
 
@@ -157,7 +157,7 @@ if [ -f "$ROOT_DIR/voice/install.sh" ]; then
 fi
 
 # ─── Step 5: Brain setup ───
-step "[5/5] Brain module..."
+step "[5/6] Brain module..."
 
 if command -v bun &> /dev/null && command -v docker &> /dev/null; then
     echo ""
@@ -179,6 +179,36 @@ else
     echo "    cd brain && docker compose up -d && bun install && bun run setup"
 fi
 
+# ─── Step 6: Install `comad` command ───
+step "[6/6] Installing 'comad' command..."
+
+BIN_DIR="$HOME/.local/bin"
+BIN_PATH="$BIN_DIR/comad"
+SOURCE_SCRIPT="$ROOT_DIR/scripts/comad"
+
+if [ -f "$SOURCE_SCRIPT" ]; then
+    mkdir -p "$BIN_DIR"
+    if [ -L "$BIN_PATH" ] || [ -f "$BIN_PATH" ]; then
+        if [ "$(readlink "$BIN_PATH" 2>/dev/null)" = "$SOURCE_SCRIPT" ]; then
+            info "'comad' already linked to this repo"
+        else
+            warn "'$BIN_PATH' exists — leaving it alone (remove manually to relink)"
+        fi
+    else
+        ln -s "$SOURCE_SCRIPT" "$BIN_PATH"
+        info "Linked $BIN_PATH → $SOURCE_SCRIPT"
+    fi
+
+    # PATH hint
+    case ":$PATH:" in
+        *":$BIN_DIR:"*) info "$BIN_DIR is already on PATH" ;;
+        *) warn "$BIN_DIR is not on PATH — add this to ~/.zshrc or ~/.bashrc:"
+           echo "    export PATH=\"\$HOME/.local/bin:\$PATH\"" ;;
+    esac
+else
+    warn "scripts/comad missing — skipping 'comad' command install"
+fi
+
 # ─── Done ───
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════╗${NC}"
@@ -194,6 +224,14 @@ echo "       cd brain && bun run crawl:hn && bun run crawl:ingest"
 echo "    4. Start MCP server:"
 echo "       cd brain && bun run mcp"
 echo "    5. Open Claude Code and say: dream"
+echo ""
+echo "  Global commands:"
+echo "    comad status     — show versions and module SHAs"
+echo "    comad upgrade    — upgrade to the latest release"
+echo "    comad upgrade --dry-run"
+echo "    comad backups    — list upgrade snapshots"
+echo "    comad rollback <ts>"
+echo "    comad help"
 echo ""
 echo "  Modules:"
 echo "    brain/  — Knowledge graph (bun run mcp)"

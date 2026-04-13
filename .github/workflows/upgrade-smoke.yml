@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'scripts/upgrade.sh'
+      - 'scripts/comad'
       - 'VERSION'
       - 'comad.lock'
       - '.github/workflows/upgrade-smoke.yml'
@@ -11,6 +12,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/upgrade.sh'
+      - 'scripts/comad'
       - 'VERSION'
   workflow_dispatch:
 
@@ -25,13 +27,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check upgrade.sh syntax
-        run: bash -n scripts/upgrade.sh
+      - name: Check shell syntax
+        run: |
+          bash -n scripts/upgrade.sh
+          bash -n scripts/comad
 
       - name: Run shellcheck (best-effort)
         run: |
           if command -v shellcheck >/dev/null 2>&1; then
-            shellcheck -S warning scripts/upgrade.sh || echo "::warning::shellcheck found issues (non-blocking)"
+            shellcheck -S warning scripts/upgrade.sh scripts/comad || echo "::warning::shellcheck found issues (non-blocking)"
           else
             echo "shellcheck not available — skipping"
           fi
@@ -46,6 +50,14 @@ jobs:
         run: |
           ./scripts/upgrade.sh --help | grep -q "Usage:"
           ./scripts/upgrade.sh --list-backups | grep -qE "Available backups|No backups"
+
+      - name: Verify comad dispatcher
+        run: |
+          ./scripts/comad help | grep -q "Commands:"
+          ./scripts/comad version | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+'
+          ./scripts/comad where | grep -q "$(pwd)"
+          ./scripts/comad status | grep -q "Comad World"
+          ./scripts/comad backups | grep -qE "Available backups|No backups"
 
       - name: Verify --lock regenerates comad.lock
         run: |

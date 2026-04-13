@@ -95,14 +95,33 @@ All three reuse the existing Claude Max OAuth — no extra API key. Details: `br
 
 ### Upgrading
 
-Already have Comad World installed? Upgrade in one command:
+Already have Comad World installed? After `./install.sh` you get a `comad` command on your PATH (symlink into `~/.local/bin/`):
 
 ```bash
-./scripts/upgrade.sh                  # full upgrade — main repo + 6 modules + deps + agents
-./scripts/upgrade.sh --dry-run        # preview what would change (no writes)
-./scripts/upgrade.sh --list-backups   # see snapshots created by previous upgrades
-./scripts/upgrade.sh --rollback <ts>  # restore an earlier snapshot
-./scripts/upgrade.sh --lock           # regenerate comad.lock from current SHAs
+comad status          # show VERSION + module SHAs (any module dirty?)
+comad upgrade         # full upgrade — main repo + 6 modules + deps + agents
+comad upgrade --dry-run   # preview what would change (no writes)
+comad backups         # list snapshots created by previous upgrades
+comad rollback <ts>   # restore an earlier snapshot
+comad lock            # regenerate comad.lock from current SHAs
+comad help
+```
+
+If you installed Comad World before the `comad` command existed, bootstrap it once:
+
+```bash
+cd /path/to/comad-world
+git pull origin main                                      # pull upgrade.sh + scripts/comad
+ln -s "$(pwd)/scripts/comad" "$HOME/.local/bin/comad"     # or re-run ./install.sh
+export PATH="$HOME/.local/bin:$PATH"                      # if not already on PATH
+comad upgrade --dry-run
+```
+
+The underlying script (`scripts/upgrade.sh`) is always available too:
+
+```bash
+./scripts/upgrade.sh --dry-run
+./scripts/upgrade.sh --rollback <ts>
 ```
 
 What it does:

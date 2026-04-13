@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# comad — global command dispatcher for Comad World.
+#
+# Installed as ~/.local/bin/comad (symlink to scripts/comad). Resolves the
+# underlying repo via the symlink so you can run `comad <command>` from any
+# directory.
+#
+# Commands:
+#   comad upgrade [--dry-run] [--force]  # run scripts/upgrade.sh
+#   comad update                          # alias for upgrade
+#   comad rollback <ts>                   # restore a snapshot
+#   comad backups                         # list snapshots
+#   comad status                          # show VERSION + module SHAs
+#   comad lock                            # regenerate comad.lock
+#   comad where                           # print the resolved repo path
+#   comad version                         # print VERSION
+#   comad help                            # this help
+#
+set -euo pipefail
+
+# Resolve the real path of this script, following symlinks.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+COMAD_ROOT="$(cd -P "$SCRIPT_DIR/.." && pwd)"
+
+if [ -t 1 ]; then
+  CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+  RED='\033[0;31m'; BOLD='\033[1m'; DIM='\033[2m'; NC='\033[0m'
+else
+  CYAN=''; GREEN=''; YELLOW=''; RED=''; BOLD=''; DIM=''; NC=''
+fi
+
+die() { printf "${RED}✗${NC} %s\n" "$1" >&2; exit 1; }
+
+[ -f "$COMAD_ROOT/VERSION" ] || die "Not a Comad World repo: $COMAD_ROOT (missing VERSION)"
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+  upgrade|update)
+    exec bash "$COMAD_ROOT/scripts/upgrade.sh" "$@"
+    ;;
+  rollback)
+    [ $# -ge 1 ] || die "Usage: comad rollback <timestamp>  (see: comad backups)"
+    exec bash "$COMAD_ROOT/scripts/upgrade.sh" --rollback "$1"
+    ;;
+  backups)
+    exec bash "$COMAD_ROOT/scripts/upgrade.sh" --list-backups
+    ;;
+  lock)
+    exec bash "$COMAD_ROOT/scripts/upgrade.sh" --lock
+    ;;
+  where)
+    echo "$COMAD_ROOT"
+    ;;
+  version)
+    cat "$COMAD_ROOT/VERSION"
+    ;;
+  status)
+    printf "${BOLD}Comad World${NC}  v$(cat "$COMAD_ROOT/VERSION")\n"
+    printf "${DIM}at $COMAD_ROOT${NC}\n\n"
+    main_sha=$(git -C "$COMAD_ROOT" rev-parse --short HEAD 2>/dev/null || echo "?")
+    main_branch=$(git -C "$COMAD_ROOT" branch --show-current 2>/dev/null || echo "?")
+    dirty=""
+    [ -n "$(git -C "$COMAD_ROOT" status --porcelain 2>/dev/null)" ] && dirty=" ${YELLOW}(dirty)${NC}"
+    printf "  ${BOLD}main${NC}   %s@%s${dirty}\n" "$main_branch" "$main_sha"
+    for m in brain ear eye photo sleep voice; do
+      if [ -d "$COMAD_ROOT/$m/.git" ] || [ -f "$COMAD_ROOT/$m/.git" ]; then
+        sha=$(git -C "$COMAD_ROOT/$m" rev-parse --short HEAD 2>/dev/null || echo "?")
+        br=$(git -C "$COMAD_ROOT/$m" branch --show-current 2>/dev/null || echo "?")
+        d=""
+        [ -n "$(git -C "$COMAD_ROOT/$m" status --porcelain 2>/dev/null)" ] && d=" ${YELLOW}(dirty)${NC}"
+        printf "  ${GREEN}✓${NC} %-6s %s@%s${d}\n" "$m" "$br" "$sha"
+      else
+        printf "  ${YELLOW}!${NC} %-6s not cloned\n" "$m"
+      fi
+    done
+    ;;
+  help|--help|-h|"")
+    sed -n '3,16p' "$0" | sed 's/^# //;s/^#//'
+    ;;
+  *)
+    die "Unknown command: $cmd  (try: comad help)"
+    ;;
+esac
