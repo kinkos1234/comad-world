@@ -22,19 +22,12 @@
 #
 set -euo pipefail
 
-# ─── Colors ───
-if [ -t 1 ]; then
-  CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
-  RED='\033[0;31m'; BOLD='\033[1m'; DIM='\033[2m'; NC='\033[0m'
-else
-  CYAN=''; GREEN=''; YELLOW=''; RED=''; BOLD=''; DIM=''; NC=''
-fi
+# shellcheck source=scripts/lib/common.sh
+. "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-info()  { printf "  ${GREEN}✓${NC} %s\n" "$1"; }
-warn()  { printf "  ${YELLOW}!${NC} %s\n" "$1"; }
-fail()  { printf "  ${RED}✗${NC} %s\n" "$1"; }
-step()  { printf "\n${BOLD}%s${NC}\n" "$1"; }
-dim()   { printf "${DIM}%s${NC}\n" "$1"; }
+# Legacy short aliases so the rest of this file does not need to change.
+CYAN="$COMAD_CYAN"; GREEN="$COMAD_GREEN"; YELLOW="$COMAD_YELLOW"
+RED="$COMAD_RED"; BOLD="$COMAD_BOLD"; DIM="$COMAD_DIM"; NC="$COMAD_NC"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"

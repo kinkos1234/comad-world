@@ -4,19 +4,13 @@
 
 set -euo pipefail
 
-# ─── Colors ���──
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BOLD='\033[1m'
-NC='\033[0m'
+# shellcheck source=scripts/lib/common.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/lib/common.sh"
 
-info()    { echo -e "  ${GREEN}✓${NC} $1"; }
-warn()    { echo -e "  ${YELLOW}!${NC} $1"; }
-error()   { echo -e "  ${RED}✗${NC} $1"; exit 1; }
-step()    { echo -e "\n${BOLD}$1${NC}"; }
-
+# Legacy aliases so the rest of this file does not change.
+CYAN="$COMAD_CYAN"; GREEN="$COMAD_GREEN"; YELLOW="$COMAD_YELLOW"
+RED="$COMAD_RED"; BOLD="$COMAD_BOLD"; NC="$COMAD_NC"
+error() { fail "$1"; exit 1; }
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ─── Banner ───
