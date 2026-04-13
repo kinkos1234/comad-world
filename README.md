@@ -93,6 +93,31 @@ zsh brain/scripts/schedule-install.sh      # OS-aware scheduler (below)
 
 All three reuse the existing Claude Max OAuth — no extra API key. Details: `brain/scripts/launchd/README.md`.
 
+### Upgrading
+
+Already have Comad World installed? Upgrade in one command:
+
+```bash
+./scripts/upgrade.sh                  # full upgrade — main repo + 6 modules + deps + agents
+./scripts/upgrade.sh --dry-run        # preview what would change (no writes)
+./scripts/upgrade.sh --list-backups   # see snapshots created by previous upgrades
+./scripts/upgrade.sh --rollback <ts>  # restore an earlier snapshot
+./scripts/upgrade.sh --lock           # regenerate comad.lock from current SHAs
+```
+
+What it does:
+
+1. **Pre-flight** — refuses to run on a dirty working tree (use `--force` to override); warns about running Comad services (ports 3000/8000/7687/7688); diffs new `.env.example` keys against your `.env`.
+2. **Snapshot** — copies `comad.config.yaml`, `comad.lock`, `VERSION`, `.env`, and `~/.claude/agents/` into `.comad/backups/<timestamp>/`.
+3. **Pull** — fast-forwards the main repo and each of the six module repos (brain / ear / eye / photo / sleep / voice) on their tracked branch, recording per-module result + elapsed time.
+4. **Dependencies** — reruns `bun install` (brain), `pip install -r eye/requirements.txt`, and `npm ci` (eye/frontend) as applicable.
+5. **Agents & configs** — redeploys `comad-sleep` and `comad-photo` agents, replaces the `COMAD-VOICE` section of `~/.claude/CLAUDE.md` in place, and reruns `scripts/apply-config.sh` to regenerate module configs from `comad.config.yaml`.
+6. **Summary** — per-module success/failure table, CHANGELOG excerpt since the previous `VERSION`, and updated `comad.lock`.
+
+The version contract is `VERSION` (root) + `comad.lock` (pins every module SHA). GitHub Actions runs `scripts/upgrade.sh --dry-run --force` on every PR that touches the upgrader, so the happy path stays green.
+
+If you want to pin your install to a known-good combination, commit `comad.lock` and treat it like `package-lock.json`.
+
 ---
 
 ## Demo: Swap a Preset, Change Everything

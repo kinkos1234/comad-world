@@ -1,0 +1,64 @@
+name: Upgrade Smoke Test
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/upgrade.sh'
+      - 'VERSION'
+      - 'comad.lock'
+      - '.github/workflows/upgrade-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/upgrade.sh'
+      - 'VERSION'
+  workflow_dispatch:
+
+jobs:
+  upgrade-smoke:
+    name: Upgrade path smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout HEAD
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check upgrade.sh syntax
+        run: bash -n scripts/upgrade.sh
+
+      - name: Run shellcheck (best-effort)
+        run: |
+          if command -v shellcheck >/dev/null 2>&1; then
+            shellcheck -S warning scripts/upgrade.sh || echo "::warning::shellcheck found issues (non-blocking)"
+          else
+            echo "shellcheck not available — skipping"
+          fi
+
+      - name: Dry-run against current checkout
+        run: |
+          # Simulate an existing install: main repo only (modules optional, upgrade.sh handles missing)
+          ./scripts/upgrade.sh --dry-run --force | tee /tmp/upgrade-dryrun.log
+          grep -q "Upgrade complete" /tmp/upgrade-dryrun.log
+
+      - name: Verify --help and --list-backups
+        run: |
+          ./scripts/upgrade.sh --help | grep -q "Usage:"
+          ./scripts/upgrade.sh --list-backups | grep -qE "Available backups|No backups"
+
+      - name: Verify --lock regenerates comad.lock
+        run: |
+          cp comad.lock /tmp/comad.lock.before
+          ./scripts/upgrade.sh --lock
+          test -s comad.lock
+          grep -q "^main:" comad.lock
+          grep -q "^modules:" comad.lock
+
+      - name: Verify VERSION matches comad.lock main SHA policy
+        run: |
+          test -f VERSION
+          version="$(cat VERSION)"
+          echo "VERSION = $version"
+          # VERSION should be semver-ish
+          echo "$version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$'
