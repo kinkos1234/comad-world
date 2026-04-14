@@ -68,6 +68,38 @@ comad_module_branch() {
   git -C "$1" branch --show-current 2>/dev/null || echo "?"
 }
 
+# ─── Execution wrappers ──────────────────────────────────────────────────────
+# comad_run <description> -- <command...>
+#   Runs <command> unless DRY_RUN=1, in which case it prints the intent.
+#   Callers can also alias as `run` for backward compatibility.
+comad_run() {
+  local desc="$1"; shift
+  [ "${1:-}" = "--" ] && shift
+  if [ "${DRY_RUN:-0}" = "1" ]; then
+    dim "    would run: $*"
+    return 0
+  fi
+  "$@"
+}
+
+# comad_timed <label> -- <command...>
+#   Runs <command> wall-clock timed, printing ✓/✗ + elapsed seconds.
+comad_timed() {
+  local label="$1"; shift
+  [ "${1:-}" = "--" ] && shift
+  local start elapsed
+  start=$(date +%s)
+  if "$@"; then
+    elapsed=$(( $(date +%s) - start ))
+    printf "  ${COMAD_GREEN}✓${COMAD_NC} %-24s ${COMAD_DIM}(%ss)${COMAD_NC}\n" "$label" "$elapsed"
+    return 0
+  else
+    elapsed=$(( $(date +%s) - start ))
+    printf "  ${COMAD_RED}✗${COMAD_NC} %-24s ${COMAD_DIM}(%ss)${COMAD_NC}\n" "$label" "$elapsed"
+    return 1
+  fi
+}
+
 # ─── Tool detection ──────────────────────────────────────────────────────────
 comad_need() {
   # comad_need <cmd> [install-hint]

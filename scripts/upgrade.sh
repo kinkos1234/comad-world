@@ -58,33 +58,9 @@ for arg in "$@"; do
   esac
 done
 
-run() {
-  # run <description> -- <command...>
-  local desc="$1"; shift
-  [ "$1" = "--" ] && shift
-  if [ "$DRY_RUN" = "1" ]; then
-    dim "    would run: $*"
-    return 0
-  fi
-  "$@"
-}
-
-timed() {
-  # timed <label> -- <command...>
-  local label="$1"; shift
-  [ "$1" = "--" ] && shift
-  local start elapsed
-  start=$(date +%s)
-  if "$@"; then
-    elapsed=$(( $(date +%s) - start ))
-    printf "  ${GREEN}✓${NC} %-24s ${DIM}(%ss)${NC}\n" "$label" "$elapsed"
-    return 0
-  else
-    elapsed=$(( $(date +%s) - start ))
-    printf "  ${RED}✗${NC} %-24s ${DIM}(%ss)${NC}\n" "$label" "$elapsed"
-    return 1
-  fi
-}
+# run/timed migrated to lib/common.sh (2026-04-14). Thin aliases for back-compat.
+run() { comad_run "$@"; }
+timed() { comad_timed "$@"; }
 
 # ─── Banner ───
 CURRENT_VERSION="$(cat VERSION 2>/dev/null || echo 'unknown')"
@@ -200,7 +176,7 @@ info "Required tools present (git, curl)"
 DIRTY_FOUND=0
 check_dirty() {
   local dir="$1"; local label="$2"
-  if [ -n "$(git -C "$dir" status --porcelain 2>/dev/null)" ]; then
+  if comad_is_dirty "$dir"; then
     warn "$label has uncommitted changes"
     DIRTY_FOUND=1
   fi
