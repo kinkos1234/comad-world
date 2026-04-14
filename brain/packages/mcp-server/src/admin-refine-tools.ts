@@ -2,8 +2,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
   refineGraph, updateEdgeWeights, decayConfidence, detectPotentialConflicts, suggestPruning,
-  getTimings, resetTimings,
+  getTimings, resetTimings, writeSnapshot,
 } from "@comad-brain/core";
+import { resolve } from "path";
 import { toolError } from "./utils.js";
 
 /** Graph self-refinement + perf stats. */
@@ -100,6 +101,14 @@ export function registerAdminRefineTools(server: McpServer) {
       }
 
       const timings = getTimings();
+      // ADR 0007: persist snapshot so scripts/comad status can read p95 without
+      // invoking the MCP tool.
+      try {
+        const snapshotPath = resolve(process.cwd(), "../benchmarks/latest.json");
+        await writeSnapshot(snapshotPath);
+      } catch {
+        // best-effort — don't fail perf tool if snapshot write fails
+      }
       return {
         content: [{ type: "text" as const, text: JSON.stringify(timings, null, 2) }],
       };
