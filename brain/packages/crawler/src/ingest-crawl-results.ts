@@ -4,6 +4,7 @@ import {
   articleUid, paperUid, repoUid, techUid, personUid, orgUid, topicUid,
   crawlLogUid, claimUid, extractEntities,
   fetchContent, fetchPaperContent,
+  writeEvidence,
 } from "@comad-brain/core";
 import type { ExtractedEntities } from "@comad-brain/core";
 
@@ -291,6 +292,16 @@ async function ingestArticle(item: CrawlItem, sourceName: string) {
           related_entities: claim.related_entities, articleUid: uid, now,
         }
       );
+      // Issue #2 Phase 1 — append evidence entry. Best-effort.
+      try {
+        await writeEvidence({
+          claim_uid: cUid,
+          kind: "extract",
+          source_id: uid,
+          extractor: "ingest-crawl-results",
+          next_state: claim.content,
+        });
+      } catch { /* evidence write best-effort */ }
     }
   }
 }

@@ -5,7 +5,7 @@
  * Usage: bun run packages/crawler/src/extract-paper-claims.ts [--limit N]
  */
 
-import { write, close, query, claimUid } from "@comad-brain/core";
+import { write, close, query, claimUid, writeEvidence } from "@comad-brain/core";
 import { writeFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -126,6 +126,17 @@ async function main() {
           now,
         }
       );
+      // Issue #2 Phase 1 — append evidence entry for this extraction.
+      // Best-effort; never fail the extract just because evidence write failed.
+      try {
+        await writeEvidence({
+          claim_uid: cUid,
+          kind: "extract",
+          source_id: uid,
+          extractor: "extract-paper-claims",
+          next_state: claim.content,
+        });
+      } catch { /* evidence write best-effort */ }
     }
 
     totalClaims += claims.length;

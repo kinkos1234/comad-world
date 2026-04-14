@@ -12,5 +12,7 @@ export * from "./temporal-query.js";
 export * from "./graph-refiner.js";
 export * from "./perf.js";
 export * from "./claim-evidence.js";
+export * from "./evidence-writer.js";
+export * from "./incident-logger.js";
 export * from "./content-guard.js";
 export * from "./config/loader.js";

@@ -6,6 +6,7 @@ import {
   initClaimHistory, getClaimTimeline, getClaimTrends,
   analyzeEntityImpact, detectContradictions,
   startTimer, recordTiming,
+  readTimeline, revertClaim,
 } from "@comad-brain/core";
 import { toolError, clampLimit } from "./utils.js";
 
@@ -374,6 +375,39 @@ export function registerAnalysisTools(server: McpServer) {
       }
 
       return { content: [{ type: "text" as const, text: "알 수 없는 action입니다." }] };
+      } catch (e: any) {
+        return toolError(e.message);
+      }
+    }
+  );
+
+  // ============================================
+  // Tool: comad_brain_claim_evidence (Issue #2 Phase 1)
+  // ============================================
+  server.tool(
+    "comad_brain_claim_evidence",
+    "Claim 증거 타임라인 조회 + 과거 시점 상태 복원 (Issue #2 Compiled Truth + Timeline).",
+    {
+      action: z.enum(["timeline", "revert"]).describe("timeline: 증거 로그 조회, revert: 특정 ts 시점 claim state 복원"),
+      claim_uid: z.string().describe("대상 claim의 uid"),
+      ts: z.string().optional().describe("revert 시 ISO timestamp (생략 시 now)"),
+    },
+    async ({ action, claim_uid, ts }) => {
+      try {
+        if (action === "timeline") {
+          const timeline = await readTimeline(claim_uid);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ claim_uid, count: timeline.length, timeline }, null, 2) }],
+          };
+        }
+        if (action === "revert") {
+          const atTs = ts ?? new Date().toISOString();
+          const state = await revertClaim(claim_uid, atTs);
+          return {
+            content: [{ type: "text" as const, text: JSON.stringify({ claim_uid, ts: atTs, state: state ?? null }, null, 2) }],
+          };
+        }
+        return { content: [{ type: "text" as const, text: "알 수 없는 action입니다." }] };
       } catch (e: any) {
         return toolError(e.message);
       }
