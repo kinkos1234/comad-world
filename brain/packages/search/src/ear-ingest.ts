@@ -22,6 +22,7 @@ import { searchAndPlan } from "./index.js";
 import { DEFAULT_CONSTRAINTS } from "./types.js";
 import type { AdoptionPlan } from "./planner.js";
 import { withTimeout } from "./fetch-util.js";
+import { close as closeNeo4j } from "@comad-brain/core";
 
 // Per-query timeout — bounds a single searchAndPlan() call.
 // Default 60s: GitHub + npm + PyPI + arXiv each have 10s fetch timeout
@@ -261,4 +262,11 @@ async function main(): Promise<void> {
   console.log(`log: ${LOG_FILE}`);
 }
 
-await main();
+try {
+  await main();
+} finally {
+  // Close the neo4j driver so launchd sees the process exit instead of
+  // leaving a bolt socket open (root cause of state=running after main()
+  // completed in the 2026-04-14 smoke run).
+  try { await closeNeo4j(); } catch {}
+}
