@@ -34,7 +34,7 @@ help:
 	@echo ""
 
 # ─── comad wrapper passthroughs ───
-.PHONY: status upgrade upgrade-check backups rollback lock
+.PHONY: status upgrade upgrade-check backups rollback lock lock-check
 status:
 	@$(COMAD) status
 upgrade:
@@ -48,6 +48,8 @@ rollback:
 	@$(COMAD) rollback $(TS)
 lock:
 	@$(COMAD) lock
+lock-check:
+	@bash scripts/upgrade.sh --lock-check
 
 # ─── Test ───
 .PHONY: test test-brain test-eye

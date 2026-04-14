@@ -32,6 +32,67 @@ jobs:
           bash -n install.sh
           bash -n scripts/apply-config.sh
 
+  lock-freshness:
+    name: comad.lock freshness (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true   # advisory, not blocking
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: false, fetch-depth: 1 }
+      - name: Check lock against HEAD
+        run: |
+          # Nested module .git dirs may not be present in CI checkout;
+          # --lock-check exits 0 for missing modules so this is safe.
+          bash scripts/upgrade.sh --lock-check || true
+
+  voice-tests:
+    name: Voice Bats Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bats
+        run: sudo apt-get update && sudo apt-get install -y bats
+      - name: Run voice tests
+        working-directory: voice
+        run: bats tests/
+
+  eye-tests-core:
+    name: Eye Python Tests (core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install minimal core deps
+        working-directory: eye
+        run: |
+          pip install pydantic pyyaml pytest pytest-timeout networkx rich \
+                      typer numpy tiktoken jinja2 neo4j tenacity python-igraph \
+                      leidenalg httpx aiohttp
+
+      - name: Run core tests (skip heavy-dep & live-LLM)
+        working-directory: eye
+        run: |
+          pytest tests/ -q --timeout=10 \
+            --ignore=tests/test_chunker.py \
+            --ignore=tests/test_extraction_validation.py \
+            --ignore=tests/test_extractor.py \
+            --ignore=tests/test_qa_session.py \
+            --ignore=tests/test_embeddings.py \
+            --ignore=tests/test_deduplicator.py \
+            --ignore=tests/test_enricher.py \
+            --ignore=tests/test_interview_synthesizer.py \
+            --ignore=tests/test_report_generator.py \
+            --ignore=tests/test_report_quality.py \
+            --ignore=tests/test_llm_client.py \
+            --ignore=tests/test_engine.py \
+            --ignore=tests/test_api_pipeline_execute.py \
+            --ignore=tests/test_api_analysis_routes.py \
+            --ignore=tests/test_api_qa_routes.py
+
   brain-typecheck:
     name: Brain TypeScript Check
     runs-on: ubuntu-latest

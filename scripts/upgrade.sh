@@ -34,7 +34,7 @@ cd "$ROOT_DIR"
 
 MODULES=(brain ear eye photo sleep voice)
 
-DRY_RUN=0; FORCE=0; ROLLBACK_TS=""; LIST_BACKUPS=0; LOCK_ONLY=0
+DRY_RUN=0; FORCE=0; ROLLBACK_TS=""; LIST_BACKUPS=0; LOCK_ONLY=0; LOCK_CHECK=0
 for arg in "$@"; do
   case "$arg" in
     --dry-run)        DRY_RUN=1 ;;
@@ -42,6 +42,7 @@ for arg in "$@"; do
     --rollback)       ROLLBACK_TS="NEXT" ;;
     --list-backups)   LIST_BACKUPS=1 ;;
     --lock)           LOCK_ONLY=1 ;;
+    --lock-check)     LOCK_CHECK=1 ;;
     -h|--help)
       sed -n '3,22p' "$0" | sed 's/^# //;s/^#//'; exit 0 ;;
     *)
@@ -113,6 +114,24 @@ if [ "$LOCK_ONLY" = "1" ]; then
   } > comad.lock
   info "Wrote $(pwd)/comad.lock"
   exit 0
+fi
+
+# ─── --lock-check: compare current lock vs regenerated, nonzero if stale ───
+if [ "$LOCK_CHECK" = "1" ]; then
+  step "Checking comad.lock freshness"
+  tmp_lock=$(mktemp)
+  trap 'rm -f "$tmp_lock"' EXIT
+  bash "$0" --lock >/dev/null 2>&1
+  # --lock just overwrote comad.lock. Diff against git HEAD version.
+  if git diff --quiet -- comad.lock 2>/dev/null; then
+    info "comad.lock is fresh"
+    exit 0
+  else
+    warn "comad.lock is stale — run 'comad lock' to refresh"
+    git --no-pager diff -- comad.lock | head -30
+    git checkout -- comad.lock 2>/dev/null || true
+    exit 1
+  fi
 fi
 
 # ─── --list-backups ───

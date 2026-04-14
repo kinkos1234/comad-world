@@ -15,6 +15,10 @@ _HERE = Path(__file__).resolve().parent
 _SRC = _HERE / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
+# eye/ itself hosts api/, app/, routes/, tests/ etc. — entry-point dirs
+# that tests import directly. Keep them on sys.path during migration.
+if str(_HERE) not in sys.path:
+    sys.path.insert(0, str(_HERE))
 
 
 # Eager-import commonly-patched submodules so @patch("comad_eye.X.sub.Y")
