@@ -37,6 +37,13 @@ fi
 
 die() { printf "${RED}✗${NC} %s\n" "$1" >&2; exit 1; }
 
+print_sli_summary() {
+  printf "\n${BOLD}SLI summary${NC}\n"
+  printf "  p95_latency: %s\n" "N/A (TODO: wire comad_brain_perf)"
+  printf "  crawl_success_rate: %s\n" "N/A (TODO: derive from ear crawl success/total logs)"
+  printf "  mcp_server_uptime: %s\n" "N/A (TODO: derive from comad status ping logs)"
+}
+
 [ -f "$COMAD_ROOT/VERSION" ] || die "Not a Comad World repo: $COMAD_ROOT (missing VERSION)"
 
 cmd="${1:-help}"
@@ -81,6 +88,7 @@ case "$cmd" in
         printf "  ${YELLOW}!${NC} %-6s not cloned\n" "$m"
       fi
     done
+    print_sli_summary
     ;;
   help|--help|-h|"")
     sed -n '3,16p' "$0" | sed 's/^# //;s/^#//'

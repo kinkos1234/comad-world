@@ -1,7 +1,9 @@
 <h1 align="center">Comad World</h1>
 
 <p align="center">
-  <strong>A self-evolving personal knowledge system —<br>what you read automatically improves your tools.</strong>
+  <strong>You read arXiv every morning. By Friday, you can't remember what Tuesday's paper argued.<br>
+  Comad World turns each paper you read into a graph edge, a sharpened retrieval lens, a calibrated prediction.<br>
+  Your reading stops evaporating — it compounds into a system that thinks alongside you.</strong>
 </p>
 
 <p align="center">
