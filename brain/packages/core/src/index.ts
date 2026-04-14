@@ -11,5 +11,6 @@ export * from "./entity-dedup.js";
 export * from "./temporal-query.js";
 export * from "./graph-refiner.js";
 export * from "./perf.js";
+export * from "./claim-evidence.js";
 export * from "./content-guard.js";
 export * from "./config/loader.js";

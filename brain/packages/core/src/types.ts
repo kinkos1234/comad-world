@@ -295,6 +295,30 @@ export interface PruneCandidate {
 }
 
 // ============================================
+// Evidence Timeline (Issue #2 — Compiled Truth + Timeline)
+// ============================================
+
+/**
+ * Append-only evidence record. One of these is attached to a Claim for every
+ * extraction, merge, contradiction, or manual edit that shaped the claim's
+ * current state. Never deleted by normal pipeline writes (prune-evidence.ts
+ * may relocate them to cold storage after the hot window — see ADR 0006).
+ */
+export type EvidenceKind = "extract" | "merge" | "contradiction" | "manual_edit";
+
+export interface EvidenceEntry {
+  uid: string;
+  claim_uid: string;        // parent claim
+  ts: string;               // ISO timestamp
+  kind: EvidenceKind;
+  source_id?: string;       // article/commit/log id
+  extractor?: string;       // which pipeline produced it (e.g. "claim-extractor-v2")
+  raw?: string;             // raw extraction payload, truncated
+  prev_state?: string;      // compiled claim content BEFORE this event (for merge/edit)
+  next_state?: string;      // compiled claim content AFTER this event
+}
+
+// ============================================
 // Node Label Map
 // ============================================
 
