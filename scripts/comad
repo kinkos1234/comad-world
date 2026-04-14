@@ -10,8 +10,9 @@
 #   comad update                          # alias for upgrade
 #   comad rollback <ts>                   # restore a snapshot
 #   comad backups                         # list snapshots
-#   comad status                          # show VERSION + module SHAs
+#   comad status                          # show VERSION + module SHAs + SLI
 #   comad lock                            # regenerate comad.lock
+#   comad hello                           # 5-minute quickstart walkthrough
 #   comad where                           # print the resolved repo path
 #   comad version                         # print VERSION
 #   comad help                            # this help
@@ -38,10 +39,31 @@ fi
 die() { printf "${RED}✗${NC} %s\n" "$1" >&2; exit 1; }
 
 print_sli_summary() {
-  printf "\n${BOLD}SLI summary${NC}\n"
-  printf "  p95_latency: %s\n" "N/A (TODO: wire comad_brain_perf)"
-  printf "  crawl_success_rate: %s\n" "N/A (TODO: derive from ear crawl success/total logs)"
-  printf "  mcp_server_uptime: %s\n" "N/A (TODO: derive from comad status ping logs)"
+  printf "\n${BOLD}SLI summary${NC} ${DIM}(targets in docs/slo.md)${NC}\n"
+  # brain p95 latency: last bench report if present
+  local bench="$COMAD_ROOT/brain/benchmarks/latest.json"
+  if [ -f "$bench" ] && command -v jq >/dev/null 2>&1; then
+    p95=$(jq -r '.p95_ms // "N/A"' "$bench" 2>/dev/null)
+    printf "  p95_latency:        %s ms  ${DIM}(target ≤ 15000)${NC}\n" "$p95"
+  else
+    printf "  p95_latency:        pending  ${DIM}(run brain/scripts/run-benchmark.sh)${NC}\n"
+  fi
+  # crawl success: tail of crawl log
+  local clog="$COMAD_ROOT/ear/logs/crawl.log"
+  if [ -f "$clog" ]; then
+    total=$(grep -cE "^(start|done|fail):" "$clog" 2>/dev/null || echo 0)
+    fail=$(grep -cE "^fail:" "$clog" 2>/dev/null || echo 0)
+    if [ "$total" -gt 0 ]; then
+      rate=$(awk -v t="$total" -v f="$fail" 'BEGIN{printf "%.1f%%", (1-f/t)*100}')
+      printf "  crawl_success_rate: %s  ${DIM}(target ≥ 95%%)${NC}\n" "$rate"
+    else
+      printf "  crawl_success_rate: pending\n"
+    fi
+  else
+    printf "  crawl_success_rate: pending  ${DIM}(no ear/logs/crawl.log yet)${NC}\n"
+  fi
+  # MCP uptime: not wired
+  printf "  mcp_server_uptime:  pending  ${DIM}(TODO: status ping log)${NC}\n"
 }
 
 [ -f "$COMAD_ROOT/VERSION" ] || die "Not a Comad World repo: $COMAD_ROOT (missing VERSION)"
@@ -84,14 +106,31 @@ case "$cmd" in
         d=""
         [ -n "$(git -C "$COMAD_ROOT/$m" status --porcelain 2>/dev/null)" ] && d=" ${YELLOW}(dirty)${NC}"
         printf "  ${GREEN}✓${NC} %-6s %s@%s${d}\n" "$m" "$br" "$sha"
+      elif [ -d "$COMAD_ROOT/$m" ]; then
+        printf "  ${GREEN}✓${NC} %-6s ${DIM}(mono-repo)${NC}\n" "$m"
       else
-        printf "  ${YELLOW}!${NC} %-6s not cloned\n" "$m"
+        printf "  ${YELLOW}!${NC} %-6s missing\n" "$m"
       fi
     done
     print_sli_summary
     ;;
+  hello)
+    printf "${BOLD}Comad World — 5-minute quickstart${NC}\n\n"
+    printf "  ${CYAN}1.${NC} Pick a preset (or keep current comad.config.yaml)\n"
+    printf "     ${DIM}cp presets/ai-ml.yaml comad.config.yaml${NC}\n\n"
+    printf "  ${CYAN}2.${NC} Install deps (first-time only)\n"
+    printf "     ${DIM}./install.sh${NC}\n\n"
+    printf "  ${CYAN}3.${NC} Start brain MCP (in a separate terminal)\n"
+    printf "     ${DIM}cd brain && bun run mcp${NC}\n\n"
+    printf "  ${CYAN}4.${NC} Trigger first crawl (manual kick — ~2 min)\n"
+    printf "     ${DIM}cd brain && bun scripts/crawl-arxiv.sh${NC}\n\n"
+    printf "  ${CYAN}5.${NC} Ask your knowledge graph\n"
+    printf "     From Claude Code: ${DIM}mcp__knowledge__comad_brain_ask \"what did I learn this week?\"${NC}\n\n"
+    printf "  ${DIM}For background on the design: README.md, STORY.md, docs/moat.md${NC}\n"
+    printf "  ${DIM}For architecture: docs/adr/${NC}\n"
+    ;;
   help|--help|-h|"")
-    sed -n '3,16p' "$0" | sed 's/^# //;s/^#//'
+    sed -n '3,17p' "$0" | sed 's/^# //;s/^#//'
     ;;
   *)
     die "Unknown command: $cmd  (try: comad help)"

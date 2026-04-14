@@ -34,6 +34,13 @@ cd "$ROOT_DIR"
 
 MODULES=(brain ear eye photo sleep voice)
 
+# ADR 0011 (2026-04-14): mono-repo reversal. Modules are directories, not
+# separate git repos. MONO_REPO=1 when no nested .git found.
+MONO_REPO=1
+for _m in "${MODULES[@]}"; do
+  if [ -d "$_m/.git" ] || [ -f "$_m/.git" ]; then MONO_REPO=0; break; fi
+done
+
 DRY_RUN=0; FORCE=0; ROLLBACK_TS=""; LIST_BACKUPS=0; LOCK_ONLY=0; LOCK_CHECK=0
 for arg in "$@"; do
   case "$arg" in
@@ -100,17 +107,22 @@ if [ "$LOCK_ONLY" = "1" ]; then
     echo "  branch: $(git branch --show-current)"
     echo "  sha: $(git rev-parse HEAD)"
     echo
-    echo "modules:"
-    for m in "${MODULES[@]}"; do
-      if [ -d "$m/.git" ] || [ -f "$m/.git" ]; then
-        echo "  $m:"
-        echo "    remote: $(git -C "$m" remote get-url origin)"
-        echo "    branch: $(git -C "$m" branch --show-current)"
-        echo "    sha: $(git -C "$m" rev-parse HEAD)"
-      else
-        echo "  $m: # missing"
-      fi
-    done
+    if [ "$MONO_REPO" = "1" ]; then
+      echo "# mono-repo (ADR 0011): modules are directories under main repo."
+      echo "modules: mono-repo"
+    else
+      echo "modules:"
+      for m in "${MODULES[@]}"; do
+        if [ -d "$m/.git" ] || [ -f "$m/.git" ]; then
+          echo "  $m:"
+          echo "    remote: $(git -C "$m" remote get-url origin)"
+          echo "    branch: $(git -C "$m" branch --show-current)"
+          echo "    sha: $(git -C "$m" rev-parse HEAD)"
+        else
+          echo "  $m: # missing"
+        fi
+      done
+    fi
   } > comad.lock
   info "Wrote $(pwd)/comad.lock"
   exit 0
@@ -279,14 +291,18 @@ pull_repo() {
 }
 
 timed "main repo" -- pull_repo "." "main" || true
-for m in "${MODULES[@]}"; do
-  if [ -d "$m/.git" ] || [ -f "$m/.git" ]; then
-    timed "$m" -- pull_repo "$m" "$m" || true
-  else
-    RESULTS+=("$m: SKIP (not cloned)")
-    warn "$m not cloned — skipped"
-  fi
-done
+if [ "$MONO_REPO" = "1" ]; then
+  info "mono-repo mode (ADR 0011): all modules updated via main pull"
+else
+  for m in "${MODULES[@]}"; do
+    if [ -d "$m/.git" ] || [ -f "$m/.git" ]; then
+      timed "$m" -- pull_repo "$m" "$m" || true
+    else
+      RESULTS+=("$m: SKIP (not cloned)")
+      warn "$m not cloned — skipped"
+    fi
+  done
+fi
 
 # ─── Step 4: Dependencies ───
 step "[4/6] Reinstalling dependencies"

@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added (2026-04-14 afternoon — luminary review)
+
+- **27-각도 AI 석학 리뷰 gap packs** — 최약점 4개 영역 정리.
+  - Pack A (Narrative): README hero rewrite, `STORY.md`, `docs/moat.md` —
+    persona-driven copy + origin + 3축 곱셈 moat.
+  - Pack B (Observability): `docs/slo.md` (3 SLIs), `docs/chaos-drill.md`,
+    `brain/docs/query-plan.md`, `scripts/comad` status에 SLI stub 배선.
+  - Pack C (Epistemic): `eye/docs/falsification.md` (Popper decay),
+    `ear/docs/source-diversity.md` (O'Neil 지표 3개),
+    `brain/docs/model-cards/{synth-classifier,eye-lens}.md` (Gebru),
+    `brain/docs/causal-edges.md` (Pearl + Korzybski).
+  - Pack D (Ecosystem): `docs/feedback-loops.md` (Wilson 상호공생 reverse edges),
+    `brain/scripts/graph-archaeology.ts` (Wolfram, 432L, `whyHub` + `timeline`).
+  - 12 산출물, ~1,813 insertions. 4 Codex 병렬 (pumasi) + Claude 직접.
+- **ADR 0007-0010** — gap pack을 ADR로 승격.
+  SLO/Observability, Epistemic Hygiene, Ecosystem Feedback, Narrative Positioning.
+- **ADR 0011 (Accepted) — Mono-repo Reversal** (supersedes ADR 0001).
+  6개 nested `.git` 아카이브 (`/tmp/comad-nested-git-archive/`). Umbrella가 유일
+  source of truth. 6인 석학 만장일치 (Norman/Linus/DHH/Collison/Moore/Evan You).
+- **`comad hello`** — 5-minute quickstart walkthrough 명령 (Norman first-run gap).
+- **`scripts/upgrade.sh`** — `MONO_REPO=1` 감지, per-module pull skip,
+  `comad.lock` modules 섹션 "mono-repo" 표기.
+
 ### Added (2026-04-14 session)
 
 - **ADR 0002 PR 2–4 (complete)** — `scripts/apply-config.sh` now generates
