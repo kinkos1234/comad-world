@@ -1,9 +1,11 @@
 # ADR 0001 — Repository Strategy
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR 0011](0011-monorepo-reversal.md) (2026-04-14)
 - **Date:** 2026-04-14
 - **Deciders:** Comad World maintainer (@kinkos1234)
 - **Related:** `refact.md`, `scripts/upgrade.sh`, `scripts/comad`, `comad.lock`
+
+> **Note (2026-04-14):** Nested `.git` 전략은 폐기됐다. 이 결정이 내려진 당일 오후 감사에서 (a) 원격 레포가 존재한 적 없고 (b) umbrella가 이미 모듈 소스를 트래킹하고 있었으며 (c) 채택률 관점에서 역효과임이 드러났다. 상세: ADR 0011.
 
 ## Context
 
