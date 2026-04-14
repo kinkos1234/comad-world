@@ -135,7 +135,7 @@ info "Backup created: $BACKUP_FILE"
 
 if grep -q "$MARKER_START" "$CLAUDE_MD" 2>/dev/null; then
     warn "Comad Voice already installed in CLAUDE.md"
-    read -p "  Overwrite? (y/N): " overwrite
+    read -r -p "  Overwrite? (y/N): " overwrite
     if [ "$overwrite" != "y" ] && [ "$overwrite" != "Y" ]; then
         echo "  Skipping CLAUDE.md update"
     else
@@ -157,7 +157,7 @@ echo ""
 step "[4/4] Memory templates"
 echo "  Memory templates help Claude remember across sessions."
 echo ""
-read -p "  Copy memory templates to current project? (y/N): " install_memory
+read -r -p "  Copy memory templates to current project? (y/N): " install_memory
 
 if [ "$install_memory" = "y" ] || [ "$install_memory" = "Y" ]; then
     PROJECT_DIR=$(pwd)

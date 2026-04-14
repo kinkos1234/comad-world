@@ -46,9 +46,8 @@ jobs:
           bash scripts/upgrade.sh --lock-check || true
 
   voice-tests:
-    name: Voice Bats Tests (advisory)
+    name: Voice Bats Tests
     runs-on: ubuntu-latest
-    continue-on-error: true   # advisory until voice/install.sh passes shellcheck
     steps:
       - uses: actions/checkout@v4
       - name: Install bats + shellcheck
@@ -86,7 +85,6 @@ jobs:
             --ignore=tests/test_deduplicator.py \
             --ignore=tests/test_enricher.py \
             --ignore=tests/test_interview_synthesizer.py \
-            --ignore=tests/test_report_generator.py \
             --ignore=tests/test_report_quality.py \
             --ignore=tests/test_llm_client.py \
             --ignore=tests/test_engine.py \

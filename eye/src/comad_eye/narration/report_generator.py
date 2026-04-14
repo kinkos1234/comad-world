@@ -16,6 +16,12 @@ from comad_eye.narration.helpers import clean_name as _clean_name, fmt_pct as _f
 from comad_eye.narration.narrative_builder import NarrativeBuilder
 from comad_eye.llm_client import LLMClient
 
+
+class _NoLLMConfigured(Exception):
+    """Raised when LLM-dependent code runs without a configured client.
+    Wrapped by the per-section try/except so the report degrades
+    gracefully (empty strings) instead of timing out."""
+
 logger = logging.getLogger("comadeye")
 
 INTERPRETATION_SYSTEM = """\
@@ -43,10 +49,20 @@ class ReportGenerator:
         analysis_dir: str | Path = "data/analysis",
         output_dir: str | Path = "data/reports",
     ):
-        self._llm = llm or LLMClient()
+        # Offline-first: if the caller passes llm=None we DO NOT
+        # auto-instantiate a live client. LLM-dependent sections degrade
+        # to empty strings instead of timing out on a live network call.
+        # Callers that want live inference pass an explicit LLMClient().
+        self._llm_provided = llm
         self._analysis_dir = Path(analysis_dir)
         self._output_dir = Path(output_dir)
         self._output_dir.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def _llm(self) -> LLMClient:
+        if self._llm_provided is None:
+            raise _NoLLMConfigured
+        return self._llm_provided
 
     def generate(
         self,
@@ -89,7 +105,7 @@ class ReportGenerator:
             cross_space=cross_space,
             lens_insights=lens_insights,
             lens_cross=lens_cross if isinstance(lens_cross, list) else [],
-            llm=self._llm,
+            llm=self._llm_provided,  # pass-through; NarrativeBuilder handles None
         )
 
         # ===== 목차 =====
