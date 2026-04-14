@@ -34,13 +34,14 @@ def test_load_settings_merges_overrides(tmp_path: Path, monkeypatch: pytest.Monk
           model: "qwen3.5:9b"
     """))
 
-    import utils.config as cfg
+    import comad_eye.config as cfg
     monkeypatch.setattr(cfg, "_OVERRIDES_PATH", overrides_path)
-    # Ensure env vars don't leak into this assertion.
+    monkeypatch.setattr(cfg, "_DEFAULT_SETTINGS_PATH", settings_path)
     for env in ("LLM_MODEL", "NEO4J_URI"):
         monkeypatch.delenv(env, raising=False)
 
-    settings = load_settings(settings_path)
+    # path=None triggers overrides merge; custom paths stay pristine.
+    settings = load_settings()
     assert settings.llm.model == "qwen3.5:9b"
     assert settings.llm.temperature == 0.3  # preserved from base
     assert settings.neo4j.uri == "bolt://localhost:7687"
@@ -50,7 +51,7 @@ def test_load_settings_without_overrides(tmp_path: Path, monkeypatch: pytest.Mon
     settings_path = tmp_path / "settings.yaml"
     settings_path.write_text("neo4j:\n  uri: \"bolt://localhost:7687\"\n  user: \"neo4j\"\n")
 
-    import utils.config as cfg
+    import comad_eye.config as cfg
     monkeypatch.setattr(cfg, "_OVERRIDES_PATH", tmp_path / "missing.yaml")
     monkeypatch.delenv("NEO4J_URI", raising=False)
 

@@ -195,7 +195,7 @@ class TestLoadLensKnowledge:
         mock_fn = MagicMock(return_value=5)
         with patch.dict(
             "sys.modules",
-            {"analysis.lens_knowledge": MagicMock(load_lens_knowledge_to_graph=mock_fn)},
+            {"comad_eye.analysis.lens_knowledge": MagicMock(load_lens_knowledge_to_graph=mock_fn)},
         ):
             count = loader._load_lens_knowledge()
             assert count == 5
@@ -203,7 +203,7 @@ class TestLoadLensKnowledge:
 
     def test_failure_returns_zero(self, loader):
         with patch(
-            "analysis.lens_knowledge.load_lens_knowledge_to_graph",
+            "comad_eye.analysis.lens_knowledge.load_lens_knowledge_to_graph",
             side_effect=ImportError("not found"),
             create=True,
         ):

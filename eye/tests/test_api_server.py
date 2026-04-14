@@ -67,9 +67,9 @@ class TestSystemStatus:
         mock_settings.llm.base_url = "http://localhost:11434/v1"
         mock_settings.llm.model = "auto"
 
-        with patch("utils.config.load_settings", return_value=mock_settings):
-            with patch("graph.neo4j_client.Neo4jClient", return_value=mock_client):
-                with patch("utils.device.detect_device", return_value=mock_device):
+        with patch("comad_eye.config.load_settings", return_value=mock_settings):
+            with patch("comad_eye.graph.neo4j_client.Neo4jClient", return_value=mock_client):
+                with patch("comad_eye.device.detect_device", return_value=mock_device):
                     # Ollama will fail (not patched), but that's fine
                     resp = client.get("/api/system-status")
                     data = resp.json()
@@ -77,9 +77,9 @@ class TestSystemStatus:
 
     def test_neo4j_unhealthy(self, client):
         """When Neo4j connection fails, neo4j should be False with error."""
-        with patch("utils.config.load_settings") as mock_settings:
+        with patch("comad_eye.config.load_settings") as mock_settings:
             mock_settings.return_value = MagicMock()
-            with patch("graph.neo4j_client.Neo4jClient", side_effect=Exception("Connection refused")):
+            with patch("comad_eye.graph.neo4j_client.Neo4jClient", side_effect=Exception("Connection refused")):
                 resp = client.get("/api/system-status")
                 data = resp.json()
                 assert data["neo4j"] is False
@@ -115,10 +115,10 @@ class TestSystemStatus:
         mock_settings.llm.base_url = "http://localhost:11434/v1"
         mock_settings.llm.model = "auto"
 
-        with patch("utils.config.load_settings", return_value=mock_settings):
-            with patch("graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
-                with patch("utils.device.detect_device", return_value=mock_device):
-                    with patch("utils.device.evaluate_all_models", return_value=[mock_rec]):
+        with patch("comad_eye.config.load_settings", return_value=mock_settings):
+            with patch("comad_eye.graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
+                with patch("comad_eye.device.detect_device", return_value=mock_device):
+                    with patch("comad_eye.device.evaluate_all_models", return_value=[mock_rec]):
                         with patch("httpx.get", return_value=mock_httpx_resp):
                             resp = client.get("/api/system-status")
                             data = resp.json()
@@ -136,9 +136,9 @@ class TestSystemStatus:
         mock_settings.llm.base_url = "http://localhost:11434/v1"
         mock_settings.llm.model = "auto"
 
-        with patch("utils.config.load_settings", return_value=mock_settings):
-            with patch("graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
-                with patch("utils.device.detect_device", side_effect=Exception("no device")):
+        with patch("comad_eye.config.load_settings", return_value=mock_settings):
+            with patch("comad_eye.graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
+                with patch("comad_eye.device.detect_device", side_effect=Exception("no device")):
                     with patch("httpx.get", return_value=mock_httpx_resp):
                         resp = client.get("/api/system-status")
                         data = resp.json()
@@ -152,9 +152,9 @@ class TestSystemStatus:
         mock_settings.llm.base_url = "http://localhost:11434/v1"
         mock_settings.llm.model = "auto"
 
-        with patch("utils.config.load_settings", return_value=mock_settings):
-            with patch("graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
-                with patch("utils.device.detect_device", side_effect=Exception("no device")):
+        with patch("comad_eye.config.load_settings", return_value=mock_settings):
+            with patch("comad_eye.graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
+                with patch("comad_eye.device.detect_device", side_effect=Exception("no device")):
                     with patch("httpx.get", side_effect=Exception("Connection refused")):
                         resp = client.get("/api/system-status")
                         data = resp.json()
@@ -183,9 +183,9 @@ class TestSystemStatus:
         mock_settings.llm.base_url = "http://localhost:11434/v1"
         mock_settings.llm.model = "llama3.1:8b"
 
-        with patch("utils.config.load_settings", return_value=mock_settings):
-            with patch("graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
-                with patch("utils.device.detect_device", side_effect=Exception("no device")):
+        with patch("comad_eye.config.load_settings", return_value=mock_settings):
+            with patch("comad_eye.graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
+                with patch("comad_eye.device.detect_device", side_effect=Exception("no device")):
                     with patch("httpx.get", return_value=mock_httpx_resp):
                         resp = client.get("/api/system-status")
                         data = resp.json()
@@ -207,9 +207,9 @@ class TestSystemStatus:
         mock_settings.llm.base_url = "http://localhost:11434/v1"
         mock_settings.llm.model = "auto"
 
-        with patch("utils.config.load_settings", return_value=mock_settings):
-            with patch("graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
-                with patch("utils.device.detect_device", side_effect=Exception("no device")):
+        with patch("comad_eye.config.load_settings", return_value=mock_settings):
+            with patch("comad_eye.graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
+                with patch("comad_eye.device.detect_device", side_effect=Exception("no device")):
                     with patch("httpx.get", return_value=mock_httpx_resp):
                         resp = client.get("/api/system-status")
                         data = resp.json()
@@ -226,9 +226,9 @@ class TestSystemStatus:
         mock_settings.llm.base_url = "http://localhost:11434/v1"
         mock_settings.llm.model = "some-model"
 
-        with patch("utils.config.load_settings", return_value=mock_settings):
-            with patch("graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
-                with patch("utils.device.detect_device", side_effect=Exception("no device")):
+        with patch("comad_eye.config.load_settings", return_value=mock_settings):
+            with patch("comad_eye.graph.neo4j_client.Neo4jClient", side_effect=Exception("no neo4j")):
+                with patch("comad_eye.device.detect_device", side_effect=Exception("no device")):
                     with patch("httpx.get", return_value=mock_httpx_resp):
                         resp = client.get("/api/system-status")
                         data = resp.json()

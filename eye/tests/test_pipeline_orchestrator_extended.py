@@ -12,17 +12,17 @@ import tempfile
 # ---------------------------------------------------------------------------
 
 class TestRunIngestion:
-    @patch("ingestion.enricher.VectorEnricher")
-    @patch("utils.embeddings.EmbeddingService")
-    @patch("ingestion.deduplicator.Deduplicator")
-    @patch("ingestion.extractor.EntityExtractor")
-    @patch("ingestion.chunker.TextChunker")
-    @patch("ingestion.segmenter.TextSegmenter")
-    @patch("utils.llm_client.LLMClient")
+    @patch("comad_eye.ingestion.enricher.VectorEnricher")
+    @patch("comad_eye.embeddings.EmbeddingService")
+    @patch("comad_eye.ingestion.deduplicator.Deduplicator")
+    @patch("comad_eye.ingestion.extractor.EntityExtractor")
+    @patch("comad_eye.ingestion.chunker.TextChunker")
+    @patch("comad_eye.ingestion.segmenter.TextSegmenter")
+    @patch("comad_eye.llm_client.LLMClient")
     def test_run_ingestion_returns_tuple(
         self, MockLLM, MockSeg, MockChunk, MockExt, MockDedup, MockEmb, MockEnrich
     ):
-        from pipeline.orchestrator import run_ingestion
+        from comad_eye.pipeline.orchestrator import run_ingestion
 
         mock_settings = MagicMock()
         mock_settings.ingestion.chunk_size = 300
@@ -54,17 +54,17 @@ class TestRunIngestion:
         mock_chunk_inst.chunk_text.assert_called_once()
         mock_ext_inst.extract.assert_called_once()
 
-    @patch("ingestion.enricher.VectorEnricher")
-    @patch("utils.embeddings.EmbeddingService")
-    @patch("ingestion.deduplicator.Deduplicator")
-    @patch("ingestion.extractor.EntityExtractor")
-    @patch("ingestion.chunker.TextChunker")
-    @patch("ingestion.segmenter.TextSegmenter")
-    @patch("utils.llm_client.LLMClient")
+    @patch("comad_eye.ingestion.enricher.VectorEnricher")
+    @patch("comad_eye.embeddings.EmbeddingService")
+    @patch("comad_eye.ingestion.deduplicator.Deduplicator")
+    @patch("comad_eye.ingestion.extractor.EntityExtractor")
+    @patch("comad_eye.ingestion.chunker.TextChunker")
+    @patch("comad_eye.ingestion.segmenter.TextSegmenter")
+    @patch("comad_eye.llm_client.LLMClient")
     def test_run_ingestion_with_progress_callback(
         self, MockLLM, MockSeg, MockChunk, MockExt, MockDedup, MockEmb, MockEnrich
     ):
-        from pipeline.orchestrator import run_ingestion
+        from comad_eye.pipeline.orchestrator import run_ingestion
 
         mock_settings = MagicMock()
         mock_settings.ingestion.chunk_size = 300
@@ -93,10 +93,10 @@ class TestRunIngestion:
 # ---------------------------------------------------------------------------
 
 class TestRunGraphLoading:
-    @patch("graph.loader.GraphLoader")
-    @patch("graph.neo4j_client.Neo4jClient")
+    @patch("comad_eye.graph.loader.GraphLoader")
+    @patch("comad_eye.graph.neo4j_client.Neo4jClient")
     def test_run_graph_loading(self, MockClient, MockLoader):
-        from pipeline.orchestrator import run_graph_loading
+        from comad_eye.pipeline.orchestrator import run_graph_loading
 
         mock_settings = MagicMock()
         mock_client_inst = MockClient.return_value
@@ -115,11 +115,11 @@ class TestRunGraphLoading:
 # ---------------------------------------------------------------------------
 
 class TestRunCommunityDetection:
-    @patch("utils.llm_client.LLMClient")
-    @patch("graph.summarizer.CommunitySummarizer")
-    @patch("graph.community.CommunityDetector")
+    @patch("comad_eye.llm_client.LLMClient")
+    @patch("comad_eye.graph.summarizer.CommunitySummarizer")
+    @patch("comad_eye.graph.community.CommunityDetector")
     def test_run_community_detection(self, MockDetector, MockSummarizer, MockLLM):
-        from pipeline.orchestrator import run_community_detection
+        from comad_eye.pipeline.orchestrator import run_community_detection
 
         mock_settings = MagicMock()
         mock_client = MagicMock()
@@ -142,12 +142,12 @@ class TestRunCommunityDetection:
 # ---------------------------------------------------------------------------
 
 class TestRunSimulation:
-    @patch("utils.active_metadata.ActiveMetadataBus")
-    @patch("simulation.engine.SimulationEngine")
-    @patch("ontology.action_registry.ActionRegistry")
-    @patch("ontology.meta_edge_engine.MetaEdgeEngine")
+    @patch("comad_eye.active_metadata.ActiveMetadataBus")
+    @patch("comad_eye.simulation.engine.SimulationEngine")
+    @patch("comad_eye.ontology.action_registry.ActionRegistry")
+    @patch("comad_eye.ontology.meta_edge_engine.MetaEdgeEngine")
     def test_run_simulation(self, MockMeta, MockAction, MockEngine, MockBus):
-        from pipeline.orchestrator import run_simulation
+        from comad_eye.pipeline.orchestrator import run_simulation
 
         mock_settings = MagicMock()
         mock_client = MagicMock()
@@ -174,12 +174,12 @@ class TestRunSimulation:
         assert result["total_events"] == 1
         assert result["total_actions"] == 5
 
-    @patch("utils.active_metadata.ActiveMetadataBus")
-    @patch("simulation.engine.SimulationEngine")
-    @patch("ontology.action_registry.ActionRegistry")
-    @patch("ontology.meta_edge_engine.MetaEdgeEngine")
+    @patch("comad_eye.active_metadata.ActiveMetadataBus")
+    @patch("comad_eye.simulation.engine.SimulationEngine")
+    @patch("comad_eye.ontology.action_registry.ActionRegistry")
+    @patch("comad_eye.ontology.meta_edge_engine.MetaEdgeEngine")
     def test_run_simulation_no_events(self, MockMeta, MockAction, MockEngine, MockBus):
-        from pipeline.orchestrator import run_simulation
+        from comad_eye.pipeline.orchestrator import run_simulation
 
         mock_settings = MagicMock()
         mock_client = MagicMock()
@@ -205,11 +205,11 @@ class TestRunSimulation:
 # ---------------------------------------------------------------------------
 
 class TestRunAnalysis:
-    @patch("analysis.aggregator.AnalysisAggregator")
-    @patch("analysis.base.SimulationData")
-    @patch("utils.llm_client.LLMClient")
+    @patch("comad_eye.analysis.aggregator.AnalysisAggregator")
+    @patch("comad_eye.analysis.base.SimulationData")
+    @patch("comad_eye.llm_client.LLMClient")
     def test_run_analysis(self, MockLLM, MockSimData, MockAgg):
-        from pipeline.orchestrator import run_analysis
+        from comad_eye.pipeline.orchestrator import run_analysis
 
         mock_settings = MagicMock()
         mock_settings.analysis.parallel = True
@@ -229,10 +229,10 @@ class TestRunAnalysis:
 # ---------------------------------------------------------------------------
 
 class TestRunReport:
-    @patch("narration.report_generator.ReportGenerator")
-    @patch("utils.llm_client.LLMClient")
+    @patch("comad_eye.narration.report_generator.ReportGenerator")
+    @patch("comad_eye.llm_client.LLMClient")
     def test_run_report(self, MockLLM, MockGen):
-        from pipeline.orchestrator import run_report
+        from comad_eye.pipeline.orchestrator import run_report
 
         mock_settings = MagicMock()
         mock_llm_inst = MockLLM.return_value

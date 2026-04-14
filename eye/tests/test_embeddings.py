@@ -72,7 +72,7 @@ class TestBatchCosineSimilarity:
 # ---------------------------------------------------------------------------
 
 class TestEmbeddingServiceInit:
-    @patch("utils.embeddings.load_settings")
+    @patch("comad_eye.embeddings.load_settings")
     def test_default_settings(self, mock_settings):
         mock_cfg = MagicMock()
         mock_cfg.embeddings.model = "BAAI/bge-m3"
@@ -85,7 +85,7 @@ class TestEmbeddingServiceInit:
         assert svc._model is None  # lazy loaded
 
     def test_custom_settings(self):
-        from utils.config import EmbeddingsSettings
+        from comad_eye.config import EmbeddingsSettings
         settings = EmbeddingsSettings(model="test-model", device="cpu", batch_size=8)
         svc = EmbeddingService(settings=settings)
         assert svc._settings.model == "test-model"
@@ -98,7 +98,7 @@ class TestEmbeddingServiceInit:
 
 class TestEncode:
     def _make_service(self) -> EmbeddingService:
-        from utils.config import EmbeddingsSettings
+        from comad_eye.config import EmbeddingsSettings
         svc = EmbeddingService(
             settings=EmbeddingsSettings(model="test", device="cpu")
         )
@@ -135,7 +135,7 @@ class TestEncode:
 
 class TestSearch:
     def test_search_returns_sorted_results(self):
-        from utils.config import EmbeddingsSettings
+        from comad_eye.config import EmbeddingsSettings
         svc = EmbeddingService(
             settings=EmbeddingsSettings(model="test", device="cpu")
         )
@@ -164,7 +164,7 @@ class TestSearch:
         assert results[1][0] == 1
 
     def test_search_top_k_limits_results(self):
-        from utils.config import EmbeddingsSettings
+        from comad_eye.config import EmbeddingsSettings
         svc = EmbeddingService(
             settings=EmbeddingsSettings(model="test", device="cpu")
         )
@@ -187,7 +187,7 @@ class TestSearch:
 
 class TestSaveLoadEmbeddings:
     def test_save_and_load_roundtrip(self, tmp_path):
-        from utils.config import EmbeddingsSettings
+        from comad_eye.config import EmbeddingsSettings
         svc = EmbeddingService(
             settings=EmbeddingsSettings(model="test", device="cpu")
         )
@@ -214,7 +214,7 @@ class TestSaveLoadEmbeddings:
 # ---------------------------------------------------------------------------
 
 class TestLoadModel:
-    @patch("utils.embeddings.load_settings")
+    @patch("comad_eye.embeddings.load_settings")
     def test_lazy_loading(self, mock_settings):
         mock_cfg = MagicMock()
         mock_cfg.embeddings.model = "test-model"
@@ -227,7 +227,7 @@ class TestLoadModel:
 
     def test_load_model_called_once(self):
         pytest.importorskip("sentence_transformers")
-        from utils.config import EmbeddingsSettings
+        from comad_eye.config import EmbeddingsSettings
         svc = EmbeddingService(
             settings=EmbeddingsSettings(model="test", device="cpu")
         )

@@ -642,7 +642,7 @@ class TestSaveResults:
         output_dir = tmp_path / "output"
         extractor.save_results(ontology, output_dir)
 
-        assert (output_dir / "ontology.json").exists()
+        assert (output_dir / "comad_eye.ontology.json").exists()
         assert (output_dir / "triples.jsonl").exists()
 
     def test_triples_format(self, tmp_path):

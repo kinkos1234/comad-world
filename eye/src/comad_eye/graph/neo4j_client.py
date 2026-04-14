@@ -104,7 +104,7 @@ class Neo4jClient:
         graph_counts_cache.clear()
 
     def node_count(self) -> int:
-        from utils.cache import _SENTINEL
+        from comad_eye.cache import _SENTINEL
         cache_key = "node_count"
         cached = graph_counts_cache.get_or_sentinel(cache_key)
         if cached is not _SENTINEL:
@@ -116,7 +116,7 @@ class Neo4jClient:
 
     def edge_count(self, active_only: bool = True) -> int:
         cache_key = f"edge_count:{active_only}"
-        from utils.cache import _SENTINEL
+        from comad_eye.cache import _SENTINEL
         cached = graph_counts_cache.get_or_sentinel(cache_key)
         if cached is not _SENTINEL:
             return cached
@@ -166,7 +166,7 @@ class Neo4jClient:
 
     def get_graph_stats(self) -> dict[str, Any]:
         """그래프 통계를 반환한다 (TTL 60 s 캐시)."""
-        from utils.cache import _SENTINEL
+        from comad_eye.cache import _SENTINEL
         cache_key = "graph_stats"
         cached = graph_stats_cache.get_or_sentinel(cache_key)
         if cached is not _SENTINEL:

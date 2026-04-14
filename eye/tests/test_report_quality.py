@@ -133,15 +133,15 @@ class TestPostProcess:
 
 class TestHelpers:
     def test_clean_name_import(self):
-        from narration.helpers import clean_name
+        from comad_eye.narration.helpers import clean_name
         assert clean_name("entity_name_test") == "entity name test"
 
     def test_fmt_pct_import(self):
-        from narration.helpers import fmt_pct
+        from comad_eye.narration.helpers import fmt_pct
         assert fmt_pct(0.85) == "85%"
         assert fmt_pct(1.0) == "100%"
 
     def test_fmt_score_import(self):
-        from narration.helpers import fmt_score
+        from comad_eye.narration.helpers import fmt_score
         assert fmt_score(0.12345) == "0.1235"
         assert fmt_score(0.12345, decimals=2) == "0.12"

@@ -7,7 +7,7 @@ class TestOrchestratorImports:
     """Verify the orchestrator module exports all expected functions."""
 
     def test_all_functions_importable(self):
-        from pipeline.orchestrator import (
+        from comad_eye.pipeline.orchestrator import (
             run_ingestion,
             run_graph_loading,
             run_community_detection,
@@ -44,7 +44,7 @@ class TestConfigDockerCompat:
     """Verify Docker compose env vars are supported."""
 
     def test_comadeye_prefix_in_env_map(self):
-        from utils.config import _ENV_MAP
+        from comad_eye.config import _ENV_MAP
         assert "COMADEYE_NEO4J_URI" in _ENV_MAP
         assert "COMADEYE_OLLAMA_URL" in _ENV_MAP
         # Verify they map to correct fields

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from comad_eye.ontology.schema import ActionType, Effect, Precondition
-from comad_eye.utils.config import load_yaml, project_root
+from comad_eye.config import load_yaml, project_root
 
 logger = logging.getLogger("comadeye")
 

@@ -104,7 +104,7 @@ class TestTTLExpiration:
 
     def test_mock_time_via_monkeypatch(self, monkeypatch):
         """Verify expiry logic using monkeypatched time.monotonic."""
-        import utils.cache as cache_mod
+        import comad_eye.cache as cache_mod
 
         now = [0.0]
 
@@ -320,7 +320,7 @@ class TestThreadSafety:
 
 class TestModuleSingletons:
     def test_singletons_exist_with_correct_ttl(self):
-        from utils.cache import (
+        from comad_eye.cache import (
             analysis_file_cache,
             graph_counts_cache,
             graph_stats_cache,
@@ -330,7 +330,7 @@ class TestModuleSingletons:
         assert analysis_file_cache.ttl == 120
 
     def test_singletons_are_usable(self):
-        from utils.cache import graph_stats_cache
+        from comad_eye.cache import graph_stats_cache
 
         graph_stats_cache.set("test_key", {"nodes": 42})
         assert graph_stats_cache.get("test_key") == {"nodes": 42}

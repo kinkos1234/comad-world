@@ -51,12 +51,12 @@ def run_ingestion(
     data_dir: Path | None = None,
 ) -> tuple[list, Any, dict]:
     """시드 텍스트 → 엔티티/관계 추출 + 벡터 인리치먼트."""
-    from ingestion.chunker import TextChunker
-    from ingestion.deduplicator import Deduplicator
-    from ingestion.enricher import VectorEnricher
-    from ingestion.extractor import EntityExtractor
-    from ingestion.segmenter import TextSegmenter
-    from utils.llm_client import LLMClient
+    from comad_eye.ingestion.chunker import TextChunker
+    from comad_eye.ingestion.deduplicator import Deduplicator
+    from comad_eye.ingestion.enricher import VectorEnricher
+    from comad_eye.ingestion.extractor import EntityExtractor
+    from comad_eye.ingestion.segmenter import TextSegmenter
+    from comad_eye.llm_client import LLMClient
 
     ext_dir = str(data_dir / "extraction") if data_dir else "data/extraction"
     Path(ext_dir).mkdir(parents=True, exist_ok=True)
@@ -89,7 +89,7 @@ def run_ingestion(
     ontology = dedup.deduplicate(ontology)
     dedup.save_merge_log(f"{ext_dir}/merge_log.json")
 
-    from utils.embeddings import EmbeddingService
+    from comad_eye.embeddings import EmbeddingService
     emb = EmbeddingService(settings=settings.embeddings)
     enricher = VectorEnricher(embedding_service=emb)
     enrichment = enricher.enrich(ontology)
@@ -100,8 +100,8 @@ def run_ingestion(
 
 def run_graph_loading(ontology: Any, settings: Any) -> Any:
     """온톨로지를 Neo4j 그래프에 로드한다."""
-    from graph.loader import GraphLoader
-    from graph.neo4j_client import Neo4jClient
+    from comad_eye.graph.loader import GraphLoader
+    from comad_eye.graph.neo4j_client import Neo4jClient
 
     client = Neo4jClient(settings=settings.neo4j)
     client.clear_all()
@@ -112,9 +112,9 @@ def run_graph_loading(ontology: Any, settings: Any) -> Any:
 
 def run_community_detection(client: Any, settings: Any) -> dict:
     """커뮤니티 탐지 + LLM 기반 커뮤니티 요약."""
-    from graph.community import CommunityDetector
-    from graph.summarizer import CommunitySummarizer
-    from utils.llm_client import LLMClient
+    from comad_eye.graph.community import CommunityDetector
+    from comad_eye.graph.summarizer import CommunitySummarizer
+    from comad_eye.llm_client import LLMClient
 
     detector = CommunityDetector(client)
     result = detector.detect()
@@ -132,11 +132,11 @@ def run_simulation(
     data_dir: Path | None = None,
 ) -> dict[str, Any]:
     """시뮬레이션 엔진을 실행하고 결과 메타데이터를 반환한다."""
-    from ontology.action_registry import ActionRegistry
-    from ontology.meta_edge_engine import MetaEdgeEngine
-    from simulation.engine import SimulationEngine
-    from simulation.event_chain import SimEvent
-    from utils.active_metadata import ActiveMetadataBus
+    from comad_eye.ontology.action_registry import ActionRegistry
+    from comad_eye.ontology.meta_edge_engine import MetaEdgeEngine
+    from comad_eye.simulation.engine import SimulationEngine
+    from comad_eye.simulation.event_chain import SimEvent
+    from comad_eye.active_metadata import ActiveMetadataBus
 
     snapshot_dir = str(data_dir / "snapshots") if data_dir else "data/snapshots"
     Path(snapshot_dir).mkdir(parents=True, exist_ok=True)
@@ -191,9 +191,9 @@ def run_analysis(
     data_dir: Path | None = None,
 ) -> dict[str, Any]:
     """6개 분석공간 + 렌즈 딥 필터를 실행한다."""
-    from analysis.aggregator import AnalysisAggregator
-    from analysis.base import SimulationData
-    from utils.llm_client import LLMClient
+    from comad_eye.analysis.aggregator import AnalysisAggregator
+    from comad_eye.analysis.base import SimulationData
+    from comad_eye.llm_client import LLMClient
 
     snapshot_dir = str(data_dir / "snapshots") if data_dir else "data/snapshots"
     analysis_dir = str(data_dir / "analysis") if data_dir else "data/analysis"
@@ -225,8 +225,8 @@ def run_report(
     data_dir: Path | None = None,
 ) -> tuple[Path, dict]:
     """분석 결과 → 마크다운 리포트 생성."""
-    from narration.report_generator import ReportGenerator
-    from utils.llm_client import LLMClient
+    from comad_eye.narration.report_generator import ReportGenerator
+    from comad_eye.llm_client import LLMClient
 
     analysis_dir = str(data_dir / "analysis") if data_dir else "data/analysis"
 

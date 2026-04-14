@@ -50,7 +50,7 @@ class TestDetect:
         # Mock leidenalg.find_partition to return a simple partition
         mock_partition = [[0, 1], [2]]  # nodes a,b in comm 0; c in comm 1
 
-        with patch("graph.community.leidenalg") as mock_leiden:
+        with patch("comad_eye.graph.community.leidenalg") as mock_leiden:
             mock_leiden.find_partition.return_value = mock_partition
             mock_leiden.RBConfigurationVertexPartition = MagicMock()
 
@@ -73,7 +73,7 @@ class TestDetect:
         ]
 
         mock_partition = [[0, 1]]
-        with patch("graph.community.leidenalg") as mock_leiden:
+        with patch("comad_eye.graph.community.leidenalg") as mock_leiden:
             mock_leiden.find_partition.return_value = mock_partition
             mock_leiden.RBConfigurationVertexPartition = MagicMock()
 
@@ -89,7 +89,7 @@ class TestDetect:
         ]
 
         mock_partition = [[0, 1]]
-        with patch("graph.community.leidenalg") as mock_leiden:
+        with patch("comad_eye.graph.community.leidenalg") as mock_leiden:
             mock_leiden.find_partition.return_value = mock_partition
             mock_leiden.RBConfigurationVertexPartition = MagicMock()
 
@@ -104,7 +104,7 @@ class TestDetect:
         ]
 
         mock_partition = [[0, 1]]
-        with patch("graph.community.leidenalg") as mock_leiden:
+        with patch("comad_eye.graph.community.leidenalg") as mock_leiden:
             mock_leiden.find_partition.return_value = mock_partition
             mock_leiden.RBConfigurationVertexPartition = MagicMock()
 

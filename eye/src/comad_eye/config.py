@@ -205,7 +205,11 @@ def load_settings(path: Path | str | None = None) -> Settings:
             raw: dict[str, Any] = yaml.safe_load(f) or {}
     else:
         raw = {}
-    raw = _apply_config_overrides(raw)
+    # Only apply overrides.yaml when loading the default settings path.
+    # A caller passing a custom path is being explicit; don't merge
+    # surprises on top of their input (ADR 0002 PR 3).
+    if path is None:
+        raw = _apply_config_overrides(raw)
     raw = _apply_env_overrides(raw)
     return Settings(**raw)
 

@@ -86,7 +86,7 @@ async def system_status():
 
     # Device spec detection
     try:
-        from utils.device import detect_device
+        from comad_eye.device import detect_device
         device = detect_device()
         status.device = DeviceInfoResponse(
             total_ram_gb=device.total_ram_gb,
@@ -102,9 +102,9 @@ async def system_status():
     # Neo4j check
     neo4j_error = None
     try:
-        from utils.config import load_settings
+        from comad_eye.config import load_settings
         settings = load_settings()
-        from graph.neo4j_client import Neo4jClient
+        from comad_eye.graph.neo4j_client import Neo4jClient
         client = Neo4jClient(settings=settings.neo4j)
         client.query("RETURN 1")
         client.close()
@@ -117,7 +117,7 @@ async def system_status():
     ollama_error = None
     try:
         import httpx
-        from utils.config import load_settings
+        from comad_eye.config import load_settings
         settings = load_settings()
         base = settings.llm.base_url.replace("/v1", "")
         resp = httpx.get(f"{base}/api/tags", timeout=3)
@@ -135,7 +135,7 @@ async def system_status():
 
             # Model fitness evaluation
             if device and status.available_models:
-                from utils.device import evaluate_all_models
+                from comad_eye.device import evaluate_all_models
                 recs = evaluate_all_models(
                     device=device,
                     base_url=base,

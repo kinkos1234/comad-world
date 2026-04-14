@@ -36,8 +36,8 @@ class TestValidatePropertyName:
 # ---------------------------------------------------------------------------
 
 class TestNeo4jClientConstruction:
-    @patch("graph.neo4j_client.GraphDatabase.driver")
-    @patch("graph.neo4j_client.load_settings")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.load_settings")
     def test_default_settings(self, mock_settings, mock_driver):
         mock_neo4j = MagicMock()
         mock_neo4j.uri = "bolt://localhost:7687"
@@ -52,7 +52,7 @@ class TestNeo4jClientConstruction:
             auth=("neo4j", "test"),
         )
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_custom_settings(self, mock_driver):
         settings = MagicMock()
         settings.uri = "bolt://custom:7688"
@@ -72,7 +72,7 @@ class TestNeo4jClientConstruction:
 # ---------------------------------------------------------------------------
 
 class TestConnectionMethods:
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_close(self, mock_driver_cls):
         mock_driver = MagicMock()
         mock_driver_cls.return_value = mock_driver
@@ -86,7 +86,7 @@ class TestConnectionMethods:
         client.close()
         mock_driver.close.assert_called_once()
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_verify_connectivity_success(self, mock_driver_cls):
         mock_driver = MagicMock()
         mock_driver_cls.return_value = mock_driver
@@ -99,7 +99,7 @@ class TestConnectionMethods:
         client = Neo4jClient(settings=settings)
         assert client.verify_connectivity() is True
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_verify_connectivity_failure(self, mock_driver_cls):
         mock_driver = MagicMock()
         mock_driver.verify_connectivity.side_effect = ConnectionError("nope")
@@ -121,7 +121,7 @@ class TestConnectionMethods:
 class TestQueryWrite:
     @pytest.fixture
     def client(self):
-        with patch("graph.neo4j_client.GraphDatabase.driver") as mock_driver_cls:
+        with patch("comad_eye.graph.neo4j_client.GraphDatabase.driver") as mock_driver_cls:
             mock_driver = MagicMock()
             mock_session = MagicMock()
             mock_result = MagicMock()
@@ -166,7 +166,7 @@ class TestQueryWrite:
 # ---------------------------------------------------------------------------
 
 class TestSetupSchema:
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_setup_schema_runs_statements(self, mock_driver_cls):
         mock_driver = MagicMock()
         mock_session = MagicMock()
@@ -188,7 +188,7 @@ class TestSetupSchema:
         # 1 constraint + 3 indexes = 4 statements
         assert mock_session.run.call_count >= 4
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_setup_schema_handles_errors(self, mock_driver_cls):
         mock_driver = MagicMock()
         mock_session = MagicMock()
@@ -214,7 +214,7 @@ class TestSetupSchema:
 # ---------------------------------------------------------------------------
 
 class TestEntityOperations:
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_get_entity_found(self, mock_driver_cls):
         mock_driver = MagicMock()
         mock_session = MagicMock()
@@ -234,7 +234,7 @@ class TestEntityOperations:
         result = client.get_entity("e1")
         assert result["uid"] == "e1"
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_get_entity_not_found(self, mock_driver_cls):
         mock_driver = MagicMock()
         mock_session = MagicMock()
@@ -254,7 +254,7 @@ class TestEntityOperations:
         result = client.get_entity("missing")
         assert result is None
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_update_entity_property_valid(self, mock_driver_cls):
         mock_driver = MagicMock()
         mock_session = MagicMock()
@@ -274,7 +274,7 @@ class TestEntityOperations:
         client.update_entity_property("e1", "stance", 0.5)
         mock_session.run.assert_called()
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
     def test_update_entity_property_unsafe(self, mock_driver_cls):
         mock_driver = MagicMock()
         mock_driver_cls.return_value = mock_driver
@@ -294,9 +294,9 @@ class TestEntityOperations:
 # ---------------------------------------------------------------------------
 
 class TestClearAndCache:
-    @patch("graph.neo4j_client.GraphDatabase.driver")
-    @patch("graph.neo4j_client.graph_stats_cache")
-    @patch("graph.neo4j_client.graph_counts_cache")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.graph_stats_cache")
+    @patch("comad_eye.graph.neo4j_client.graph_counts_cache")
     def test_clear_all(self, mock_counts, mock_stats, mock_driver_cls):
         mock_driver = MagicMock()
         mock_session = MagicMock()
@@ -319,9 +319,9 @@ class TestClearAndCache:
         mock_stats.clear.assert_called()
         mock_counts.clear.assert_called()
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
-    @patch("graph.neo4j_client.graph_stats_cache")
-    @patch("graph.neo4j_client.graph_counts_cache")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.graph_stats_cache")
+    @patch("comad_eye.graph.neo4j_client.graph_counts_cache")
     def test_invalidate_cache(self, mock_counts, mock_stats, mock_driver_cls):
         mock_driver = MagicMock()
         mock_driver_cls.return_value = mock_driver
@@ -342,10 +342,10 @@ class TestClearAndCache:
 # ---------------------------------------------------------------------------
 
 class TestCounts:
-    @patch("graph.neo4j_client.GraphDatabase.driver")
-    @patch("graph.neo4j_client.graph_counts_cache")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.graph_counts_cache")
     def test_node_count_from_query(self, mock_cache, mock_driver_cls):
-        from utils.cache import _SENTINEL
+        from comad_eye.cache import _SENTINEL
         mock_cache.get_or_sentinel.return_value = _SENTINEL
 
         mock_driver = MagicMock()
@@ -366,8 +366,8 @@ class TestCounts:
         count = client.node_count()
         assert count == 42
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
-    @patch("graph.neo4j_client.graph_counts_cache")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.graph_counts_cache")
     def test_node_count_cached(self, mock_cache, mock_driver_cls):
         mock_cache.get_or_sentinel.return_value = 99
 
@@ -383,10 +383,10 @@ class TestCounts:
         count = client.node_count()
         assert count == 99
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
-    @patch("graph.neo4j_client.graph_counts_cache")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.graph_counts_cache")
     def test_edge_count_active_only(self, mock_cache, mock_driver_cls):
-        from utils.cache import _SENTINEL
+        from comad_eye.cache import _SENTINEL
         mock_cache.get_or_sentinel.return_value = _SENTINEL
 
         mock_driver = MagicMock()
@@ -403,10 +403,10 @@ class TestCounts:
         settings.password = "p"
         settings.database = "db"
 
-    @patch("graph.neo4j_client.GraphDatabase.driver")
-    @patch("graph.neo4j_client.graph_counts_cache")
+    @patch("comad_eye.graph.neo4j_client.GraphDatabase.driver")
+    @patch("comad_eye.graph.neo4j_client.graph_counts_cache")
     def test_edge_count_empty(self, mock_cache, mock_driver_cls):
-        from utils.cache import _SENTINEL
+        from comad_eye.cache import _SENTINEL
         mock_cache.get_or_sentinel.return_value = _SENTINEL
 
         mock_driver = MagicMock()

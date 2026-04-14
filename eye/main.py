@@ -107,9 +107,9 @@ def qa(
     settings = load_settings()
     setup_logger(settings.logging)
 
-    from graph.neo4j_client import Neo4jClient
-    from narration.qa_session import QASession
-    from utils.llm_client import LLMClient
+    from comad_eye.graph.neo4j_client import Neo4jClient
+    from comad_eye.narration.qa_session import QASession
+    from comad_eye.llm_client import LLMClient
 
     console.print(Panel(
         "[bold cyan]ComadEye Q&A Session[/bold cyan]\n"
@@ -169,9 +169,9 @@ def analyze(
     settings = load_settings()
     setup_logger(settings.logging)
 
-    from analysis.aggregator import AnalysisAggregator
-    from analysis.base import SimulationData
-    from graph.neo4j_client import Neo4jClient
+    from comad_eye.analysis.aggregator import AnalysisAggregator
+    from comad_eye.analysis.base import SimulationData
+    from comad_eye.graph.neo4j_client import Neo4jClient
 
     client = Neo4jClient(settings=settings.neo4j)
 
@@ -198,8 +198,8 @@ def report(
     settings = load_settings()
     setup_logger(settings.logging)
 
-    from narration.report_generator import ReportGenerator
-    from utils.llm_client import LLMClient
+    from comad_eye.narration.report_generator import ReportGenerator
+    from comad_eye.llm_client import LLMClient
 
     llm = LLMClient(settings=settings.llm)
     generator = ReportGenerator(llm, analysis_dir, output_dir)

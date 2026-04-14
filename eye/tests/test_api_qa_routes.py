@@ -242,11 +242,11 @@ class TestGetOrCreateSession:
         mock_qa_session.load_session.return_value = None
 
         # These are lazy-imported inside _get_or_create_session, so patch at source module
-        with patch("utils.config.load_settings") as mock_settings:
+        with patch("comad_eye.config.load_settings") as mock_settings:
             mock_settings.return_value = MagicMock()
-            with patch("graph.neo4j_client.Neo4jClient", return_value=mock_neo4j):
-                with patch("utils.llm_client.LLMClient", return_value=mock_llm):
-                    with patch("narration.qa_session.QASession", return_value=mock_qa_session):
+            with patch("comad_eye.graph.neo4j_client.Neo4jClient", return_value=mock_neo4j):
+                with patch("comad_eye.llm_client.LLMClient", return_value=mock_llm):
+                    with patch("comad_eye.narration.qa_session.QASession", return_value=mock_qa_session):
                         with patch("api.routes.qa._qa_session_dir", return_value=tmp_path):
                             with patch("api.routes.qa._job_analysis_dir", return_value=tmp_path / "analysis"):
                                 from api.routes.qa import _get_or_create_session

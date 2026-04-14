@@ -54,3 +54,4 @@ docs/posts/
 # Docker volumes
 neo4j_data/
 ollama_data/
+eye/.venv-verify/

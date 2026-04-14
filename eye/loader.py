@@ -129,7 +129,7 @@ class GraphLoader:
     def _load_lens_knowledge(self) -> int:
         """렌즈 지식을 그래프에 적재한다."""
         try:
-            from analysis.lens_knowledge import load_lens_knowledge_to_graph
+            from comad_eye.analysis.lens_knowledge import load_lens_knowledge_to_graph
             return load_lens_knowledge_to_graph(self._client)
         except Exception as e:
             logger.warning("렌즈 지식 적재 실패 (비치명적): %s", e)

@@ -201,7 +201,7 @@ class TestEvaluateModelFitness:
 # ---------------------------------------------------------------------------
 
 class TestDetectDevice:
-    @patch("utils.device.platform")
+    @patch("comad_eye.device.platform")
     def test_basic_detection(self, mock_platform):
         mock_platform.system.return_value = "Darwin"
         mock_platform.machine.return_value = "arm64"
@@ -221,7 +221,7 @@ class TestDetectDevice:
         assert info.arch == "arm64"
         assert info.gpu_type == "mps"
 
-    @patch("utils.device.platform")
+    @patch("comad_eye.device.platform")
     def test_linux_detection_without_psutil(self, mock_platform):
         mock_platform.system.return_value = "Linux"
         mock_platform.machine.return_value = "x86_64"
@@ -251,7 +251,7 @@ class TestDetectDevice:
 # ---------------------------------------------------------------------------
 
 class TestGetOllamaModelDetails:
-    @patch("utils.device.httpx.post")
+    @patch("comad_eye.device.httpx.post")
     def test_successful_response(self, mock_post):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -277,7 +277,7 @@ class TestGetOllamaModelDetails:
         assert detail["size_gb"] == pytest.approx(4.4, abs=0.2)
         assert detail["family"] == "llama"
 
-    @patch("utils.device.httpx.post")
+    @patch("comad_eye.device.httpx.post")
     def test_failed_request(self, mock_post):
         mock_post.side_effect = Exception("Connection refused")
         result = get_ollama_model_details(
@@ -285,7 +285,7 @@ class TestGetOllamaModelDetails:
         )
         assert result["missing-model"] == {}
 
-    @patch("utils.device.httpx.post")
+    @patch("comad_eye.device.httpx.post")
     def test_non_200_response(self, mock_post):
         mock_resp = MagicMock()
         mock_resp.status_code = 404
@@ -297,7 +297,7 @@ class TestGetOllamaModelDetails:
         # Non-200 responses are silently skipped — no entry for the model
         assert "unknown" not in result
 
-    @patch("utils.device.httpx.post")
+    @patch("comad_eye.device.httpx.post")
     def test_multiple_models(self, mock_post):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -320,7 +320,7 @@ class TestGetOllamaModelDetails:
 # ---------------------------------------------------------------------------
 
 class TestEvaluateAllModels:
-    @patch("utils.device.get_ollama_model_details")
+    @patch("comad_eye.device.get_ollama_model_details")
     def test_evaluates_all(self, mock_details):
         mock_details.return_value = {
             "model-a": {"size_gb": 4.0, "parameter_size": "8B"},
@@ -333,7 +333,7 @@ class TestEvaluateAllModels:
         assert results[0].name == "model-a"
         assert results[0].fitness == "safe"
 
-    @patch("utils.device.get_ollama_model_details")
+    @patch("comad_eye.device.get_ollama_model_details")
     def test_handles_missing_details(self, mock_details):
         mock_details.return_value = {"model-a": {}}
         device = DeviceInfo(total_ram_gb=64.0, cpu_cores=10, gpu_type="mps")

@@ -88,9 +88,9 @@ def _qa_session_dir(job_id: str) -> Path:
 
 def _get_or_create_session(job_id: str):
     if job_id not in _sessions:
-        from graph.neo4j_client import Neo4jClient
-        from narration.qa_session import QASession
-        from utils.llm_client import LLMClient
+        from comad_eye.graph.neo4j_client import Neo4jClient
+        from comad_eye.narration.qa_session import QASession
+        from comad_eye.llm_client import LLMClient
 
         settings = load_settings()
         client = Neo4jClient(settings=settings.neo4j)

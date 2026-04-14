@@ -254,7 +254,7 @@ def _push_stage(job_id: str, stage: PipelineStage, status: JobStatus, message: s
 
 def _execute_pipeline(job_id: str):
     """Run the full pipeline synchronously (in background thread)."""
-    from utils.config import load_settings
+    from comad_eye.config import load_settings
 
     job = _jobs[job_id]
     job["status"] = JobStatus.RUNNING
@@ -324,7 +324,7 @@ def _execute_pipeline(job_id: str):
         # Job-scoped data directory
         data_dir = _job_data_dir(job_id)
 
-        from pipeline.orchestrator import run_ingestion
+        from comad_eye.pipeline.orchestrator import run_ingestion
         chunks, ontology, ingestion_usage = run_ingestion(
             seed_text, settings, on_progress=_ingestion_progress, data_dir=data_dir,
         )
@@ -335,20 +335,20 @@ def _execute_pipeline(job_id: str):
 
         # Stage 2: Graph
         _push_stage(job_id, PipelineStage.GRAPH, JobStatus.RUNNING, "Neo4j 그래프 로딩...")
-        from pipeline.orchestrator import run_graph_loading
+        from comad_eye.pipeline.orchestrator import run_graph_loading
         client = run_graph_loading(ontology, settings)
         _push_stage(job_id, PipelineStage.GRAPH, JobStatus.COMPLETED, "그래프 로딩 완료")
 
         # Stage 3: Community
         _push_stage(job_id, PipelineStage.COMMUNITY, JobStatus.RUNNING, "커뮤니티 탐지 중...")
-        from pipeline.orchestrator import run_community_detection
+        from comad_eye.pipeline.orchestrator import run_community_detection
         community_usage = run_community_detection(client, settings)
         _merge_usage(community_usage)
         _push_stage(job_id, PipelineStage.COMMUNITY, JobStatus.COMPLETED, "커뮤니티 탐지 완료")
 
         # Stage 4: Simulation
         _push_stage(job_id, PipelineStage.SIMULATION, JobStatus.RUNNING, "시뮬레이션 실행 중...")
-        from pipeline.orchestrator import run_simulation
+        from comad_eye.pipeline.orchestrator import run_simulation
         sim_result = run_simulation(client, ontology, settings, data_dir=data_dir)
         _push_stage(job_id, PipelineStage.SIMULATION, JobStatus.COMPLETED,
                     f"라운드 {sim_result['total_rounds']}회 완료",
@@ -359,7 +359,7 @@ def _execute_pipeline(job_id: str):
         lens_label = f" + 렌즈 {len(selected_lenses)}개" if selected_lenses else " + 렌즈 자동 선별"
         _push_stage(job_id, PipelineStage.ANALYSIS, JobStatus.RUNNING,
                     f"6개 분석공간{lens_label} 실행 중...")
-        from pipeline.orchestrator import run_analysis
+        from comad_eye.pipeline.orchestrator import run_analysis
         aggregated = run_analysis(
             client, settings,
             lenses=selected_lenses,
@@ -377,7 +377,7 @@ def _execute_pipeline(job_id: str):
 
         # Stage 6: Report
         _push_stage(job_id, PipelineStage.REPORT, JobStatus.RUNNING, "리포트 생성 중...")
-        from pipeline.orchestrator import run_report
+        from comad_eye.pipeline.orchestrator import run_report
         report_dir = data_dir / "reports"
         report_path, report_usage = run_report(seed_text, sim_result, report_dir, settings, analysis_prompt=analysis_prompt, data_dir=data_dir)
         _merge_usage(report_usage)
@@ -435,7 +435,7 @@ async def retry_job(
 @router.post("/preflight", response_model=PreflightResponse)
 def preflight(req: PreflightRequest):
     """시드 텍스트 사전 진단 — 토큰 추정, 위험도, 예상 배치 수."""
-    from utils.preflight import run_preflight
+    from comad_eye.preflight import run_preflight
 
     result = run_preflight(
         text=req.seed_text,

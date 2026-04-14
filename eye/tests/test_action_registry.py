@@ -92,7 +92,7 @@ SAMPLE_YAML = {
 
 @pytest.fixture
 def registry():
-    with patch("ontology.action_registry.load_yaml", return_value=SAMPLE_YAML):
+    with patch("comad_eye.ontology.action_registry.load_yaml", return_value=SAMPLE_YAML):
         return ActionRegistry(actions_path="/fake/path.yaml")
 
 
@@ -122,7 +122,7 @@ class TestParsing:
         assert registry.actions["persuade"].priority == 8
 
     def test_empty_actions(self):
-        with patch("ontology.action_registry.load_yaml", return_value={"actions": {}}):
+        with patch("comad_eye.ontology.action_registry.load_yaml", return_value={"actions": {}}):
             reg = ActionRegistry(actions_path="/fake")
         assert reg.actions == {}
 

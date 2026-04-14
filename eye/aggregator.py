@@ -106,7 +106,7 @@ class AnalysisAggregator:
                 engine = LensEngine(self._llm, self._selected_lenses, graph_client=self._graph_client)
             else:
                 # 기본 활성화된 렌즈 사용 (LLM auto_select 호출 절감)
-                from analysis.lenses import DEFAULT_LENS_IDS
+                from comad_eye.analysis.lenses import DEFAULT_LENS_IDS
                 budget = compute_lens_budget(self._settings_override)
                 default_ids = DEFAULT_LENS_IDS[:budget]
                 logger.info("기본 렌즈 사용 (예산: %d개): %s", budget, default_ids)

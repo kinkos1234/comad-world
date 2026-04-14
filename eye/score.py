@@ -49,7 +49,7 @@ def compute_score() -> float:
                 rel_count += 1
 
     # ontology.json 에서도 확인
-    ontology_file = extraction_dir / "ontology.json"
+    ontology_file = extraction_dir / "comad_eye.ontology.json"
     entity_names: list[str] = []
     if ontology_file.exists():
         try:

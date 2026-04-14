@@ -58,8 +58,8 @@ class TestCmrBadge:
 class TestResolveConfigToCapability:
     """Test config filename → capability mapping without loading YAML."""
 
-    @patch("utils.impact_analyzer.load_yaml")
-    @patch("utils.impact_analyzer.project_root")
+    @patch("comad_eye.impact_analyzer.load_yaml")
+    @patch("comad_eye.impact_analyzer.project_root")
     def _make_analyzer(self, mock_root, mock_yaml):
         mock_root.return_value = type("Path", (), {"__truediv__": lambda s, o: f"root/{o}"})()
         mock_yaml.return_value = {"packages": {}}
@@ -95,8 +95,8 @@ class TestResolveConfigToCapability:
 class TestImpactAnalyzerWithMockedManifest:
     """Test the analyzer using mocked YAML data."""
 
-    @patch("utils.impact_analyzer.project_root")
-    @patch("utils.impact_analyzer.load_yaml")
+    @patch("comad_eye.impact_analyzer.project_root")
+    @patch("comad_eye.impact_analyzer.load_yaml")
     def _make_analyzer(self, manifest, cmr, mock_yaml, mock_root):
         from pathlib import Path
         mock_root.return_value = Path("/fake/root")
@@ -236,8 +236,8 @@ class TestImpactAnalyzerWithMockedManifest:
 # ---------------------------------------------------------------------------
 
 class TestRender:
-    @patch("utils.impact_analyzer.project_root")
-    @patch("utils.impact_analyzer.load_yaml")
+    @patch("comad_eye.impact_analyzer.project_root")
+    @patch("comad_eye.impact_analyzer.load_yaml")
     def test_render_does_not_crash(self, mock_yaml, mock_root):
         from io import StringIO
         from pathlib import Path

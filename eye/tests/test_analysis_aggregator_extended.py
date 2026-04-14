@@ -237,12 +237,12 @@ class TestRankFindingsExtended:
 
 
 class TestRunAll:
-    @patch("analysis.aggregator.CrossSpace")
-    @patch("analysis.aggregator.CausalSpace")
-    @patch("analysis.aggregator.StructuralSpace")
-    @patch("analysis.aggregator.RecursiveSpace")
-    @patch("analysis.aggregator.TemporalSpace")
-    @patch("analysis.aggregator.HierarchySpace")
+    @patch("comad_eye.analysis.aggregator.CrossSpace")
+    @patch("comad_eye.analysis.aggregator.CausalSpace")
+    @patch("comad_eye.analysis.aggregator.StructuralSpace")
+    @patch("comad_eye.analysis.aggregator.RecursiveSpace")
+    @patch("comad_eye.analysis.aggregator.TemporalSpace")
+    @patch("comad_eye.analysis.aggregator.HierarchySpace")
     def test_run_all_sequential(
         self, MockH, MockT, MockR, MockS, MockC, MockX
     ):
@@ -269,12 +269,12 @@ class TestRunAll:
             assert "key_findings" in result
             assert "spaces" in result
 
-    @patch("analysis.aggregator.CrossSpace")
-    @patch("analysis.aggregator.CausalSpace")
-    @patch("analysis.aggregator.StructuralSpace")
-    @patch("analysis.aggregator.RecursiveSpace")
-    @patch("analysis.aggregator.TemporalSpace")
-    @patch("analysis.aggregator.HierarchySpace")
+    @patch("comad_eye.analysis.aggregator.CrossSpace")
+    @patch("comad_eye.analysis.aggregator.CausalSpace")
+    @patch("comad_eye.analysis.aggregator.StructuralSpace")
+    @patch("comad_eye.analysis.aggregator.RecursiveSpace")
+    @patch("comad_eye.analysis.aggregator.TemporalSpace")
+    @patch("comad_eye.analysis.aggregator.HierarchySpace")
     def test_space_failure_isolated(
         self, MockH, MockT, MockR, MockS, MockC, MockX
     ):

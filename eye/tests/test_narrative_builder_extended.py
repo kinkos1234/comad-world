@@ -717,19 +717,19 @@ class TestBuildOntologyAppendixExtended:
                 },
             ],
         }
-        (extraction_dir / "ontology.json").write_text(
+        (extraction_dir / "comad_eye.ontology.json").write_text(
             json.dumps(data, ensure_ascii=False), encoding="utf-8"
         )
 
         builder = _make_builder()
-        with patch("narration.narrative_builder.Path"):
+        with patch("comad_eye.narration.narrative_builder.Path"):
             # We need to mock the Path("data/extraction") in the method
             # Instead, let's directly call and rely on the actual path check
             pass
 
         # Since build_ontology_appendix uses hardcoded Path("data/extraction"),
         # we need to patch it
-        with patch("narration.narrative_builder.Path") as MockPath:
+        with patch("comad_eye.narration.narrative_builder.Path") as MockPath:
             mock_extraction = MagicMock()
             mock_extraction.__truediv__ = MagicMock(side_effect=lambda x: extraction_dir / x)
 
@@ -752,7 +752,7 @@ class TestBuildOntologyAppendixExtended:
 
     def test_no_ontology_file(self):
         builder = _make_builder()
-        with patch("narration.narrative_builder.Path") as MockPath:
+        with patch("comad_eye.narration.narrative_builder.Path") as MockPath:
             mock_extraction = MagicMock()
             mock_ontology = MagicMock()
             mock_ontology.exists.return_value = False
@@ -771,7 +771,7 @@ class TestBuildOntologyAppendixExtended:
             ],
             "relationships": [],
         }
-        with patch("narration.narrative_builder.Path") as MockPath:
+        with patch("comad_eye.narration.narrative_builder.Path") as MockPath:
             mock_extraction = MagicMock()
             mock_ontology = MagicMock()
             mock_ontology.exists.return_value = True
@@ -789,7 +789,7 @@ class TestBuildOntologyAppendixExtended:
             "entities": ["entity_string_1", "entity_string_2"],
             "relationships": [],
         }
-        with patch("narration.narrative_builder.Path") as MockPath:
+        with patch("comad_eye.narration.narrative_builder.Path") as MockPath:
             mock_extraction = MagicMock()
             mock_ontology = MagicMock()
             mock_ontology.exists.return_value = True
@@ -811,7 +811,7 @@ class TestBuildOntologyAppendixExtended:
             ],
             "relationships": [],
         }
-        with patch("narration.narrative_builder.Path") as MockPath:
+        with patch("comad_eye.narration.narrative_builder.Path") as MockPath:
             mock_extraction = MagicMock()
             mock_ontology = MagicMock()
             mock_ontology.exists.return_value = True
@@ -832,7 +832,7 @@ class TestBuildOntologyAppendixExtended:
 class TestBuildSimulationTimelineExtended:
     def test_no_snapshots_dir(self):
         builder = _make_builder()
-        with patch("narration.narrative_builder.Path") as MockPath:
+        with patch("comad_eye.narration.narrative_builder.Path") as MockPath:
             mock_snapshots = MagicMock()
             mock_snapshots.exists.return_value = False
             MockPath.return_value = mock_snapshots
@@ -843,7 +843,7 @@ class TestBuildSimulationTimelineExtended:
 
     def test_empty_snapshots_dir(self):
         builder = _make_builder()
-        with patch("narration.narrative_builder.Path") as MockPath:
+        with patch("comad_eye.narration.narrative_builder.Path") as MockPath:
             mock_snapshots = MagicMock()
             mock_snapshots.exists.return_value = True
             mock_snapshots.glob.return_value = []
@@ -874,13 +874,13 @@ class TestBuildSimulationTimelineExtended:
             )
 
         builder = _make_builder()
-        with patch("narration.narrative_builder.Path") as MockPath:
+        with patch("comad_eye.narration.narrative_builder.Path") as MockPath:
             MockPath.return_value = snapshots_dir
             # We need the real Path behavior for glob
             MockPath.side_effect = None
 
         # Use the actual filesystem with patched Path
-        with patch("narration.narrative_builder.Path", return_value=snapshots_dir):
+        with patch("comad_eye.narration.narrative_builder.Path", return_value=snapshots_dir):
             builder.build_simulation_timeline()
             # Since we're patching Path constructor, let's test with tmp_path directly
             # This test mainly verifies the code doesn't crash
@@ -903,7 +903,7 @@ class TestBuildSimulationTimelineExtended:
         builder = _make_builder()
         # Manually test the parsing logic by calling with the correct Path
         # Since the method uses hardcoded "data/snapshots", we patch Path
-        import narration.narrative_builder as nb_module
+        import comad_eye.narration.narrative_builder as nb_module
 
         original_path = nb_module.Path
 

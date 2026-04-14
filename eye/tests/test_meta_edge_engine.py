@@ -80,7 +80,7 @@ SAMPLE_YAML = {
 @pytest.fixture
 def engine():
     """Construct engine from sample YAML without touching the filesystem."""
-    with patch("ontology.meta_edge_engine.load_yaml", return_value=SAMPLE_YAML):
+    with patch("comad_eye.ontology.meta_edge_engine.load_yaml", return_value=SAMPLE_YAML):
         return MetaEdgeEngine(rules_path="/fake/path.yaml")
 
 
@@ -133,12 +133,12 @@ class TestParseRules:
         assert stance_rule.actions[0].link_type == "SIMILAR_STANCE"
 
     def test_empty_rules(self):
-        with patch("ontology.meta_edge_engine.load_yaml", return_value={"rules": {}}):
+        with patch("comad_eye.ontology.meta_edge_engine.load_yaml", return_value={"rules": {}}):
             eng = MetaEdgeEngine(rules_path="/fake")
         assert eng.rules == []
 
     def test_no_rules_key(self):
-        with patch("ontology.meta_edge_engine.load_yaml", return_value={}):
+        with patch("comad_eye.ontology.meta_edge_engine.load_yaml", return_value={}):
             eng = MetaEdgeEngine(rules_path="/fake")
         assert eng.rules == []
 

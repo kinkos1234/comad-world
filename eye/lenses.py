@@ -531,7 +531,7 @@ class LensEngine:
         if not self._graph:
             return ""
         try:
-            from analysis.lens_knowledge import (
+            from comad_eye.analysis.lens_knowledge import (
                 format_principles_for_prompt,
                 query_lens_principles,
             )

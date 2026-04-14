@@ -71,7 +71,7 @@ class TestAnalysisSpace:
 
         with patch("api.routes.analysis._GLOBAL_ANALYSIS_DIR", analysis_dir):
             # Clear the cache so the patched path is used
-            from utils.cache import analysis_file_cache
+            from comad_eye.cache import analysis_file_cache
             analysis_file_cache.clear()
 
             resp = client.get(f"/api/analysis/{space}")
@@ -88,7 +88,7 @@ class TestAnalysisSpace:
         (analysis_dir / "hierarchy.json").write_text("NOT VALID JSON {{{", encoding="utf-8")
 
         with patch("api.routes.analysis._GLOBAL_ANALYSIS_DIR", analysis_dir):
-            from utils.cache import analysis_file_cache
+            from comad_eye.cache import analysis_file_cache
             analysis_file_cache.clear()
 
             resp = client.get("/api/analysis/hierarchy")
@@ -106,7 +106,7 @@ class TestAnalysisSpace:
         (job_analysis / "hierarchy.json").write_text(json.dumps(expected), encoding="utf-8")
 
         with patch("api.routes.analysis._JOBS_DIR", jobs_dir):
-            from utils.cache import analysis_file_cache
+            from comad_eye.cache import analysis_file_cache
             analysis_file_cache.clear()
 
             resp = client.get("/api/analysis/hierarchy", params={"job_id": "test_job"})
@@ -124,7 +124,7 @@ class TestAnalysisSpace:
 
         with patch("api.routes.analysis._GLOBAL_ANALYSIS_DIR", global_dir):
             with patch("api.routes.analysis._JOBS_DIR", tmp_path / "nonexistent_jobs"):
-                from utils.cache import analysis_file_cache
+                from comad_eye.cache import analysis_file_cache
                 analysis_file_cache.clear()
 
                 resp = client.get("/api/analysis/hierarchy", params={"job_id": "fake_job"})
@@ -149,7 +149,7 @@ class TestLensInsights:
         (analysis_dir / "lens_insights.json").write_text(json.dumps(expected), encoding="utf-8")
 
         with patch("api.routes.analysis._GLOBAL_ANALYSIS_DIR", analysis_dir):
-            from utils.cache import analysis_file_cache
+            from comad_eye.cache import analysis_file_cache
             analysis_file_cache.clear()
 
             resp = client.get("/api/analysis/lens-insights")
@@ -166,7 +166,7 @@ class TestLensInsights:
         (job_analysis / "lens_insights.json").write_text(json.dumps(expected), encoding="utf-8")
 
         with patch("api.routes.analysis._JOBS_DIR", jobs_dir):
-            from utils.cache import analysis_file_cache
+            from comad_eye.cache import analysis_file_cache
             analysis_file_cache.clear()
 
             resp = client.get("/api/analysis/lens-insights", params={"job_id": "j1"})
@@ -191,7 +191,7 @@ class TestLensCross:
         (analysis_dir / "lens_cross.json").write_text(json.dumps(expected), encoding="utf-8")
 
         with patch("api.routes.analysis._GLOBAL_ANALYSIS_DIR", analysis_dir):
-            from utils.cache import analysis_file_cache
+            from comad_eye.cache import analysis_file_cache
             analysis_file_cache.clear()
 
             resp = client.get("/api/analysis/lens-cross")
@@ -216,7 +216,7 @@ class TestAggregated:
         (analysis_dir / "aggregated.json").write_text(json.dumps(expected), encoding="utf-8")
 
         with patch("api.routes.analysis._GLOBAL_ANALYSIS_DIR", analysis_dir):
-            from utils.cache import analysis_file_cache
+            from comad_eye.cache import analysis_file_cache
             analysis_file_cache.clear()
 
             resp = client.get("/api/analysis/aggregated")
@@ -232,7 +232,7 @@ class TestAggregated:
 class TestAnalysisCache:
     def test_clear_analysis_cache(self):
         from api.routes.analysis import clear_analysis_cache
-        from utils.cache import analysis_file_cache
+        from comad_eye.cache import analysis_file_cache
 
         # Add something to the cache, then clear
         analysis_file_cache.set("test_key", {"data": True})
@@ -250,7 +250,7 @@ class TestAnalysisCache:
         file_path.write_text(json.dumps(expected), encoding="utf-8")
 
         with patch("api.routes.analysis._GLOBAL_ANALYSIS_DIR", analysis_dir):
-            from utils.cache import analysis_file_cache
+            from comad_eye.cache import analysis_file_cache
             analysis_file_cache.clear()
 
             # First call loads from file

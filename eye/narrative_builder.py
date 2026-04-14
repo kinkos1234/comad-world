@@ -582,7 +582,7 @@ class NarrativeBuilder:
         extraction_dir = Path("data/extraction")
 
         # 엔티티 테이블
-        ontology_file = extraction_dir / "ontology.json"
+        ontology_file = extraction_dir / "comad_eye.ontology.json"
         entities: list[dict] = []
         relationships: list[dict] = []
 

@@ -50,13 +50,13 @@ class TestExecutePipeline:
         }
         return job_id
 
-    @patch("pipeline.orchestrator.run_report")
-    @patch("pipeline.orchestrator.run_analysis")
-    @patch("pipeline.orchestrator.run_simulation")
-    @patch("pipeline.orchestrator.run_community_detection")
-    @patch("pipeline.orchestrator.run_graph_loading")
-    @patch("pipeline.orchestrator.run_ingestion")
-    @patch("utils.config.load_settings")
+    @patch("comad_eye.pipeline.orchestrator.run_report")
+    @patch("comad_eye.pipeline.orchestrator.run_analysis")
+    @patch("comad_eye.pipeline.orchestrator.run_simulation")
+    @patch("comad_eye.pipeline.orchestrator.run_community_detection")
+    @patch("comad_eye.pipeline.orchestrator.run_graph_loading")
+    @patch("comad_eye.pipeline.orchestrator.run_ingestion")
+    @patch("comad_eye.config.load_settings")
     def test_successful_execution(
         self, mock_settings, mock_ingest, mock_graph, mock_community,
         mock_sim, mock_analysis, mock_report, tmp_path
@@ -95,7 +95,7 @@ class TestExecutePipeline:
             # Cleanup
             del _jobs[job_id]
 
-    @patch("utils.config.load_settings")
+    @patch("comad_eye.config.load_settings")
     def test_pipeline_failure_sets_failed_status(self, mock_settings, tmp_path):
         with patch("api.routes.pipeline._JOBS_DIR", tmp_path):
             from api.routes.pipeline import _execute_pipeline, _jobs
@@ -109,7 +109,7 @@ class TestExecutePipeline:
             mock_settings.return_value = settings
 
             # Make ingestion fail
-            with patch("pipeline.orchestrator.run_ingestion", side_effect=RuntimeError("boom")):
+            with patch("comad_eye.pipeline.orchestrator.run_ingestion", side_effect=RuntimeError("boom")):
                 _execute_pipeline(job_id)
 
             assert _jobs[job_id]["status"] == JobStatus.FAILED
@@ -117,13 +117,13 @@ class TestExecutePipeline:
 
             del _jobs[job_id]
 
-    @patch("pipeline.orchestrator.run_report")
-    @patch("pipeline.orchestrator.run_analysis")
-    @patch("pipeline.orchestrator.run_simulation")
-    @patch("pipeline.orchestrator.run_community_detection")
-    @patch("pipeline.orchestrator.run_graph_loading")
-    @patch("pipeline.orchestrator.run_ingestion")
-    @patch("utils.config.load_settings")
+    @patch("comad_eye.pipeline.orchestrator.run_report")
+    @patch("comad_eye.pipeline.orchestrator.run_analysis")
+    @patch("comad_eye.pipeline.orchestrator.run_simulation")
+    @patch("comad_eye.pipeline.orchestrator.run_community_detection")
+    @patch("comad_eye.pipeline.orchestrator.run_graph_loading")
+    @patch("comad_eye.pipeline.orchestrator.run_ingestion")
+    @patch("comad_eye.config.load_settings")
     def test_model_override_applied(
         self, mock_settings, mock_ingest, mock_graph, mock_community,
         mock_sim, mock_analysis, mock_report, tmp_path
@@ -156,13 +156,13 @@ class TestExecutePipeline:
 
             del _jobs[job_id]
 
-    @patch("pipeline.orchestrator.run_report")
-    @patch("pipeline.orchestrator.run_analysis")
-    @patch("pipeline.orchestrator.run_simulation")
-    @patch("pipeline.orchestrator.run_community_detection")
-    @patch("pipeline.orchestrator.run_graph_loading")
-    @patch("pipeline.orchestrator.run_ingestion")
-    @patch("utils.config.load_settings")
+    @patch("comad_eye.pipeline.orchestrator.run_report")
+    @patch("comad_eye.pipeline.orchestrator.run_analysis")
+    @patch("comad_eye.pipeline.orchestrator.run_simulation")
+    @patch("comad_eye.pipeline.orchestrator.run_community_detection")
+    @patch("comad_eye.pipeline.orchestrator.run_graph_loading")
+    @patch("comad_eye.pipeline.orchestrator.run_ingestion")
+    @patch("comad_eye.config.load_settings")
     def test_qwen3_model_warning_and_adjustment(
         self, mock_settings, mock_ingest, mock_graph, mock_community,
         mock_sim, mock_analysis, mock_report, tmp_path
@@ -197,13 +197,13 @@ class TestExecutePipeline:
 
             del _jobs[job_id]
 
-    @patch("pipeline.orchestrator.run_report")
-    @patch("pipeline.orchestrator.run_analysis")
-    @patch("pipeline.orchestrator.run_simulation")
-    @patch("pipeline.orchestrator.run_community_detection")
-    @patch("pipeline.orchestrator.run_graph_loading")
-    @patch("pipeline.orchestrator.run_ingestion")
-    @patch("utils.config.load_settings")
+    @patch("comad_eye.pipeline.orchestrator.run_report")
+    @patch("comad_eye.pipeline.orchestrator.run_analysis")
+    @patch("comad_eye.pipeline.orchestrator.run_simulation")
+    @patch("comad_eye.pipeline.orchestrator.run_community_detection")
+    @patch("comad_eye.pipeline.orchestrator.run_graph_loading")
+    @patch("comad_eye.pipeline.orchestrator.run_ingestion")
+    @patch("comad_eye.config.load_settings")
     def test_auto_detect_model(
         self, mock_settings, mock_ingest, mock_graph, mock_community,
         mock_sim, mock_analysis, mock_report, tmp_path
@@ -241,13 +241,13 @@ class TestExecutePipeline:
 
             del _jobs[job_id]
 
-    @patch("pipeline.orchestrator.run_report")
-    @patch("pipeline.orchestrator.run_analysis")
-    @patch("pipeline.orchestrator.run_simulation")
-    @patch("pipeline.orchestrator.run_community_detection")
-    @patch("pipeline.orchestrator.run_graph_loading")
-    @patch("pipeline.orchestrator.run_ingestion")
-    @patch("utils.config.load_settings")
+    @patch("comad_eye.pipeline.orchestrator.run_report")
+    @patch("comad_eye.pipeline.orchestrator.run_analysis")
+    @patch("comad_eye.pipeline.orchestrator.run_simulation")
+    @patch("comad_eye.pipeline.orchestrator.run_community_detection")
+    @patch("comad_eye.pipeline.orchestrator.run_graph_loading")
+    @patch("comad_eye.pipeline.orchestrator.run_ingestion")
+    @patch("comad_eye.config.load_settings")
     def test_settings_override_applied(
         self, mock_settings, mock_ingest, mock_graph, mock_community,
         mock_sim, mock_analysis, mock_report, tmp_path

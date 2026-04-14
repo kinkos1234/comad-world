@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 def _get_client():
-    from graph.neo4j_client import Neo4jClient
+    from comad_eye.graph.neo4j_client import Neo4jClient
     s = load_settings()
     return Neo4jClient(settings=s.neo4j)
 

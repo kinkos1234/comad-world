@@ -1,10 +1,10 @@
-"""Compatibility shim — canonical impl is in comad_eye.impact_analyzer
-(ADR 0005, Tier 3 Phase 2). Existing callsites `from utils.impact_analyzer
-import ImpactAnalyzer, ImpactReport` keep working while the codebase
-migrates.
+"""Compatibility shim — canonical impl in comad_eye.impact_analyzer (ADR 0005).
+
+Aliases this module to the canonical one so BOTH public and private
+names (_foo, __bar) resolve identically whether imported as
+``comad_eye.impact_analyzer`` or via the legacy path this file sits at.
 """
-
+import sys as _sys
 from comad_eye.impact_analyzer import *  # noqa: F401,F403
-from comad_eye.impact_analyzer import ImpactAnalyzer, ImpactReport  # noqa: F401
-
-__all__ = ["ImpactAnalyzer", "ImpactReport"]
+import comad_eye.impact_analyzer as _canonical
+_sys.modules[__name__] = _canonical

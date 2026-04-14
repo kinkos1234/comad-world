@@ -74,8 +74,8 @@ class TestCountBy:
 # ---------------------------------------------------------------------------
 
 class TestActiveMetadataBusBasics:
-    @patch("utils.active_metadata.project_root")
-    @patch("utils.active_metadata.load_yaml")
+    @patch("comad_eye.active_metadata.project_root")
+    @patch("comad_eye.active_metadata.load_yaml")
     def _make_bus(self, mock_yaml, mock_root, bindings=None):
         from pathlib import Path
         mock_root.return_value = Path("/fake/root")
@@ -107,8 +107,8 @@ class TestActiveMetadataBusBasics:
 # ---------------------------------------------------------------------------
 
 class TestSubscription:
-    @patch("utils.active_metadata.project_root")
-    @patch("utils.active_metadata.load_yaml")
+    @patch("comad_eye.active_metadata.project_root")
+    @patch("comad_eye.active_metadata.load_yaml")
     def _make_bus(self, mock_yaml=None, mock_root=None):
         from pathlib import Path
         mock_root.return_value = Path("/fake/root")
@@ -166,8 +166,8 @@ class TestSubscription:
 # ---------------------------------------------------------------------------
 
 class TestEmitPropertyChange:
-    @patch("utils.active_metadata.project_root")
-    @patch("utils.active_metadata.load_yaml")
+    @patch("comad_eye.active_metadata.project_root")
+    @patch("comad_eye.active_metadata.load_yaml")
     def _make_bus(self, mock_yaml=None, mock_root=None):
         from pathlib import Path
         mock_root.return_value = Path("/fake/root")
@@ -201,8 +201,8 @@ class TestEmitPropertyChange:
 # ---------------------------------------------------------------------------
 
 class TestCommunityStale:
-    @patch("utils.active_metadata.project_root")
-    @patch("utils.active_metadata.load_yaml")
+    @patch("comad_eye.active_metadata.project_root")
+    @patch("comad_eye.active_metadata.load_yaml")
     def _make_bus(self, mock_yaml=None, mock_root=None):
         from pathlib import Path
         mock_root.return_value = Path("/fake/root")
@@ -232,8 +232,8 @@ class TestCommunityStale:
 # ---------------------------------------------------------------------------
 
 class TestInvalidateAnalysisCache:
-    @patch("utils.active_metadata.project_root")
-    @patch("utils.active_metadata.load_yaml")
+    @patch("comad_eye.active_metadata.project_root")
+    @patch("comad_eye.active_metadata.load_yaml")
     def _make_bus(self, mock_yaml=None, mock_root=None):
         from pathlib import Path
         mock_root.return_value = Path("/fake/root")
@@ -264,8 +264,8 @@ class TestInvalidateAnalysisCache:
 # ---------------------------------------------------------------------------
 
 class TestConfigChangePropagation:
-    @patch("utils.active_metadata.project_root")
-    @patch("utils.active_metadata.load_yaml")
+    @patch("comad_eye.active_metadata.project_root")
+    @patch("comad_eye.active_metadata.load_yaml")
     def _make_bus(self, bindings, mock_yaml=None, mock_root=None):
         from pathlib import Path
         mock_root.return_value = Path("/fake/root")
@@ -355,8 +355,8 @@ class TestConfigChangePropagation:
 # ---------------------------------------------------------------------------
 
 class TestResetAndSummary:
-    @patch("utils.active_metadata.project_root")
-    @patch("utils.active_metadata.load_yaml")
+    @patch("comad_eye.active_metadata.project_root")
+    @patch("comad_eye.active_metadata.load_yaml")
     def _make_bus(self, mock_yaml=None, mock_root=None):
         from pathlib import Path
         mock_root.return_value = Path("/fake/root")

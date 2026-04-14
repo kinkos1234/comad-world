@@ -24,7 +24,7 @@ def mock_client():
 
 @pytest.fixture
 def engine(mock_client):
-    with patch("simulation.propagation.load_yaml", return_value={
+    with patch("comad_eye.simulation.propagation.load_yaml", return_value={
         "relationship_rules": {
             "INFLUENCES": {
                 "inversion": False,
@@ -46,7 +46,7 @@ def engine(mock_client):
 
 @pytest.fixture
 def engine_no_rules(mock_client):
-    with patch("simulation.propagation.load_yaml", side_effect=FileNotFoundError):
+    with patch("comad_eye.simulation.propagation.load_yaml", side_effect=FileNotFoundError):
         return PropagationEngine(mock_client)
 
 

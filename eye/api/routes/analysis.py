@@ -27,7 +27,7 @@ def _analysis_dir(job_id: str | None) -> Path:
 @router.get("/analysis/lenses")
 async def get_lens_catalog():
     """Return the catalog of available analysis lenses."""
-    from analysis.lenses import DEFAULT_LENS_IDS, LENS_CATALOG
+    from comad_eye.analysis.lenses import DEFAULT_LENS_IDS, LENS_CATALOG
 
     return {
         "lenses": [
