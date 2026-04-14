@@ -39,13 +39,13 @@
 <summary><b>Key numbers from a real deployment</b></summary>
 
 - **60,000+** graph nodes, **150,000+** relationships from ongoing crawling
-- **22** RSS feeds monitored (OpenAI, Anthropic, Google, Meta, arXiv, researcher blogs)
-- **30+ MCP tools** across 4 servers (brain 20+, eye 7, sleep 2, photoshop) — all auto-connected
+- **31** RSS feeds monitored (OpenAI, Anthropic, Google, Meta, arXiv, researcher blogs)
+- **28 MCP tools** across 4 servers (brain 19, eye 7, sleep 2, photoshop) — all auto-connected
 - **Entity-level confidence scoring** (0.0–1.0) for trust boundary tracking
 - **Content guard** — injection detection on all crawled content (10 threat patterns)
 - **Built-in performance monitoring** via `comad_brain_perf` MCP tool
 - **$0/day** additional cost with Claude Max subscription (all LLM calls via CLI, local Ollama for eye)
-- **2,800+** tests across all modules (Brain 152 + Eye 2,664)
+- **1,388+** tests across all modules (Brain 200 + Eye 1,188)
 
 </details>
 
@@ -178,7 +178,7 @@ profile:
   language: "en"
   description: "AI/ML knowledge system"
 
-# Crawl AI sources (22 RSS feeds, 10 arXiv categories)
+# Crawl AI sources (31 RSS feeds, 10 arXiv categories)
 $ cd brain && bun run crawl:hn
 [hn-crawler] Keywords: 48, RSS feeds: 22, HN queries: 8
 [hn-crawler] HN stories: 347

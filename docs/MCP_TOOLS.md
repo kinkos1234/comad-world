@@ -10,7 +10,7 @@ All Comad MCP tools follow a three-tier stability model. Check the stability lev
 | **Beta** | Functional and tested, but parameter names or response fields may change. | Fine for interactive use. Pin to a known version for automation. |
 | **Alpha** | Experimental. May be removed, renamed, or fundamentally reworked. | Manual use only. |
 
-## Brain Tools (22 tools)
+## Brain Tools (19 tools)
 
 ### Stable
 
@@ -33,7 +33,6 @@ All Comad MCP tools follow a three-tier stability model. Check the stability lev
 |------|---------|-------|
 | `comad_brain_export` | Export subgraph (JSON, JSON-LD, CSV) | Stable params, format options may expand |
 | `comad_brain_impact` | Entity impact analysis | Scoring algorithm under tuning |
-| `comad_brain_impact_v2` | Impact v2 (weighted) | May replace v1 |
 | `comad_brain_trend` | Temporal trend detection | Time window params may change |
 | `comad_brain_temporal` | Time-scoped queries | Filter syntax under review |
 | `comad_brain_claim_timeline` | Claim confidence over time | Chart format TBD |
@@ -44,10 +43,7 @@ All Comad MCP tools follow a three-tier stability model. Check the stability lev
 
 ### Alpha
 
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| `comad_brain_graph_export` | Full graph export | Performance concerns at scale |
-| `comad_brain_ontology_meta` | Ontology schema introspection | May merge into `meta` |
+_(none currently)_
 
 ## Eye Tools (7 tools)
 
