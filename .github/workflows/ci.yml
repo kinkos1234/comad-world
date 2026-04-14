@@ -56,8 +56,8 @@ jobs:
         working-directory: voice
         run: bats tests/
 
-  eye-tests-core:
-    name: Eye Python Tests (core)
+  eye-tests:
+    name: Eye Python Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,29 +69,14 @@ jobs:
       - name: Install minimal core deps
         working-directory: eye
         run: |
-          pip install pydantic pyyaml pytest pytest-timeout networkx rich \
-                      typer numpy tiktoken jinja2 neo4j tenacity python-igraph \
-                      leidenalg httpx aiohttp
+          pip install pydantic pyyaml pytest pytest-timeout pytest-asyncio \
+                      networkx rich typer numpy tiktoken jinja2 neo4j tenacity \
+                      python-igraph leidenalg httpx aiohttp fastapi uvicorn \
+                      sentence-transformers kss
 
-      - name: Run core tests (skip heavy-dep & live-LLM)
+      - name: Run full eye test suite
         working-directory: eye
-        run: |
-          pytest tests/ -q --timeout=10 \
-            --ignore=tests/test_chunker.py \
-            --ignore=tests/test_extraction_validation.py \
-            --ignore=tests/test_extractor.py \
-            --ignore=tests/test_qa_session.py \
-            --ignore=tests/test_embeddings.py \
-            --ignore=tests/test_deduplicator.py \
-            --ignore=tests/test_enricher.py \
-            --ignore=tests/test_interview_synthesizer.py \
-            --ignore=tests/test_report_quality.py \
-            --ignore=tests/test_llm_client.py \
-            --ignore=tests/test_engine.py \
-            --ignore=tests/test_api_pipeline_execute.py \
-            --ignore=tests/test_api_analysis_routes.py \
-            --ignore=tests/test_api_qa_routes.py \
-            --ignore=tests/test_pipeline_orchestrator_extended.py
+        run: pytest tests/ -q --timeout=15
 
   brain-typecheck:
     name: Brain TypeScript Check

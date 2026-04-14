@@ -775,7 +775,7 @@ class EntityExtractor:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        ontology.save(output_dir / "comad_eye.ontology.json")
+        ontology.save(output_dir / "ontology.json")
 
         triples_path = output_dir / "triples.jsonl"
         with open(triples_path, "w", encoding="utf-8") as f:

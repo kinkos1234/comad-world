@@ -717,7 +717,7 @@ class TestBuildOntologyAppendixExtended:
                 },
             ],
         }
-        (extraction_dir / "comad_eye.ontology.json").write_text(
+        (extraction_dir / "ontology.json").write_text(
             json.dumps(data, ensure_ascii=False), encoding="utf-8"
         )
 
