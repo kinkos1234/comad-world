@@ -8,6 +8,7 @@
 import { startTimer, recordTiming } from "@comad-brain/core";
 import type { RepoCandidate, SearchConstraints } from "./types.js";
 import { DEFAULT_CONSTRAINTS } from "./types.js";
+import { fetchWithTimeout } from "./fetch-util.js";
 
 const GITHUB_API = "https://api.github.com";
 
@@ -19,7 +20,7 @@ async function githubFetch(path: string): Promise<any> {
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${GITHUB_API}${path}`, { headers });
+  const res = await fetchWithTimeout(`${GITHUB_API}${path}`, { headers });
   if (!res.ok) {
     if (res.status === 403) throw new Error("GitHub API rate limit — set GITHUB_TOKEN");
     throw new Error(`GitHub API ${res.status}: ${await res.text()}`);

@@ -21,6 +21,16 @@ import { join } from "path";
 import { searchAndPlan } from "./index.js";
 import { DEFAULT_CONSTRAINTS } from "./types.js";
 import type { AdoptionPlan } from "./planner.js";
+import { withTimeout } from "./fetch-util.js";
+
+// Per-query timeout — bounds a single searchAndPlan() call.
+// Default 60s: GitHub + npm + PyPI + arXiv each have 10s fetch timeout
+// plus retry; 60s gives headroom for slow multi-source aggregation.
+const QUERY_TIMEOUT_MS = Number(process.env.EAR_INGEST_QUERY_TIMEOUT_MS ?? 60_000);
+// Overall job deadline. If we can't finish by this, we stop gracefully
+// with whatever we've written so far. Default 45m — shorter than the
+// 24h cron period so a late run finishes before the next run kicks off.
+const JOB_DEADLINE_MS = Number(process.env.EAR_INGEST_JOB_DEADLINE_MS ?? 45 * 60_000);
 
 // Archive lives one level up from brain/ (repo root ear/archive)
 const ARCHIVE_DIR = join(import.meta.dir, "../../../../ear/archive");
@@ -173,13 +183,28 @@ async function main(): Promise<void> {
 
   await mkdir(LOG_DIR, { recursive: true });
 
+  const jobStart = Date.now();
+  const jobDeadline = jobStart + JOB_DEADLINE_MS;
+  let lastHeartbeat = jobStart;
+  const HEARTBEAT_MS = 60_000;
+
   // Dedupe queries across articles so we don't re-run the same search n times
   const seenQueries = new Set<string>();
   let totalQueries = 0;
   let totalAdopts = 0;
   let totalSkipped = 0;
+  let processedArticles = 0;
 
   for (const meta of metas) {
+    if (Date.now() >= jobDeadline) {
+      console.error(`[ear-ingest] deadline hit after ${processedArticles}/${metas.length} articles — stopping cleanly`);
+      break;
+    }
+    if (Date.now() - lastHeartbeat >= HEARTBEAT_MS) {
+      const elapsed = Math.round((Date.now() - jobStart) / 1000);
+      console.error(`[ear-ingest] heartbeat: ${processedArticles}/${metas.length} articles, ${totalQueries} queries, ${totalAdopts} adopts (${elapsed}s)`);
+      lastHeartbeat = Date.now();
+    }
     const queries = buildQueries(meta).filter(q => !seenQueries.has(q));
     for (const q of queries) seenQueries.add(q);
 
@@ -193,7 +218,11 @@ async function main(): Promise<void> {
 
     for (const q of queries) {
       try {
-        const result = await searchAndPlan(q, DEFAULT_CONSTRAINTS, 2);
+        const result = await withTimeout(
+          searchAndPlan(q, DEFAULT_CONSTRAINTS, 2),
+          QUERY_TIMEOUT_MS,
+          `searchAndPlan(${q})`
+        );
         const adoptCount = result.evaluated.filter(e => e.verdict === "adopt").length;
         queryResults.push({
           query: q,
@@ -225,6 +254,7 @@ async function main(): Promise<void> {
 
     const icon = queryResults.some(r => r.adopt_count > 0) ? "✓" : "·";
     console.log(` ${icon} ${articleId.slice(0, 50)} — ${queries.length} queries, ${queryResults.reduce((s, r) => s + r.adopt_count, 0)} adopts`);
+    processedArticles++;
   }
 
   console.log(`ear-ingest: ${metas.length} articles, ${totalQueries} queries, ${totalAdopts} adopt hits, ${totalSkipped} skipped (no tech tokens)`);

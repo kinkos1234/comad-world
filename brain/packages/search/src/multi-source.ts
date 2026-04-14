@@ -11,6 +11,7 @@
 
 import { startTimer, recordTiming } from "@comad-brain/core";
 import type { RepoCandidate } from "./types.js";
+import { fetchWithTimeout } from "./fetch-util.js";
 
 // ── npm Registry ──
 
@@ -29,7 +30,7 @@ async function searchNpm(query: string, limit: number = 10): Promise<RepoCandida
   const timer = startTimer();
   try {
     const q = encodeURIComponent(query);
-    const res = await fetch(`https://registry.npmjs.org/-/v1/search?text=${q}&size=${limit}`);
+    const res = await fetchWithTimeout(`https://registry.npmjs.org/-/v1/search?text=${q}&size=${limit}`);
     if (!res.ok) return [];
 
     const data = await res.json();
@@ -78,7 +79,7 @@ async function searchPyPI(query: string, limit: number = 10): Promise<RepoCandid
     // PyPI doesn't have a search API, use the simple JSON API for known packages
     // Fallback: search via pypi.org XML-RPC or warehouse API
     const q = encodeURIComponent(query);
-    const res = await fetch(`https://pypi.org/search/?q=${q}&o=`, {
+    const res = await fetchWithTimeout(`https://pypi.org/search/?q=${q}&o=`, {
       headers: { Accept: "text/html" },
     });
     if (!res.ok) return [];
@@ -101,7 +102,7 @@ async function searchPyPI(query: string, limit: number = 10): Promise<RepoCandid
     const candidates: RepoCandidate[] = [];
     for (const name of packageNames.slice(0, limit)) {
       try {
-        const detailRes = await fetch(`https://pypi.org/pypi/${name}/json`);
+        const detailRes = await fetchWithTimeout(`https://pypi.org/pypi/${name}/json`);
         if (!detailRes.ok) continue;
         const detail = await detailRes.json();
         const info = detail.info;
@@ -154,7 +155,7 @@ async function searchArxiv(query: string, limit: number = 10): Promise<RepoCandi
   const timer = startTimer();
   try {
     const q = encodeURIComponent(query);
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://export.arxiv.org/api/query?search_query=all:${q}&start=0&max_results=${limit}&sortBy=relevance`
     );
     if (!res.ok) return [];

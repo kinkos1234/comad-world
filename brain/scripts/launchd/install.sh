@@ -100,6 +100,9 @@ $args_xml  </array>
 $weekday_xml  </dict>
   <key>StandardOutPath</key><string>$log_path</string>
   <key>StandardErrorPath</key><string>$log_path</string>
+  <key>ExitTimeOut</key><integer>60</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>AbandonProcessGroup</key><true/>
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key><string>$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
