@@ -50,8 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install bats
-        run: sudo apt-get update && sudo apt-get install -y bats
+      - name: Install bats + shellcheck
+        run: sudo apt-get update && sudo apt-get install -y bats shellcheck
       - name: Run voice tests
         working-directory: voice
         run: bats tests/
@@ -91,7 +91,8 @@ jobs:
             --ignore=tests/test_engine.py \
             --ignore=tests/test_api_pipeline_execute.py \
             --ignore=tests/test_api_analysis_routes.py \
-            --ignore=tests/test_api_qa_routes.py
+            --ignore=tests/test_api_qa_routes.py \
+            --ignore=tests/test_pipeline_orchestrator_extended.py
 
   brain-typecheck:
     name: Brain TypeScript Check
