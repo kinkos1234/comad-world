@@ -10,7 +10,7 @@ PROJECT_DIR="$HOME/Programmer/01-comad/comad-world/brain"
 
 echo "[$TODAY] Crawling arXiv papers..."
 
-cd "$PROJECT_DIR" && bun run crawl:arxiv -- --limit 100 --output "$OUTFILE"
+cd "$PROJECT_DIR" && bun run crawl:arxiv -- --limit 200 --output "$OUTFILE"
 
 if [[ -s "$OUTFILE" ]]; then
   echo "  → Ingesting results (with arXiv page fetch)..."
