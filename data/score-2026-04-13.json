@@ -1,0 +1,23 @@
+{
+  "date": "2026-04-13",
+  "scores": {
+    "simplicity": 94,
+    "trust": 100,
+    "scalability": 70,
+    "self_improvement": 100,
+    "composability": 100,
+    "performance": 84
+  },
+  "total": 91,
+  "metrics": {
+    "dependencies": 1,
+    "avg_file_loc": 185,
+    "graph_nodes": 27320,
+    "benchmark_recall": "0.9",
+    "benchmark_latency_ms": "14469",
+    "neo4j_latency_ms": 57,
+    "total_tests": 2818,
+    "cron_jobs": 0,
+    "adoption_decisions": 6
+  }
+}

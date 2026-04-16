@@ -1,0 +1,900 @@
+{
+  "run_date": "2026-04-13",
+  "graph_size": {
+    "nodes": {
+      "low": 27320,
+      "high": 0
+    },
+    "edges": {
+      "low": 45059,
+      "high": 0
+    }
+  },
+  "results": [
+    {
+      "question_id": "b01",
+      "entities_found": [
+        "Attention Is All You Need",
+        "Vaswani"
+      ],
+      "entities_expected": [
+        "Attention Is All You Need",
+        "Vaswani"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 7,
+      "cited_entities": 7,
+      "grounding_rate": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 9885
+    },
+    {
+      "question_id": "b02",
+      "entities_found": [
+        "PyTorch",
+        "TensorFlow"
+      ],
+      "entities_expected": [
+        "PyTorch",
+        "TensorFlow"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 5,
+      "cited_entities": 5,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 9038
+    },
+    {
+      "question_id": "b03",
+      "entities_found": [
+        "OpenAI",
+        "GPT-4"
+      ],
+      "entities_expected": [
+        "OpenAI",
+        "GPT-4"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 5,
+      "cited_entities": 5,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 8684
+    },
+    {
+      "question_id": "b04",
+      "entities_found": [
+        "NVIDIA",
+        "CUDA"
+      ],
+      "entities_expected": [
+        "NVIDIA",
+        "CUDA"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 8,
+      "cited_entities": 9,
+      "grounding_rate": 0.8888888888888888,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 11775
+    },
+    {
+      "question_id": "b05",
+      "entities_found": [
+        "Hugging Face"
+      ],
+      "entities_expected": [
+        "Hugging Face"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 24,
+      "cited_entities": 24,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 17041
+    },
+    {
+      "question_id": "b06",
+      "entities_found": [
+        "RAG"
+      ],
+      "entities_expected": [
+        "RAG"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 13,
+      "cited_entities": 13,
+      "grounding_rate": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 17142
+    },
+    {
+      "question_id": "b07",
+      "entities_found": [
+        "Constitutional AI",
+        "RAG"
+      ],
+      "entities_expected": [
+        "RLHF",
+        "Constitutional AI",
+        "RAG"
+      ],
+      "entity_recall": 0.6666666666666666,
+      "grounded_entities": 17,
+      "cited_entities": 18,
+      "grounding_rate": 0.9444444444444444,
+      "context_relevant": true,
+      "answer_quality": "partial",
+      "latency_ms": 15504
+    },
+    {
+      "question_id": "b08",
+      "entities_found": [
+        "MCP"
+      ],
+      "entities_expected": [
+        "MCP",
+        "Anthropic"
+      ],
+      "entity_recall": 0.5,
+      "grounded_entities": 5,
+      "cited_entities": 5,
+      "grounding_rate": 1,
+      "context_relevant": true,
+      "answer_quality": "partial",
+      "latency_ms": 11064
+    },
+    {
+      "question_id": "b09",
+      "entities_found": [
+        "LoRA",
+        "QLoRA"
+      ],
+      "entities_expected": [
+        "LoRA",
+        "QLoRA"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 6,
+      "cited_entities": 6,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 12405
+    },
+    {
+      "question_id": "b10",
+      "entities_found": [
+        "LangChain"
+      ],
+      "entities_expected": [
+        "LangChain",
+        "AutoGPT",
+        "ReAct"
+      ],
+      "entity_recall": 0.3333333333333333,
+      "grounded_entities": 26,
+      "cited_entities": 26,
+      "grounding_rate": 1,
+      "context_relevant": true,
+      "answer_quality": "partial",
+      "latency_ms": 18607
+    },
+    {
+      "question_id": "b11",
+      "entities_found": [],
+      "entities_expected": [],
+      "entity_recall": 1,
+      "grounded_entities": 12,
+      "cited_entities": 13,
+      "grounding_rate": 0.9230769230769231,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 10918
+    },
+    {
+      "question_id": "b12",
+      "entities_found": [
+        "Chinchilla"
+      ],
+      "entities_expected": [
+        "Chinchilla"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 9,
+      "cited_entities": 12,
+      "grounding_rate": 0.75,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 10742
+    },
+    {
+      "question_id": "b13",
+      "entities_found": [
+        "Mamba",
+        "RWKV"
+      ],
+      "entities_expected": [
+        "Mamba",
+        "RWKV"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 15,
+      "cited_entities": 18,
+      "grounding_rate": 0.8333333333333334,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 26817
+    },
+    {
+      "question_id": "b14",
+      "entities_found": [
+        "Anthropic",
+        "OpenAI",
+        "DeepMind"
+      ],
+      "entities_expected": [
+        "Anthropic",
+        "OpenAI",
+        "DeepMind"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 10,
+      "cited_entities": 12,
+      "grounding_rate": 0.8333333333333334,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 13131
+    },
+    {
+      "question_id": "b15",
+      "entities_found": [],
+      "entities_expected": [],
+      "entity_recall": 1,
+      "grounded_entities": 15,
+      "cited_entities": 15,
+      "grounding_rate": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 19938
+    },
+    {
+      "question_id": "b16",
+      "entities_found": [
+        "Llama",
+        "Mistral"
+      ],
+      "entities_expected": [
+        "Llama",
+        "Mistral"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 28,
+      "cited_entities": 30,
+      "grounding_rate": 0.9333333333333333,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 20238
+    },
+    {
+      "question_id": "b17",
+      "entities_found": [
+        "NVIDIA"
+      ],
+      "entities_expected": [
+        "NVIDIA"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 29,
+      "cited_entities": 30,
+      "grounding_rate": 0.9666666666666667,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 19300
+    },
+    {
+      "question_id": "b18",
+      "entities_found": [],
+      "entities_expected": [],
+      "entity_recall": 1,
+      "grounded_entities": 7,
+      "cited_entities": 8,
+      "grounding_rate": 0.875,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 12921
+    },
+    {
+      "question_id": "b19",
+      "entities_found": [
+        "EU AI Act"
+      ],
+      "entities_expected": [
+        "EU AI Act"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 7,
+      "cited_entities": 10,
+      "grounding_rate": 0.7,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 14879
+    },
+    {
+      "question_id": "b20",
+      "entities_found": [],
+      "entities_expected": [],
+      "entity_recall": 1,
+      "grounded_entities": 5,
+      "cited_entities": 7,
+      "grounding_rate": 0.7142857142857143,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 14873
+    },
+    {
+      "question_id": "b21",
+      "entities_found": [
+        "BERT"
+      ],
+      "entities_expected": [
+        "BERT",
+        "Google"
+      ],
+      "entity_recall": 0.5,
+      "grounded_entities": 2,
+      "cited_entities": 2,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 9837
+    },
+    {
+      "question_id": "b22",
+      "entities_found": [
+        "Llama",
+        "Meta"
+      ],
+      "entities_expected": [
+        "Llama",
+        "Meta"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 4,
+      "cited_entities": 4,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 9698
+    },
+    {
+      "question_id": "b23",
+      "entities_found": [
+        "Neo4j"
+      ],
+      "entities_expected": [
+        "Neo4j"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 2,
+      "cited_entities": 3,
+      "grounding_rate": 0.6666666666666666,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 10656
+    },
+    {
+      "question_id": "b24",
+      "entities_found": [
+        "Claude",
+        "Anthropic"
+      ],
+      "entities_expected": [
+        "Claude",
+        "Anthropic"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 5,
+      "cited_entities": 5,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 9793
+    },
+    {
+      "question_id": "b25",
+      "entities_found": [
+        "Mistral"
+      ],
+      "entities_expected": [
+        "Mistral"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 8,
+      "cited_entities": 8,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 9767
+    },
+    {
+      "question_id": "b26",
+      "entities_found": [
+        "DeepMind"
+      ],
+      "entities_expected": [
+        "DeepMind",
+        "Google"
+      ],
+      "entity_recall": 0.5,
+      "grounded_entities": 1,
+      "cited_entities": 1,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 10993
+    },
+    {
+      "question_id": "b27",
+      "entities_found": [
+        "Hugging Face"
+      ],
+      "entities_expected": [
+        "Hugging Face"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 5,
+      "cited_entities": 6,
+      "grounding_rate": 0.8333333333333334,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 8242
+    },
+    {
+      "question_id": "b28",
+      "entities_found": [
+        "LangChain"
+      ],
+      "entities_expected": [
+        "LangChain"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 15,
+      "cited_entities": 15,
+      "grounding_rate": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 16059
+    },
+    {
+      "question_id": "b29",
+      "entities_found": [
+        "Vector DB"
+      ],
+      "entities_expected": [
+        "Vector DB"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 8,
+      "cited_entities": 9,
+      "grounding_rate": 0.8888888888888888,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 7645
+    },
+    {
+      "question_id": "b30",
+      "entities_found": [
+        "ReAct"
+      ],
+      "entities_expected": [
+        "ReAct"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 9,
+      "cited_entities": 9,
+      "grounding_rate": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 14100
+    },
+    {
+      "question_id": "b31",
+      "entities_found": [
+        "RLHF",
+        "Constitutional AI"
+      ],
+      "entities_expected": [
+        "RLHF",
+        "Constitutional AI"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 21,
+      "cited_entities": 22,
+      "grounding_rate": 0.9545454545454546,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 17078
+    },
+    {
+      "question_id": "b32",
+      "entities_found": [
+        "PyTorch",
+        "TensorFlow"
+      ],
+      "entities_expected": [
+        "PyTorch",
+        "TensorFlow"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 5,
+      "cited_entities": 5,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 12189
+    },
+    {
+      "question_id": "b33",
+      "entities_found": [],
+      "entities_expected": [
+        "NVIDIA",
+        "CUDA"
+      ],
+      "entity_recall": 0,
+      "grounded_entities": 13,
+      "cited_entities": 14,
+      "grounding_rate": 0.9285714285714286,
+      "context_relevant": true,
+      "answer_quality": "partial",
+      "latency_ms": 18823
+    },
+    {
+      "question_id": "b34",
+      "entities_found": [
+        "Hugging Face"
+      ],
+      "entities_expected": [
+        "Hugging Face"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 8,
+      "cited_entities": 9,
+      "grounding_rate": 0.8888888888888888,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 11061
+    },
+    {
+      "question_id": "b35",
+      "entities_found": [
+        "Chinchilla"
+      ],
+      "entities_expected": [
+        "Chinchilla"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 1,
+      "cited_entities": 3,
+      "grounding_rate": 0.3333333333333333,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 8931
+    },
+    {
+      "question_id": "b36",
+      "entities_found": [
+        "Foundation Model",
+        "Scaling Law"
+      ],
+      "entities_expected": [
+        "Foundation Model",
+        "Scaling Law"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 11,
+      "cited_entities": 13,
+      "grounding_rate": 0.8461538461538461,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 12027
+    },
+    {
+      "question_id": "b37",
+      "entities_found": [
+        "AutoGPT",
+        "LangChain"
+      ],
+      "entities_expected": [
+        "AutoGPT",
+        "LangChain"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 15,
+      "cited_entities": 15,
+      "grounding_rate": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 18716
+    },
+    {
+      "question_id": "b38",
+      "entities_found": [
+        "MCP",
+        "LangChain"
+      ],
+      "entities_expected": [
+        "MCP",
+        "LangChain"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 9,
+      "cited_entities": 9,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 21552
+    },
+    {
+      "question_id": "b39",
+      "entities_found": [
+        "EU AI Act",
+        "Foundation Model"
+      ],
+      "entities_expected": [
+        "EU AI Act",
+        "Foundation Model"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 7,
+      "cited_entities": 9,
+      "grounding_rate": 0.7777777777777778,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 11690
+    },
+    {
+      "question_id": "b40",
+      "entities_found": [
+        "Vector DB",
+        "Knowledge Graph"
+      ],
+      "entities_expected": [
+        "Vector DB",
+        "Knowledge Graph"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 9,
+      "cited_entities": 10,
+      "grounding_rate": 0.9,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 13094
+    },
+    {
+      "question_id": "b41",
+      "entities_found": [
+        "OpenAI",
+        "Anthropic",
+        "RLHF",
+        "Constitutional AI"
+      ],
+      "entities_expected": [
+        "OpenAI",
+        "Anthropic",
+        "RLHF",
+        "Constitutional AI"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 7,
+      "cited_entities": 7,
+      "grounding_rate": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 15445
+    },
+    {
+      "question_id": "b42",
+      "entities_found": [
+        "Transformer",
+        "NVIDIA",
+        "CUDA"
+      ],
+      "entities_expected": [
+        "Transformer",
+        "NVIDIA",
+        "CUDA"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 25,
+      "cited_entities": 29,
+      "grounding_rate": 0.8620689655172413,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 21123
+    },
+    {
+      "question_id": "b43",
+      "entities_found": [
+        "Llama",
+        "Mistral",
+        "Meta"
+      ],
+      "entities_expected": [
+        "Llama",
+        "Mistral",
+        "Meta"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 7,
+      "cited_entities": 7,
+      "grounding_rate": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 13904
+    },
+    {
+      "question_id": "b44",
+      "entities_found": [
+        "RAG",
+        "Knowledge Graph"
+      ],
+      "entities_expected": [
+        "RAG",
+        "Knowledge Graph",
+        "Vector DB"
+      ],
+      "entity_recall": 0.6666666666666666,
+      "grounded_entities": 13,
+      "cited_entities": 14,
+      "grounding_rate": 0.9285714285714286,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 20390
+    },
+    {
+      "question_id": "b45",
+      "entities_found": [
+        "LoRA",
+        "QLoRA",
+        "Foundation Model"
+      ],
+      "entities_expected": [
+        "LoRA",
+        "QLoRA",
+        "Foundation Model"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 18,
+      "cited_entities": 20,
+      "grounding_rate": 0.9,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 20907
+    },
+    {
+      "question_id": "b46",
+      "entities_found": [
+        "Mamba",
+        "RWKV",
+        "Transformer"
+      ],
+      "entities_expected": [
+        "Mamba",
+        "RWKV",
+        "Transformer"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 6,
+      "cited_entities": 8,
+      "grounding_rate": 0.75,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 16620
+    },
+    {
+      "question_id": "b47",
+      "entities_found": [],
+      "entities_expected": [
+        "DeepMind"
+      ],
+      "entity_recall": 0,
+      "grounded_entities": 15,
+      "cited_entities": 17,
+      "grounding_rate": 0.8823529411764706,
+      "context_relevant": true,
+      "answer_quality": "partial",
+      "latency_ms": 17101
+    },
+    {
+      "question_id": "b48",
+      "entities_found": [
+        "MCP",
+        "OpenAI"
+      ],
+      "entities_expected": [
+        "MCP",
+        "OpenAI",
+        "Anthropic"
+      ],
+      "entity_recall": 0.6666666666666666,
+      "grounded_entities": 10,
+      "cited_entities": 12,
+      "grounding_rate": 0.8333333333333334,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 19030
+    },
+    {
+      "question_id": "b49",
+      "entities_found": [
+        "ReAct",
+        "AutoGPT"
+      ],
+      "entities_expected": [
+        "ReAct",
+        "AutoGPT"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 13,
+      "cited_entities": 14,
+      "grounding_rate": 0.9285714285714286,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 16960
+    },
+    {
+      "question_id": "b50",
+      "entities_found": [
+        "Constitutional AI",
+        "RLHF",
+        "Anthropic"
+      ],
+      "entities_expected": [
+        "Constitutional AI",
+        "RLHF",
+        "Anthropic"
+      ],
+      "entity_recall": 1,
+      "grounded_entities": 12,
+      "cited_entities": 13,
+      "grounding_rate": 0.9230769230769231,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 15127
+    }
+  ],
+  "summary": {
+    "total": 50,
+    "entity_recall_avg": 0.9,
+    "grounding_rate_avg": 0.91,
+    "good_answers": 25,
+    "partial_answers": 25,
+    "poor_answers": 0,
+    "avg_latency_ms": 14469,
+    "by_difficulty": {
+      "easy": {
+        "count": 15,
+        "entity_recall_avg": 0.9333333333333333,
+        "good_rate": 0.2
+      },
+      "medium": {
+        "count": 17,
+        "entity_recall_avg": 0.8529411764705882,
+        "good_rate": 0.47058823529411764
+      },
+      "hard": {
+        "count": 18,
+        "entity_recall_avg": 0.9074074074074073,
+        "good_rate": 0.7777777777777778
+      }
+    }
+  }
+}

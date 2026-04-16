@@ -1,0 +1,305 @@
+{
+  "run_date": "2026-04-10",
+  "graph_size": {
+    "nodes": {
+      "low": 12735,
+      "high": 0
+    },
+    "edges": {
+      "low": 19556,
+      "high": 0
+    }
+  },
+  "results": [
+    {
+      "question_id": "b01",
+      "entities_found": [
+        "Attention Is All You Need",
+        "Vaswani"
+      ],
+      "entities_expected": [
+        "Attention Is All You Need",
+        "Vaswani"
+      ],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 27433
+    },
+    {
+      "question_id": "b02",
+      "entities_found": [
+        "PyTorch",
+        "TensorFlow"
+      ],
+      "entities_expected": [
+        "PyTorch",
+        "TensorFlow"
+      ],
+      "entity_recall": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 41151
+    },
+    {
+      "question_id": "b03",
+      "entities_found": [
+        "OpenAI",
+        "GPT-4"
+      ],
+      "entities_expected": [
+        "OpenAI",
+        "GPT-4"
+      ],
+      "entity_recall": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 22903
+    },
+    {
+      "question_id": "b04",
+      "entities_found": [
+        "NVIDIA",
+        "CUDA"
+      ],
+      "entities_expected": [
+        "NVIDIA",
+        "CUDA"
+      ],
+      "entity_recall": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 24010
+    },
+    {
+      "question_id": "b05",
+      "entities_found": [
+        "Hugging Face"
+      ],
+      "entities_expected": [
+        "Hugging Face"
+      ],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 36541
+    },
+    {
+      "question_id": "b06",
+      "entities_found": [
+        "RAG"
+      ],
+      "entities_expected": [
+        "RAG"
+      ],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 37115
+    },
+    {
+      "question_id": "b07",
+      "entities_found": [
+        "RLHF",
+        "RAG"
+      ],
+      "entities_expected": [
+        "RLHF",
+        "Constitutional AI",
+        "RAG"
+      ],
+      "entity_recall": 0.6666666666666666,
+      "context_relevant": true,
+      "answer_quality": "partial",
+      "latency_ms": 46913
+    },
+    {
+      "question_id": "b08",
+      "entities_found": [
+        "MCP"
+      ],
+      "entities_expected": [
+        "MCP",
+        "Anthropic"
+      ],
+      "entity_recall": 0.5,
+      "context_relevant": true,
+      "answer_quality": "partial",
+      "latency_ms": 39373
+    },
+    {
+      "question_id": "b09",
+      "entities_found": [
+        "LoRA",
+        "QLoRA"
+      ],
+      "entities_expected": [
+        "LoRA",
+        "QLoRA"
+      ],
+      "entity_recall": 1,
+      "context_relevant": false,
+      "answer_quality": "partial",
+      "latency_ms": 25420
+    },
+    {
+      "question_id": "b10",
+      "entities_found": [],
+      "entities_expected": [
+        "LangChain",
+        "AutoGPT",
+        "ReAct"
+      ],
+      "entity_recall": 0,
+      "context_relevant": true,
+      "answer_quality": "partial",
+      "latency_ms": 45889
+    },
+    {
+      "question_id": "b11",
+      "entities_found": [],
+      "entities_expected": [],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 43850
+    },
+    {
+      "question_id": "b12",
+      "entities_found": [
+        "Chinchilla"
+      ],
+      "entities_expected": [
+        "Chinchilla"
+      ],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 42599
+    },
+    {
+      "question_id": "b13",
+      "entities_found": [
+        "Mamba"
+      ],
+      "entities_expected": [
+        "Mamba",
+        "RWKV"
+      ],
+      "entity_recall": 0.5,
+      "context_relevant": true,
+      "answer_quality": "partial",
+      "latency_ms": 44066
+    },
+    {
+      "question_id": "b14",
+      "entities_found": [
+        "Anthropic",
+        "OpenAI",
+        "DeepMind"
+      ],
+      "entities_expected": [
+        "Anthropic",
+        "OpenAI",
+        "DeepMind"
+      ],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 50710
+    },
+    {
+      "question_id": "b15",
+      "entities_found": [],
+      "entities_expected": [],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 46464
+    },
+    {
+      "question_id": "b16",
+      "entities_found": [
+        "Llama",
+        "Mistral"
+      ],
+      "entities_expected": [
+        "Llama",
+        "Mistral"
+      ],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 50655
+    },
+    {
+      "question_id": "b17",
+      "entities_found": [
+        "NVIDIA"
+      ],
+      "entities_expected": [
+        "NVIDIA"
+      ],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 57816
+    },
+    {
+      "question_id": "b18",
+      "entities_found": [],
+      "entities_expected": [],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 51402
+    },
+    {
+      "question_id": "b19",
+      "entities_found": [
+        "EU AI Act"
+      ],
+      "entities_expected": [
+        "EU AI Act"
+      ],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 50800
+    },
+    {
+      "question_id": "b20",
+      "entities_found": [],
+      "entities_expected": [],
+      "entity_recall": 1,
+      "context_relevant": true,
+      "answer_quality": "good",
+      "latency_ms": 42178
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "entity_recall_avg": 0.88,
+    "good_answers": 12,
+    "partial_answers": 8,
+    "poor_answers": 0,
+    "avg_latency_ms": 41364,
+    "by_difficulty": {
+      "easy": {
+        "count": 5,
+        "entity_recall_avg": 1,
+        "good_rate": 0.4
+      },
+      "medium": {
+        "count": 7,
+        "entity_recall_avg": 0.738095238095238,
+        "good_rate": 0.42857142857142855
+      },
+      "hard": {
+        "count": 8,
+        "entity_recall_avg": 0.9375,
+        "good_rate": 0.875
+      }
+    }
+  }
+}

@@ -55,3 +55,7 @@ docs/posts/
 neo4j_data/
 ollama_data/
 eye/.venv-verify/
+
+# Runtime state (root data/)
+data/jobs/
+data/logs/
