@@ -133,25 +133,25 @@ State files:
 | `back` / `forward` / `reload` | | History navigation |
 | `text` / `html` / `links` / `title` / `url` | | Page content |
 | `snapshot` | `[-i]` | Accessibility tree with @ref IDs |
-| `find` | `role|text|label|placeholder|testid=value [limit=N]` | Semantic finder, refs only |
+| `find` | `role=X \| text=Y \| label=Z \| placeholder=W \| testid=ID [limit=N]` | Semantic finder, refs only |
 | `click` | `selector` | Click (accepts @refN) |
 | `fill` | `selector`, `value` | Fill input |
 | `select` | `selector`, `value` | Select option |
-| `scroll` | `[up|down] [px]` | Scroll |
-| `wait` | `ms | selector | text | url | load_state | js` `[timeout]` | Wait variants |
+| `scroll` | `[up\|down] [px]` | Scroll |
+| `wait` | `ms \| selector \| text \| url \| load_state \| js` `[timeout]` | Wait variants |
 | `screenshot` | `[path]` | Screenshot (base64 if no path) |
 | `batch` | `steps=<json> [stop_on_error=true]` or stdin `-` | Run N commands in one round-trip |
-| `cookies` | `action=get|set|clear [cookies=<json>]` | Cookie mgmt |
-| `storage` | `action=get|set|clear [kind=local|session] [key] [value]` | Web storage |
-| `session` | `action=info|save` | Session state (use `--session <name>`) |
-| `tab` | `action=list|new|switch|close [id] [url]` | Multi-tab |
-| `feature` | `action=list|enable|disable [name]` | Toggle dormant features |
+| `cookies` | `action=get\|set\|clear [cookies=<json>]` | Cookie mgmt |
+| `storage` | `action=get\|set\|clear [kind=local\|session] [key] [value]` | Web storage |
+| `session` | `action=info\|save` | Session state (use `--session <name>`) |
+| `tab` | `action=list\|new\|switch\|close [id] [url]` | Multi-tab |
+| `feature` | `action=list\|enable\|disable [name]` | Toggle dormant features |
 
 ### Dormant (enable first)
 
 | Command | Args |
 |---------|------|
-| `diff` | `action=snapshot|screenshot|reset [path]` |
-| `har` | `action=start|stop|export|status|clear [path]` |
-| `auth` | `action=list|save|login|delete [name] [url] [username] [password]` |
-| `route` | `action=list|add|clear [pattern] [kind=block|mock] [body] [status]` |
+| `diff` | `action=snapshot\|screenshot\|reset [path]` |
+| `har` | `action=start\|stop\|export\|status\|clear [path]` |
+| `auth` | `action=list\|save\|login\|delete [name] [url] [username] [pass]` |
+| `route` | `action=list\|add\|clear [pattern] [kind=block\|mock] [body] [status]` |
