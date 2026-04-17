@@ -8,7 +8,7 @@ labels=(
   com.comad.crawl-arxiv com.comad.crawl-blogs com.comad.crawl-github
   com.comad.ingest-geeknews com.comad.search-weekly com.comad.ear-digest
   com.comad.monitor-upstream com.comad.evolution-loop com.comad.run-benchmark
-  com.comad.ear-ingest
+  com.comad.ear-ingest com.comad.ear-poll
 )
 
 for label in "${labels[@]}"; do

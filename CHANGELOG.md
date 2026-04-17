@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed (2026-04-17 — ear Mode B lock-in)
+
+- **ear: add Mode B (REST polling LaunchAgent), deprecate KeepAlive `ccd` wrapper**
+  — the `KeepAlive=true` launchd plist crash-looped `claude` interactive wrap
+  (no TTY), restarted every 30s, and spawned the discord2 MCP each time,
+  burning Discord's 1000/day IDENTIFY quota in ~8h (2026-04-16 incident).
+  Mode B polls `/channels/:id/messages` every 15 min via REST, passes the
+  message as an env-var to per-run `claude -p` with `--strict-mcp-config
+  --mcp-config ear/poll-no-mcp.json` so no MCP ever spawns. `install.sh`
+  auto-registers `com.comad.ear-poll` when `~/.claude/channels/discord2/.env`
+  exists (silent skip otherwise). Removed: `ear/run-ccd.sh`,
+  `ear/restart-ccd.sh`, `ear/kill-orphan-discord.sh`.
+
 ### Added (2026-04-14 afternoon — luminary review)
 
 - **27-각도 AI 석학 리뷰 gap packs** — 최약점 4개 영역 정리.

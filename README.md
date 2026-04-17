@@ -291,6 +291,7 @@ Discord bot that detects articles, classifies relevance, and archives with struc
 - **Daily digest** auto-generation in HTML — nightly cron writes `ear/digests/YYYY-MM-DD-digest.html`
 - **Auto-ingest to /search** — must-read articles in core categories (AI/LLM, Tool, OpenSource, …) are fed into the search pipeline daily, closing the loop ear → brain → /search → adoption
 - **YAML frontmatter** for every archived article
+- **Two operation modes** — Mode A (interactive `ccd`, real-time, terminal-bound) or Mode B (`ear-poll` LaunchAgent, 15-min REST polling, 24/7, zero IDENTIFY quota). See [guide](https://kinkos1234.github.io/comad/guide/ear.html).
 
 ### Eye — Prediction Simulation Engine
 
