@@ -349,19 +349,39 @@ Claude Code harness with auto-triggered workflows.
 cd voice && ./install.sh
 ```
 
-### Browse — Headless Browser
+### Browse — Headless Browser (token-efficient)
 
-Standalone browser automation for AI agents. Anti-bot stealth, 16 commands.
+Playwright Chromium wrapper tuned for AI agents. Anti-bot stealth, CLI + HTTP daemon + programmatic API, 23 commands plus 4 dormant ones.
 
-- **Auto-fallback**: brain/ear use it when native HTTP fetch returns insufficient content
-- **Anti-bot stealth**: UA masking, WebDriver flag removal
-- **Snapshot @refs**: `@e3 [button] "Submit"` → `click @e3`
-- **Minimal**: 787 LOC, Playwright only dependency
+- **@ref interaction**: `snapshot -i` and `find` hand back stable `@e1`, `@e2`... refs instead of long CSS selectors — keeps transcripts compact
+- **Semantic `find`**: filter by `role`/`text`/`label`/`placeholder`/`testid` — refs only, no full snapshot
+- **`batch` stdin JSON**: run N steps (goto → find → fill → click → wait) in one HTTP round-trip
+- **Session persistence**: `--session <name>` auto-saves/loads Playwright `storageState` (cookies, localStorage, IndexedDB) at `.comad/sessions/<name>.json`
+- **Multi-tab**: stable IDs (`t1`, `t2`, …) via `tab list|new|switch|close`
+- **Advanced waits**: `wait selector|text|url|load_state|js` + configurable timeout
+- **Anti-bot stealth**: UA masking, WebDriver flag removal, realistic plugins
+- **Auto-fallback**: brain's content-fetcher uses it when native HTTP returns too little
+- **Dormant features** (implement-ready, off by default — enable with `browse feature enable name=<feat>`):
+  - `diff` — snapshot/screenshot baseline compare
+  - `har` — request/response buffering + export
+  - `auth` — AES-256-GCM credential vault + auto-login
+  - `route` — network block/mock rules
 
 ```bash
 cd browse && bun install
 bun run src/cli.ts goto https://example.com
-bun run src/cli.ts text  # rendered text extraction
+bun run src/cli.ts find role=button text=Submit   # refs only, no snapshot
+bun run src/cli.ts --session myapp goto https://app.example.com  # persist login
+
+# Batch a login flow in one round-trip
+echo '{"steps":[
+  {"command":"goto","args":{"url":"https://app.example.com/login"}},
+  {"command":"find","args":{"role":"textbox","placeholder":"email"}},
+  {"command":"fill","args":{"selector":"@e1","value":"me@example.com"}},
+  {"command":"find","args":{"role":"button","text":"Sign in"}},
+  {"command":"click","args":{"selector":"@e2"}},
+  {"command":"wait","args":{"url":"**/dashboard","timeout":10000}}
+]}' | bun run src/cli.ts batch -
 ```
 
 ### Search — Self-Evolving Reference Discovery
