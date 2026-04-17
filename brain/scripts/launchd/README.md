@@ -30,7 +30,7 @@ Claude Max OAuth works without any extra API key.
 zsh brain/scripts/launchd/install.sh
 ```
 
-Creates 10 plists under `~/Library/LaunchAgents/` and bootstraps them
+Creates up to 11 plists under `~/Library/LaunchAgents/` and bootstraps them
 into the current GUI session. Re-running the script is idempotent.
 
 Installed agents (schedule in local time, Monday = weekday 1):
@@ -47,6 +47,12 @@ Installed agents (schedule in local time, Monday = weekday 1):
 | `com.comad.search-weekly` | 12:00 Mon | `search-weekly.sh` |
 | `com.comad.evolution-loop` | 12:30 Mon | `evolution-loop.sh` |
 | `com.comad.run-benchmark` | 13:00 Mon | `run-benchmark.sh` |
+| `com.comad.ear-poll` | every 15m (optional) | `ear/poll-ear.sh` |
+
+`com.comad.ear-poll` is the **Mode B** Discord polling agent (REST-based, 0
+IDENTIFY quota). Auto-registered only when `~/.claude/channels/discord2/.env`
+exists — fresh clones silently skip it. See `ear/poll-ear.sh` for details and
+`comad/guide/ear.html` for the Mode A vs Mode B comparison.
 
 ## Operate
 

@@ -120,5 +120,47 @@ done
 
 echo
 echo "Installed ${#jobs[@]} LaunchAgents."
+
+# ear-poll — Mode B REST polling (optional). Uses StartInterval instead of
+# StartCalendarInterval, so it doesn't fit the calendar-based loop above. Only
+# installed when the user has a Discord bot token configured — keeping it
+# silent-skip so fresh clones don't fail setup.
+EAR_POLL_ENV="$HOME/.claude/channels/discord2/.env"
+if [[ -f "$EAR_POLL_ENV" ]]; then
+  label="com.comad.ear-poll"
+  plist="$AGENTS/${label}.plist"
+  cat > "$plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>$label</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>$PROJECT/ear/poll-ear.sh</string>
+  </array>
+  <key>WorkingDirectory</key><string>$PROJECT/ear</string>
+  <key>StartInterval</key><integer>900</integer>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>$PROJECT/ear/launchd-poll-out.log</string>
+  <key>StandardErrorPath</key><string>$PROJECT/ear/launchd-poll-err.log</string>
+  <key>ExitTimeOut</key><integer>60</integer>
+  <key>AbandonProcessGroup</key><true/>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key><string>$HOME</string>
+  </dict>
+</dict>
+</plist>
+PLIST
+  launchctl bootout "gui/$UID_NUM/$label" 2>/dev/null || true
+  launchctl bootstrap "gui/$UID_NUM" "$plist"
+  echo "  ✓ $label  — every 15m (Mode B REST polling)"
+else
+  echo "  ⏭  com.comad.ear-poll  — skipped (no $EAR_POLL_ENV; Mode B optional)"
+fi
+
 echo "List:  launchctl list | grep com.comad"
 echo "Trigger one-off: launchctl kickstart gui/$UID_NUM/<label>"
