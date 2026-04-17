@@ -14,7 +14,7 @@ cd browse && bun install   # install comad-browse once
 ### Phase 1: Discovery
 1. Detect dev server (check ports 3000, 5173, 8080, 4321, or user-specified URL)
 2. `browse goto {url}` → take initial screenshot
-3. `browse snapshot -i` → map all interactive elements
+3. `browse snapshot -i` → map all interactive elements (use `browse find` for targeted lookups — cheaper)
 
 ### Phase 2: Systematic Testing
 
@@ -22,12 +22,32 @@ cd browse && bun install   # install comad-browse once
 - Click every link (`browse click @eN`), verify no 404/500
 - Check back/forward navigation works
 - Verify all routes render content (not blank pages)
+- Multi-page flows → open tabs in parallel: `browse tab new url=...`; switch with `browse tab switch id=tN`
 
 **Form Test:**
-- Find all forms (`browse snapshot -i` → filter textbox/button)
+- Find all forms (`browse find role=textbox`, `browse find role=button text=Submit`)
 - Fill with valid data → submit → verify success
 - Fill with invalid data → verify error handling
 - Test empty submission → verify validation
+
+**Token saver — batch multi-step flows:**
+```bash
+echo '{"steps":[
+  {"command":"goto","args":{"url":"http://localhost:3000/login"}},
+  {"command":"find","args":{"role":"textbox","placeholder":"email"}},
+  {"command":"fill","args":{"selector":"@e1","value":"test@example.com"}},
+  {"command":"find","args":{"role":"button","text":"Sign in"}},
+  {"command":"click","args":{"selector":"@e2"}},
+  {"command":"wait","args":{"url":"**/dashboard","timeout":10000}}
+]}' | browse batch -
+```
+
+**Authenticated flows — persist session:**
+```bash
+browse --session myapp goto http://localhost:3000/login
+# log in once; session state auto-saves on close
+browse --session myapp goto http://localhost:3000/dashboard  # already logged in
+```
 
 **Responsive Test:**
 - `browse viewport 1920 1080` → screenshot (desktop)

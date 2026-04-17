@@ -1,4 +1,14 @@
 import type { Page } from "playwright";
+import { getPage, listTabs, openTab, switchTab, closeTab, getSessionName, saveSession } from "./browser";
+import {
+  isEnabled,
+  setEnabled,
+  listFlags,
+  DEFERRED_NAMES,
+  featureDisabledMessage,
+  type DeferredFeature,
+} from "./features";
+import { runDeferred } from "./deferred";
 
 const UNTRUSTED_START = "--- BEGIN UNTRUSTED EXTERNAL CONTENT ---";
 const UNTRUSTED_END = "--- END UNTRUSTED EXTERNAL CONTENT ---";
@@ -7,13 +17,17 @@ function wrapUntrusted(content: string): string {
   return `${UNTRUSTED_START}\n${content}\n${UNTRUSTED_END}`;
 }
 
-// Element ref storage for snapshot @ref IDs
-const elementRefs = new Map<string, string>(); // @eN -> selector
+// Element ref storage for snapshot/find @ref IDs
+const elementRefs = new Map<string, string>();
 let refCounter = 0;
 
 function clearRefs(): void {
   elementRefs.clear();
   refCounter = 0;
+}
+
+function nextRef(): string {
+  return `@e${++refCounter}`;
 }
 
 function resolveSelector(selector: string): string {
@@ -25,7 +39,7 @@ function resolveSelector(selector: string): string {
   return selector;
 }
 
-// Navigation commands
+// ---------------- Navigation ----------------
 
 async function goto(page: Page, args: Record<string, any>): Promise<string> {
   const url = args.url;
@@ -54,7 +68,7 @@ async function reload(page: Page): Promise<string> {
   return `Reloaded ${page.url()}`;
 }
 
-// Read commands
+// ---------------- Read ----------------
 
 async function text(page: Page): Promise<string> {
   const content = await page.evaluate(() => document.body?.innerText ?? "");
@@ -87,7 +101,7 @@ async function url(page: Page): Promise<string> {
   return page.url();
 }
 
-// Interact commands
+// ---------------- Interact ----------------
 
 async function click(page: Page, args: Record<string, any>): Promise<string> {
   const selector = resolveSelector(args.selector);
@@ -118,13 +132,46 @@ async function scroll(page: Page, args: Record<string, any>): Promise<string> {
   return `Scrolled ${direction} by ${amount}px`;
 }
 
+// Advanced wait — Phase C.2
 async function wait(page: Page, args: Record<string, any>): Promise<string> {
+  const timeout = args.timeout ?? 30000;
+
+  if (args.selector) {
+    await page.waitForSelector(resolveSelector(args.selector), { timeout });
+    return `Selector appeared: ${args.selector}`;
+  }
+  if (args.text) {
+    const target = String(args.text);
+    await page.waitForFunction(
+      (t) => (document.body?.innerText ?? "").includes(t),
+      target,
+      { timeout }
+    );
+    return `Text appeared: ${target}`;
+  }
+  if (args.url) {
+    await page.waitForURL(args.url, { timeout });
+    return `URL matched: ${args.url}`;
+  }
+  if (args.load_state) {
+    const validStates = ["load", "domcontentloaded", "networkidle"] as const;
+    if (!validStates.includes(args.load_state)) {
+      throw new Error(`Invalid load_state. Use one of: ${validStates.join(", ")}`);
+    }
+    await page.waitForLoadState(args.load_state, { timeout });
+    return `Load state: ${args.load_state}`;
+  }
+  if (args.js) {
+    await page.waitForFunction(args.js as string, { timeout });
+    return "JS condition met";
+  }
+
   const ms = args.ms ?? 1000;
   await page.waitForTimeout(ms);
   return `Waited ${ms}ms`;
 }
 
-// Capture commands
+// ---------------- Capture ----------------
 
 async function screenshot(page: Page, args: Record<string, any>): Promise<string> {
   const path = args.path;
@@ -136,7 +183,7 @@ async function screenshot(page: Page, args: Record<string, any>): Promise<string
   return buffer.toString("base64");
 }
 
-// Snapshot command — DOM-based accessibility tree
+// ---------------- Snapshot + Find (shared walker) ----------------
 
 interface SnapElement {
   tag: string;
@@ -147,15 +194,26 @@ interface SnapElement {
   value?: string;
   checked?: boolean;
   disabled?: boolean;
-  type?: string;
+  testid?: string;
+  label?: string;
+  placeholder?: string;
 }
 
-async function snapshot(page: Page, args: Record<string, any>): Promise<string> {
-  clearRefs();
-  const interactiveOnly = args.interactive_only ?? args.i ?? false;
+interface WalkerOpts {
+  interactive: boolean;
+  limit: number;
+  filter?: {
+    role?: string;
+    text?: string;
+    label?: string;
+    placeholder?: string;
+    testid?: string;
+  };
+}
 
-  const elements: SnapElement[] = await page.evaluate((interactive: boolean) => {
-    const results: any[] = [];
+async function walkElements(page: Page, opts: WalkerOpts): Promise<SnapElement[]> {
+  return await page.evaluate((o: WalkerOpts) => {
+    const results: SnapElement[] = [];
     const interactiveTags = new Set([
       "A", "BUTTON", "INPUT", "TEXTAREA", "SELECT", "DETAILS", "SUMMARY",
     ]);
@@ -219,17 +277,39 @@ async function snapshot(page: Page, args: Record<string, any>): Promise<string> 
       const tag = el.tagName.toLowerCase();
       const id = el.id;
       if (id) return `#${id}`;
+      const testid = el.getAttribute("data-testid");
+      if (testid) return `${tag}[data-testid="${testid}"]`;
       const name = el.getAttribute("name");
       if (name) return `${tag}[name="${name}"]`;
       const ariaLabel = el.getAttribute("aria-label");
       if (ariaLabel) return `${tag}[aria-label="${ariaLabel}"]`;
-      const text = getText(el).slice(0, 40);
-      if (text && (el.tagName === "A" || el.tagName === "BUTTON")) {
-        return `${tag}:has-text("${text}")`;
+      const t = getText(el).slice(0, 40);
+      if (t && (el.tagName === "A" || el.tagName === "BUTTON")) {
+        return `${tag}:has-text("${t.replace(/"/g, '\\"')}")`;
       }
       const placeholder = (el as HTMLInputElement).placeholder;
       if (placeholder) return `${tag}[placeholder="${placeholder}"]`;
       return `${tag} >> nth=${idx}`;
+    }
+
+    function matchesFilter(el: Element, role: string, text: string): boolean {
+      if (!o.filter) return true;
+      const f = o.filter;
+      if (f.role && role !== f.role) return false;
+      if (f.text && !text.toLowerCase().includes(f.text.toLowerCase())) return false;
+      if (f.label) {
+        const aria = el.getAttribute("aria-label") ?? "";
+        if (!aria.toLowerCase().includes(f.label.toLowerCase())) return false;
+      }
+      if (f.placeholder) {
+        const p = (el as HTMLInputElement).placeholder ?? "";
+        if (!p.toLowerCase().includes(f.placeholder.toLowerCase())) return false;
+      }
+      if (f.testid) {
+        const tid = el.getAttribute("data-testid") ?? "";
+        if (tid !== f.testid) return false;
+      }
+      return true;
     }
 
     const walker = document.createTreeWalker(
@@ -238,10 +318,10 @@ async function snapshot(page: Page, args: Record<string, any>): Promise<string> 
       {
         acceptNode: (node) => {
           const el = node as Element;
-          if (interactive && !isInteresting(el)) return NodeFilter.FILTER_SKIP;
-          if (!interactive && isInteresting(el)) return NodeFilter.FILTER_ACCEPT;
-          if (!interactive && headingTags.has(el.tagName)) return NodeFilter.FILTER_ACCEPT;
-          if (interactive) return NodeFilter.FILTER_ACCEPT;
+          if (o.interactive && !isInteresting(el)) return NodeFilter.FILTER_SKIP;
+          if (!o.interactive && isInteresting(el)) return NodeFilter.FILTER_ACCEPT;
+          if (!o.interactive && headingTags.has(el.tagName)) return NodeFilter.FILTER_ACCEPT;
+          if (o.interactive) return NodeFilter.FILTER_ACCEPT;
           return NodeFilter.FILTER_SKIP;
         },
       }
@@ -252,16 +332,18 @@ async function snapshot(page: Page, args: Record<string, any>): Promise<string> 
     while ((node = walker.nextNode())) {
       const el = node as Element;
       const role = getRole(el);
-      const text = getText(el);
-      const entry: any = {
+      const t = getText(el);
+      if (!matchesFilter(el, role, t)) {
+        idx++;
+        continue;
+      }
+      const entry: SnapElement = {
         tag: el.tagName.toLowerCase(),
         role,
-        text,
+        text: t,
         selector: buildSelector(el, idx),
       };
-      if (headingTags.has(el.tagName)) {
-        entry.level = parseInt(el.tagName[1]);
-      }
+      if (headingTags.has(el.tagName)) entry.level = parseInt(el.tagName[1]);
       if ((el as HTMLInputElement).value !== undefined && el.tagName !== "BUTTON") {
         const val = (el as HTMLInputElement).value;
         if (val) entry.value = val;
@@ -269,19 +351,46 @@ async function snapshot(page: Page, args: Record<string, any>): Promise<string> 
       if ((el as HTMLInputElement).checked !== undefined) {
         entry.checked = (el as HTMLInputElement).checked;
       }
-      if ((el as HTMLInputElement).disabled) {
-        entry.disabled = true;
-      }
+      if ((el as HTMLInputElement).disabled) entry.disabled = true;
+      const tid = el.getAttribute("data-testid");
+      if (tid) entry.testid = tid;
       results.push(entry);
       idx++;
-      if (results.length > 500) break;
+      if (results.length >= o.limit) break;
     }
     return results;
-  }, interactiveOnly);
+  }, opts);
+}
 
+async function snapshot(page: Page, args: Record<string, any>): Promise<string> {
+  clearRefs();
+  const interactive_only = args.interactive_only ?? args.i ?? false;
+  const elements = await walkElements(page, { interactive: interactive_only, limit: 500 });
+  return formatRefs(elements);
+}
+
+// Phase A.2 — find semantic refs without full snapshot
+async function find(page: Page, args: Record<string, any>): Promise<string> {
+  const filter = {
+    role: args.role as string | undefined,
+    text: args.text as string | undefined,
+    label: args.label as string | undefined,
+    placeholder: args.placeholder as string | undefined,
+    testid: args.testid as string | undefined,
+  };
+  const hasFilter = Object.values(filter).some((v) => v !== undefined);
+  if (!hasFilter) {
+    throw new Error("find requires at least one of: role, text, label, placeholder, testid");
+  }
+  const limit = args.limit ?? 20;
+  const elements = await walkElements(page, { interactive: true, limit, filter });
+  return formatRefs(elements) || "No matches";
+}
+
+function formatRefs(elements: SnapElement[]): string {
   const lines: string[] = [];
   for (const el of elements) {
-    const ref = `@e${++refCounter}`;
+    const ref = nextRef();
     elementRefs.set(ref, el.selector);
 
     const extras: string[] = [];
@@ -289,16 +398,192 @@ async function snapshot(page: Page, args: Record<string, any>): Promise<string> 
     if (el.value) extras.push(`value="${el.value}"`);
     if (el.checked !== undefined) extras.push(`checked=${el.checked}`);
     if (el.disabled) extras.push("disabled");
+    if (el.testid) extras.push(`testid="${el.testid}"`);
 
     const extStr = extras.length ? ` [${extras.join(", ")}]` : "";
     const nameStr = el.text ? ` "${el.text}"` : "";
     lines.push(`${ref} [${el.role}]${nameStr}${extStr}`);
   }
-
-  return lines.join("\n") || "Empty page";
+  return lines.join("\n");
 }
 
-// Command registry
+// ---------------- Phase A.1 — Batch ----------------
+
+interface BatchStep {
+  command: string;
+  args?: Record<string, any>;
+}
+
+async function batch(_page: Page, args: Record<string, any>): Promise<string> {
+  const steps = args.steps as BatchStep[] | undefined;
+  if (!Array.isArray(steps)) throw new Error("steps (array) required");
+  const stopOnError = args.stop_on_error === true;
+
+  const results: Array<{ ok: boolean; result?: string; error?: string }> = [];
+  for (const step of steps) {
+    const cmd = step.command;
+    const stepArgs = step.args ?? {};
+    try {
+      const active = await getPage();
+      const result = await executeCommand(active, cmd, stepArgs);
+      results.push({ ok: true, result });
+    } catch (err: any) {
+      results.push({ ok: false, error: err.message });
+      if (stopOnError) break;
+    }
+  }
+  return JSON.stringify(results);
+}
+
+// ---------------- Phase B.1 — Cookies + Storage ----------------
+
+async function cookies(page: Page, args: Record<string, any>): Promise<string> {
+  const ctx = page.context();
+  const action = args.action ?? "get";
+
+  if (action === "get") {
+    const list = await ctx.cookies(args.urls);
+    return JSON.stringify(list, null, 2);
+  }
+  if (action === "set") {
+    const cookieArg = args.cookies ?? (args.cookie ? [args.cookie] : null);
+    if (!cookieArg) throw new Error("cookies (array) or cookie (object) required");
+    await ctx.addCookies(cookieArg);
+    return `Set ${cookieArg.length} cookie(s)`;
+  }
+  if (action === "clear") {
+    await ctx.clearCookies();
+    return "Cookies cleared";
+  }
+  throw new Error(`Unknown cookies action: ${action}`);
+}
+
+async function storage(page: Page, args: Record<string, any>): Promise<string> {
+  const kind = (args.kind ?? "local") as "local" | "session";
+  if (kind !== "local" && kind !== "session") {
+    throw new Error(`kind must be "local" or "session"`);
+  }
+  const action = args.action ?? "get";
+
+  if (action === "get") {
+    const data = await page.evaluate(
+      (p: { kind: string; key?: string }) => {
+        const store = p.kind === "session" ? sessionStorage : localStorage;
+        if (p.key) return { [p.key]: store.getItem(p.key) };
+        const out: Record<string, string | null> = {};
+        for (let i = 0; i < store.length; i++) {
+          const k = store.key(i);
+          if (k) out[k] = store.getItem(k);
+        }
+        return out;
+      },
+      { kind, key: args.key }
+    );
+    return JSON.stringify(data, null, 2);
+  }
+  if (action === "set") {
+    const { key, value } = args;
+    if (!key || value === undefined) throw new Error("key and value required");
+    await page.evaluate(
+      (p: { kind: string; key: string; value: string }) => {
+        const store = p.kind === "session" ? sessionStorage : localStorage;
+        store.setItem(p.key, p.value);
+      },
+      { kind, key, value: String(value) }
+    );
+    return `Set ${kind}Storage[${key}]`;
+  }
+  if (action === "clear") {
+    await page.evaluate((p: { kind: string }) => {
+      const store = p.kind === "session" ? sessionStorage : localStorage;
+      store.clear();
+    }, { kind });
+    return `${kind}Storage cleared`;
+  }
+  throw new Error(`Unknown storage action: ${action}`);
+}
+
+// ---------------- Phase B.2 — Session ----------------
+
+async function session(_page: Page, args: Record<string, any>): Promise<string> {
+  const action = args.action ?? "info";
+  if (action === "info") {
+    const name = getSessionName();
+    return name ? `Active session: ${name}` : "No active session";
+  }
+  if (action === "save") {
+    const path = await saveSession();
+    return path ? `Session saved to ${path}` : "No active session to save";
+  }
+  throw new Error(`Unknown session action: ${action}`);
+}
+
+// ---------------- Phase C.1 — Tabs ----------------
+
+async function tab(_page: Page, args: Record<string, any>): Promise<string> {
+  const action = args.action ?? "list";
+
+  if (action === "list") {
+    const tabs = listTabs();
+    if (tabs.length === 0) return "No tabs";
+    const lines = await Promise.all(
+      tabs.map(async (t) => {
+        const title = await t.page.title().catch(() => "");
+        const marker = t.active ? "*" : " ";
+        return `${marker} ${t.id} ${t.url}${title ? ` — ${title}` : ""}`;
+      })
+    );
+    return lines.join("\n");
+  }
+  if (action === "new") {
+    const id = await openTab(args.url);
+    return `New tab ${id}${args.url ? ` at ${args.url}` : ""}`;
+  }
+  if (action === "switch") {
+    if (!args.id) throw new Error("id required");
+    switchTab(args.id);
+    return `Switched to ${args.id}`;
+  }
+  if (action === "close") {
+    if (!args.id) throw new Error("id required");
+    await closeTab(args.id);
+    return `Closed ${args.id}`;
+  }
+  throw new Error(`Unknown tab action: ${action}`);
+}
+
+// ---------------- Feature flag control ----------------
+
+async function feature(_page: Page, args: Record<string, any>): Promise<string> {
+  const action = args.action ?? "list";
+
+  if (action === "list") {
+    const flags = listFlags();
+    return Object.entries(flags)
+      .map(([k, v]) => `${k}: ${v ? "on" : "off"}`)
+      .join("\n");
+  }
+  if (action === "enable" || action === "disable") {
+    const name = args.name as DeferredFeature;
+    if (!DEFERRED_NAMES.includes(name)) {
+      throw new Error(`Unknown feature: ${name}. Valid: ${DEFERRED_NAMES.join(", ")}`);
+    }
+    setEnabled(name, action === "enable");
+    return `Feature "${name}" ${action}d`;
+  }
+  throw new Error(`Unknown feature action: ${action}`);
+}
+
+// ---------------- Deferred wrappers (flag-gated) ----------------
+
+function deferredCommand(name: DeferredFeature) {
+  return async (page: Page, args: Record<string, any>): Promise<string> => {
+    if (!isEnabled(name)) return featureDisabledMessage(name);
+    return runDeferred(name, page, args);
+  };
+}
+
+// ---------------- Registry ----------------
 
 type CommandHandler = (page: Page, args: Record<string, any>) => Promise<string>;
 
@@ -319,6 +604,17 @@ const commands: Record<string, CommandHandler> = {
   wait,
   screenshot,
   snapshot,
+  find,
+  batch,
+  cookies,
+  storage,
+  session,
+  tab,
+  feature,
+  diff: deferredCommand("diff"),
+  har: deferredCommand("har"),
+  auth: deferredCommand("auth"),
+  route: deferredCommand("route"),
 };
 
 export async function executeCommand(
