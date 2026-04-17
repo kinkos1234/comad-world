@@ -219,17 +219,18 @@ async function auth(page: Page, args: Record<string, any>): Promise<string> {
   if (action === "save") {
     const name = args.name as string;
     if (!name) throw new Error("name required");
+    const secret = args.pass ?? args.password;
     const entry: AuthEntry = {
       name,
       url: args.url,
       username: args.username,
-      password: args.password,
+      password: secret,
       userSelector: args.user_selector,
       passSelector: args.pass_selector,
       submitSelector: args.submit_selector,
     };
     if (!entry.url || !entry.username || !entry.password) {
-      throw new Error("url, username, password required");
+      throw new Error("url, username, pass required");
     }
     const key = deriveKey();
     if (key) {

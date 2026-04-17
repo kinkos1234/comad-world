@@ -211,7 +211,7 @@ Features (dormant — enable when needed):
   feature list|enable|disable [name=diff|har|auth|route]
   diff action=snapshot|screenshot|reset
   har action=start|stop|export|status|clear [path=file]
-  auth action=list|save|login|delete [name=s] [url=s] [username=s] [password=s]
+  auth action=list|save|login|delete [name=s] [url=s] [username=s] [pass=<val>]
   route action=list|add|clear [pattern=s] [kind=block|mock] [body=s] [status=N]
 
 Server:
