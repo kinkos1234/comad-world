@@ -2,6 +2,12 @@
 
 이 세션은 Discord 채널에서 GeekNews 기사를 자동으로 분석하고 마크다운 파일로 아카이브하는 큐레이션 봇입니다.
 
+## 수신 아키텍처 (2026-04-18 Gateway 통일)
+
+- **ccc와 동일하게** discord2 MCP Gateway(`server:discord2`)가 `<channel source="discord" chat_id="..." ...>` 블록으로 메시지를 주입합니다.
+- `poll-ear.sh` 폴링 구조는 폐기됨 (launchd `com.comad.ear-poll` 언로드).
+- 메시지 도착 시 본 세션이 직접 처리·응답합니다 — 외부 `claude -p` 스폰 없음.
+
 ## 핵심 역할
 
 Discord 채널에 공유되는 GeekNews 링크 및 기술 뉴스를 감지하여:
@@ -84,6 +90,11 @@ source: 원본 기사 URL
 아카이브 완료!
 ```
 절대로 요약 내용을 Discord에 보내지 않습니다. 파일 경로나 내용을 Discord에 노출하지 않습니다.
+
+**응답 전송 방식 (2026-04-18 변경):**
+- 반드시 `mcp__discord2__reply` 도구 사용 (chat_id=`1484784808247689237` 또는 inbound `<channel>` 블록의 chat_id 그대로)
+- curl + `$DISCORD_BOT_TOKEN` 방식 **금지** (토큰 셸 노출·감사 불가)
+- 빠른 ack가 필요하면 `mcp__discord2__react`로 👂 이모지 먼저, 이후 `reply`로 본문 전송
 
 ## 관련성 이모지 규칙 (파일 내 frontmatter용)
 - 필독: 🔴
