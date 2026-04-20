@@ -83,8 +83,8 @@
 ```
 
 ### 확인된 명시적 의존
-- `evolution-loop.sh` 헤더 주석: "Cron: 30 12 * * 1 (weekly Monday 12:30, **after search-weekly**)"
-- `run-benchmark.sh` 헤더 주석: "Cron: 0 13 * * 1 (Monday 13:00, **after evolution loop**)"
+- `evolution-loop.sh` 헤더 주석: "Cron: `30 12 * * 1` (weekly Monday 12:30, **after search-weekly**)"
+- `run-benchmark.sh` 헤더 주석: "Cron: `0 13 * * 1` (Monday 13:00, **after evolution loop**)"
 - `evolution-loop` trigger 조건 중 하나: "Benchmark score dropped 5%+" → 지난 주 benchmark 결과 의존
 
 ### 암시적 의존 (시간 순서로 추정)

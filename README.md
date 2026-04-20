@@ -93,7 +93,9 @@ zsh brain/scripts/schedule-install.sh      # OS-aware scheduler (below)
 | Linux / WSL | cron | Session keychain propagates. |
 | Windows | Task Scheduler (`LogonType=Interactive`) | DPAPI/OAuth stays unlocked while logged on. Uses bun directly — no shell. |
 
-All three reuse the existing Claude Max OAuth — no extra API key. Details: `brain/scripts/launchd/README.md`.
+All three reuse the existing Claude Max OAuth — no extra API key. Per-platform install details: `brain/scripts/launchd/README.md`.
+
+Full catalog of the 11 scheduled jobs (dependencies, cron expressions, missing-run recovery) lives in [`docs/cron-catalog.md`](docs/cron-catalog.md). A boot-time catch-up agent (`com.comad.boot-catchup`) replays any LaunchAgent that would have fired while the laptop was asleep, so the Monday analysis pipeline still runs even if you opened the lid mid-day.
 
 ### Upgrading
 
