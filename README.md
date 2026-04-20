@@ -42,7 +42,7 @@
 
 - **60,000+** graph nodes, **150,000+** relationships from ongoing crawling
 - **31** RSS feeds monitored (OpenAI, Anthropic, Google, Meta, arXiv, researcher blogs)
-- **28 MCP tools** across 4 servers (brain 19, eye 7, sleep 2, photoshop) — all auto-connected
+- **30+ MCP tools** across 4 servers (brain 21, eye 7, sleep 2, photoshop) — all auto-connected
 - **Entity-level confidence scoring** (0.0–1.0) for trust boundary tracking
 - **Content guard** — injection detection on all crawled content (10 threat patterns)
 - **Built-in performance monitoring** via `comad_brain_perf` MCP tool
@@ -95,7 +95,7 @@ zsh brain/scripts/schedule-install.sh      # OS-aware scheduler (below)
 
 All three reuse the existing Claude Max OAuth — no extra API key. Per-platform install details: `brain/scripts/launchd/README.md`.
 
-Full catalog of the 11 scheduled jobs (dependencies, cron expressions, missing-run recovery) lives in [`docs/cron-catalog.md`](docs/cron-catalog.md). A boot-time catch-up agent (`com.comad.boot-catchup`) replays any LaunchAgent that would have fired while the laptop was asleep, so the Monday analysis pipeline still runs even if you opened the lid mid-day.
+Full catalog of the 11 scheduled jobs (dependencies, cron expressions, missing-run recovery) lives in [`docs/cron-catalog.md`](docs/cron-catalog.md). A boot-time catch-up agent (`com.comad.cron-catchup`) replays any LaunchAgent that would have fired while the laptop was asleep, so the Monday analysis pipeline still runs even if you opened the lid mid-day.
 
 ### Upgrading
 
