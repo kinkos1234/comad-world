@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed (2026-04-25 — README hero refresh)
+
+- **`docs/demo.gif` 교체** — 기존 980×620 183KB GIF (2026-04-06) 를
+  v0.3.0 업데이트 홍보 영상으로 교체. 720×405 @ 12fps · 4MB.
+  HTML + Playwright + ffmpeg 파이프라인 (comad-motion skill) 으로 생성.
+  5-beat 서사 (Hook → Setup → Build → Climax → Rest) · 30초.
+  BGM: Loneliness by Frozen Silence (CC-BY-NC-SA · Jamendo).
+- **`docs/promo-v0.3.0.mp4`** — Full-quality 1920×1080 @ 25fps + AAC
+  오디오 (2.6MB). 고화질 재생이 필요한 환경 (발표·블로그·대형 스크린) 용.
+- **`docs/promo-v0.3.0-60fps.mp4`** — 60fps minterpolate 업스케일
+  (3.1MB). SNS·웹 embed 의 부드러운 모션 필요 시.
+- README hero: MP4 다운로드 링크 2종 + "27-angle expert review · Gap
+  Packs A~D" 서브텍스트 추가.
+
 ### Changed (2026-04-17 — ear Mode B lock-in)
 
 - **ear: add Mode B (REST polling LaunchAgent), deprecate KeepAlive `ccd` wrapper**

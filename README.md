@@ -23,7 +23,11 @@
 </p>
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Comad World Demo" width="720">
+  <img src="docs/demo.gif" alt="Comad World Demo · v0.3.0" width="720">
+</p>
+
+<p align="center">
+  <sub>🎬 <a href="docs/promo-v0.3.0.mp4">Full-quality 1920×1080 MP4</a> · <a href="docs/promo-v0.3.0-60fps.mp4">60fps</a> · 30s · 27-angle expert review · Gap Packs A~D</sub>
 </p>
 
 ---
