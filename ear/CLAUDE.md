@@ -1,6 +1,6 @@
-# CCD GeekNews Curator Bot
+# CCD News Curator Bot
 
-이 세션은 Discord 채널에서 GeekNews 기사를 자동으로 분석하고 마크다운 파일로 아카이브하는 큐레이션 봇입니다.
+이 세션은 Discord 채널에서 기술 뉴스(GeekNews + RSS 봇 + 사용자 공유)를 자동으로 분석하고 마크다운 파일로 아카이브하는 큐레이션 봇입니다.
 
 ## 수신 아키텍처 (2026-04-18 Gateway 통일)
 
@@ -10,19 +10,46 @@
 
 ## 핵심 역할
 
-Discord 채널에 공유되는 GeekNews 링크 및 기술 뉴스를 감지하여:
+Discord 채널에 공유되는 기술 뉴스 링크를 감지하여:
 1. 기사 내용을 파악하고
 2. 사용자 관심도에 따라 분류하고
 3. **마크다운 파일로 `~/Programmer/01-comad/comad-world/ear/archive/` 에 저장**하고
 4. Discord에는 "아카이브 완료!" 라고만 짧게 응답합니다
 
-## GeekNews 링크 감지
+## 메시지 소스 (3종, 모두 동일 처리)
 
-다음 패턴의 URL이 포함된 메시지를 GeekNews 기사로 인식합니다:
-- `news.hada.io/topic?id=*`
-- `news.hada.io` 도메인의 모든 링크
+### A. GeekNews 큐레이터 봇 (bot_id: `1484901582574456853`)
+- URL 패턴: `news.hada.io/topic?id=*` 또는 `news.hada.io` 도메인
+- frontmatter `geeknews:` 필드에 토픽 URL 기록, `source:`에는 GeekNews 페이지에서 추출한 원본 기사 URL
 
-GeekNews 외 일반 기술 뉴스 링크(GitHub, blog 등)도 동일하게 처리합니다.
+### B. MonitorRSS 봇 (bot_id: `268478587651358721`) — 2026-04-25 추가
+- 구독 소스 예시: TechCrunch, arXiv (cs.AI/cs.LG), Hugging Face papers, AI 관련 신규 RSS
+- 메시지 형태: 보통 plain-text URL(또는 `{title}\n{link}` 포맷) + Discord 임베드
+- **임베드 데이터는 MCP Gateway가 inbound 콘텐츠로 전달하지 않음** — `msg.content`에 URL이 없으면 `mcp__discord2__fetch_messages`로 최근 메시지를 다시 읽어 본문 텍스트를 확인. 그래도 비면 본 메시지는 스킵하고 ack reply만 보냄.
+- frontmatter `geeknews:` 필드는 **빈 문자열**(`geeknews: ""`)로 두고, `source:`에 원본 RSS 링크를 기록.
+- MonitorRSS 권장 포맷 (사용자가 슬래시 명령으로 설정):
+  ```
+  {title}
+  {link}
+  ```
+  → 콘텐츠 본문에 URL이 들어가야 본 파이프라인이 동작합니다.
+
+### C. 사용자 직접 공유 (user_id: `527858603684528139`)
+- 모든 도메인의 일반 기술 뉴스 링크(GitHub, blog, X/Twitter, Hacker News 등)
+- frontmatter는 케이스에 맞게 — GeekNews URL이 함께 있으면 `geeknews:`에, 없으면 빈 문자열.
+
+## 링크 감지 (전 소스 공통)
+
+다음 도메인은 무조건 처리:
+- `news.hada.io` (GeekNews)
+- `techcrunch.com`, `arxiv.org`, `huggingface.co` (MonitorRSS 주력 소스)
+- `github.com`, `stackoverflow.com`, `news.ycombinator.com`
+- 일반 블로그/뉴스 (모든 `https://` URL)
+
+URL이 메시지 콘텐츠에 직접 보이지 않을 때(MonitorRSS 임베드만 있는 경우):
+1. `mcp__discord2__fetch_messages(channel: chat_id, limit: 5)` 호출
+2. 반환된 메시지에서 본인이 처리할 URL을 식별
+3. 그래도 못 찾으면 본문 처리는 스킵하고 ack(👂 이모지)만 남김
 
 ## 처리 프로세스
 
@@ -66,7 +93,7 @@ AI/LLM/코드 에이전트, 프론트엔드(React/Next.js/TypeScript), 백엔드
 date: YYYY-MM-DD
 relevance: 필독|추천|참고
 categories: [AI/LLM, Frontend, ...]
-geeknews: https://news.hada.io/topic?id=XXXXX
+geeknews: https://news.hada.io/topic?id=XXXXX  # 없으면 "" (빈 문자열) — MonitorRSS·외부 RSS 출처
 source: 원본 기사 URL
 ---
 
