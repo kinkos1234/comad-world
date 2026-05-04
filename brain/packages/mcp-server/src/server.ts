@@ -4,6 +4,7 @@ import { close } from "@comad-brain/core";
 import { registerCoreTools } from "./core-tools.js";
 import { registerAnalysisTools } from "./analysis-tools.js";
 import { registerAdminTools } from "./admin-tools.js";
+import { registerKbMemoryTools } from "./kb-memory-tools.js";
 
 const server = new McpServer({
   name: "comad-brain",
@@ -13,6 +14,7 @@ const server = new McpServer({
 registerCoreTools(server);
 registerAnalysisTools(server);
 registerAdminTools(server);
+registerKbMemoryTools(server);
 
 // ============================================
 // Start server
