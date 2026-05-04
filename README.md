@@ -391,6 +391,28 @@ echo '{"steps":[
 ]}' | bun run src/cli.ts batch -
 ```
 
+### loopy-era — Always-On Self-Evolution Harness
+
+Three LaunchAgents that keep the system measuring, learning, and pruning itself without any user prompt.
+
+- **`com.comad.loopy-era`** — supervisor.py runs a 15-phase tick every 30 minutes; phase 04 promotes T6 patterns into `kb_facts`, phase 15 records a composite score row to `results.tsv`
+- **`com.comad.kb-sleep`** — every 2h: extracts new facts from all `~/.claude/projects/*/memory/*.md`, refreshes Ollama embeddings, runs rule-only consolidation, and publishes the meta-changelog to GitHub Pages
+- **`com.comad.auto-dream`** — daily 03:15 KST: if `dream_pending=true` (memory ≥ 3,500 lines OR ≥ 7 days since last dream), invokes the comad-sleep agent via headless `claude -p` (mutex-guarded against `ccd`/`cdx`)
+- **Single SoT for Claude + Codex** — same 5 `comad_kb_*` MCP tools registered in `comad-brain` server, used identically from `claude`, `ccc`, `ccd`, `cdx`
+- **Live changelog** — every tick publishes meta-only stats (no body content) to <https://kinkos1234.github.io/memory-log/>
+- **Zero new dependencies** — Python stdlib + local Ollama only
+
+```bash
+# Install (interactive prompt during install.sh)
+./install.sh
+# answer "y" to:  Install always-on loopy-era harness (3 LaunchAgents)?
+
+# Manual operations
+loopy-era/bin/supervisor.py status
+loopy-era/bin/start-harness.sh tick
+loopy-era/bin/kb-sleep-tick.py --no-push
+```
+
 ### Search — Self-Evolving Reference Discovery
 
 GitHub repo discovery → evaluation → adoption planning → sandbox testing. The system finds patterns to improve itself.

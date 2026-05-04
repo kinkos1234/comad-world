@@ -179,6 +179,103 @@ else
     echo "    cd brain && docker compose up -d && bun install && bun run setup"
 fi
 
+# ─── Step 5b: loopy-era harness (optional) ───
+if [ -d "$ROOT_DIR/loopy-era" ]; then
+    echo ""
+    read -p "  Install always-on loopy-era harness (3 LaunchAgents)? (y/N): " install_loopy
+    if [ "$install_loopy" = "y" ] || [ "$install_loopy" = "Y" ]; then
+        mkdir -p "$HOME/.comad/loopy-era/logs" \
+                 "$HOME/.comad/loopy-era/pending" \
+                 "$HOME/.comad/loopy-era/phase_history"
+
+        # Replace runtime bin/ with a symlink to the repo source.
+        # If a regular dir exists (legacy install), back it up first.
+        RUNTIME_BIN="$HOME/.comad/loopy-era/bin"
+        if [ -d "$RUNTIME_BIN" ] && [ ! -L "$RUNTIME_BIN" ]; then
+            mv "$RUNTIME_BIN" "${RUNTIME_BIN}.bak-$(date +%Y%m%d%H%M%S)"
+        fi
+        if [ ! -L "$RUNTIME_BIN" ]; then
+            ln -s "$ROOT_DIR/loopy-era/bin" "$RUNTIME_BIN"
+            info "Linked $RUNTIME_BIN → repo loopy-era/bin"
+        fi
+
+        # Render and install three LaunchAgent plists with absolute paths.
+        LA_DIR="$HOME/Library/LaunchAgents"
+        mkdir -p "$LA_DIR"
+
+        cat > "$LA_DIR/com.comad.loopy-era.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.comad.loopy-era</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$ROOT_DIR/loopy-era/bin/supervisor.py</string>
+    <string>tick</string>
+  </array>
+  <key>StartInterval</key><integer>1800</integer>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>$HOME/.comad/loopy-era/logs/daemon.stdout.log</string>
+  <key>StandardErrorPath</key><string>$HOME/.comad/loopy-era/logs/daemon.stderr.log</string>
+  <key>ProcessType</key><string>Background</string>
+  <key>Nice</key><integer>10</integer>
+</dict>
+</plist>
+EOF
+
+        cat > "$LA_DIR/com.comad.kb-sleep.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.comad.kb-sleep</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/env</string><string>python3</string>
+    <string>$ROOT_DIR/loopy-era/bin/kb-sleep-tick.py</string>
+  </array>
+  <key>StartInterval</key><integer>7200</integer>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>$HOME/.comad/loopy-era/logs/kb-sleep.stdout.log</string>
+  <key>StandardErrorPath</key><string>$HOME/.comad/loopy-era/logs/kb-sleep.stderr.log</string>
+  <key>ProcessType</key><string>Background</string>
+  <key>LowPriorityIO</key><true/>
+</dict>
+</plist>
+EOF
+
+        cat > "$LA_DIR/com.comad.auto-dream.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.comad.auto-dream</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>$ROOT_DIR/loopy-era/bin/auto-dream.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>15</integer></dict>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>$HOME/.comad/loopy-era/logs/auto-dream.stdout.log</string>
+  <key>StandardErrorPath</key><string>$HOME/.comad/loopy-era/logs/auto-dream.stderr.log</string>
+  <key>ProcessType</key><string>Background</string>
+</dict>
+</plist>
+EOF
+
+        for label in com.comad.loopy-era com.comad.kb-sleep com.comad.auto-dream; do
+            launchctl unload "$LA_DIR/$label.plist" 2>/dev/null || true
+            launchctl load "$LA_DIR/$label.plist"
+        done
+        info "loopy-era harness installed (3 LaunchAgents loaded)"
+    else
+        echo "  Skipping loopy-era. To install later: re-run install.sh"
+    fi
+fi
+
 # ─── Step 6: Install `comad` command ───
 step "[6/6] Installing 'comad' command..."
 
@@ -238,6 +335,7 @@ echo "    brain/  — Knowledge graph (bun run mcp)"
 echo "    ear/    — Content curator (Discord bot)"
 echo "    eye/    — Simulation engine (make dev)"
 echo "    photo/  — Photo correction (say: 사진 보���)"
-echo "    sleep/  — Memory cleanup (say: dream)"
-echo "    voice/  — Workflow automation (say: 검토해봐)"
+echo "    sleep/      — Memory cleanup (say: dream)"
+echo "    voice/      — Workflow automation (say: 검토해봐)"
+echo "    loopy-era/  — Always-on self-evolution harness (LaunchAgents)"
 echo ""

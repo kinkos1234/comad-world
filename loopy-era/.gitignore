@@ -1,0 +1,15 @@
+# All runtime state lives in ~/.comad/loopy-era/ — never inside the repo.
+# The patterns below catch accidental copies if someone runs supervisor.py
+# directly from this directory.
+logs/
+pending/
+phase_history/
+evolve/
+memory/
+state.json
+metrics.jsonl
+results.tsv
+*.cooldown
+.stop-pending-count
+.supervisor.lock
+__pycache__/
