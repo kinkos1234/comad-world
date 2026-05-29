@@ -306,6 +306,16 @@ else
     warn "scripts/comad missing — skipping 'comad' command install"
 fi
 
+# ─── Git hooks (public-pages sync enforcement) ───
+if [ -d "$ROOT_DIR/scripts/githooks" ]; then
+    chmod +x "$ROOT_DIR"/scripts/githooks/* "$ROOT_DIR"/scripts/check-pages-sync.sh 2>/dev/null || true
+    if git -C "$ROOT_DIR" config core.hooksPath scripts/githooks 2>/dev/null; then
+        info "git hooks wired (core.hooksPath=scripts/githooks) — pre-push enforces landing/guide sync"
+    else
+        warn "could not set core.hooksPath; run: git config core.hooksPath scripts/githooks"
+    fi
+fi
+
 # ─── Done ───
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════╗${NC}"

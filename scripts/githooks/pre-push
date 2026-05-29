@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# comad-world pre-push hook — enforces public-pages sync.
+# Installed via:  git config core.hooksPath scripts/githooks
+# (install.sh wires this automatically; see scripts/check-pages-sync.sh for logic.)
+#
+# Blocks the push if comad-world's feature surface changed but the public
+# landing/guide (kinkos1234.github.io/comad) weren't refreshed. Override with
+# COMAD_SKIP_PAGES_SYNC=1 or `git push --no-verify`.
+set -uo pipefail
+DIR="$(git rev-parse --show-toplevel 2>/dev/null)/scripts"
+[ -x "$DIR/check-pages-sync.sh" ] && exec "$DIR/check-pages-sync.sh"
+exit 0

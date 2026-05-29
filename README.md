@@ -51,7 +51,7 @@
 - **Content guard** — injection detection on all crawled content (10 threat patterns)
 - **Built-in performance monitoring** via `comad_brain_perf` MCP tool
 - **$0/day** additional cost with Claude Max subscription (all LLM calls via CLI, local Ollama for eye)
-- **1,388+** tests across all modules (Brain 200 + Eye 1,188)
+- **1,422** tests across all modules (brain + eye suites)
 
 </details>
 
@@ -59,7 +59,7 @@
 
 ## 🌍 What is Comad World?
 
-Comad World is a modular AI agent system built on [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It connects six specialized agents into a pipeline that collects information, builds a knowledge graph, runs simulations, curates content, manages memory, and automates workflows — all driven by a single configuration file.
+Comad World is a modular AI agent system built on [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It connects six specialized agents into a pipeline that collects information, builds a knowledge graph, runs simulations, curates content, manages memory, and automates workflows — plus an always-on **loopy-era** self-evolution harness (the 9th module) that keeps the system measuring and learning — all driven by a single configuration file.
 
 ```
 ear (listen) → brain (think) → eye (predict)
