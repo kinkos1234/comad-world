@@ -51,15 +51,22 @@ def main() -> int:
     pending_count = sum(1 for _ in pending_dir.glob("*.json")) if pending_dir.exists() else 0
 
     seen_pat = re.compile(r"Seen\s+([2-9]|[1-9]\d+)\s*회")
+    # A pattern already promoted to a HARD hook ("승격 완료"/"승격됨") is enforced
+    # by that hook and is no longer an OPEN blocker. Excluding it keeps
+    # l6_blocker_count reachable to 0 — otherwise append-only feedback memory
+    # makes recurring permanent and the stopping_threshold unreachable.
+    # (Must stay identical to 03-self-improve-trigger.py.)
+    resolved_pat = re.compile(r"승격\s*완료|승격됨")
     recurring_count = 0
     mem_dir = pathlib.Path.home() / ".claude/projects"
     if mem_dir.exists():
         for fb in mem_dir.glob("*/memory/feedback_*.md"):
             try:
-                if seen_pat.search(fb.read_text(encoding="utf-8", errors="replace")):
-                    recurring_count += 1
+                text = fb.read_text(encoding="utf-8", errors="replace")
             except OSError:
-                pass
+                continue
+            if seen_pat.search(text) and not resolved_pat.search(text):
+                recurring_count += 1
 
     qa_fail = count_qa_evidence_failures()
 

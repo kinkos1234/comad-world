@@ -214,6 +214,15 @@ if [ -d "$ROOT_DIR/loopy-era" ]; then
     <string>$ROOT_DIR/loopy-era/bin/supervisor.py</string>
     <string>tick</string>
   </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key>
+    <string>$HOME</string>
+    <key>COMAD_LOOPY_DIR</key>
+    <string>$HOME/.comad/loopy-era</string>
+  </dict>
   <key>StartInterval</key><integer>1800</integer>
   <key>RunAtLoad</key><false/>
   <key>StandardOutPath</key><string>$HOME/.comad/loopy-era/logs/daemon.stdout.log</string>
@@ -256,6 +265,13 @@ EOF
     <string>/bin/bash</string>
     <string>$ROOT_DIR/loopy-era/bin/auto-dream.sh</string>
   </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key>
+    <string>$HOME</string>
+  </dict>
   <key>StartCalendarInterval</key>
   <dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>15</integer></dict>
   <key>RunAtLoad</key><false/>

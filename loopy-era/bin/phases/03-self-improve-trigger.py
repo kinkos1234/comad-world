@@ -32,14 +32,19 @@ def main() -> int:
     home = pathlib.Path.home()
     recurring_count = 0
     seen_pattern = re.compile(r"Seen\s+([2-9]|[1-9]\d+)\s*회")
+    # Exclude patterns already promoted to a HARD hook ("승격 완료"/"승격됨") —
+    # they are enforced and no longer open blockers. Keep identical to the
+    # metric definition in 05-verify-initial.py.
+    resolved_pattern = re.compile(r"승격\s*완료|승격됨")
     mem_dir = home / ".claude" / "projects"
     if mem_dir.exists():
         for fb in mem_dir.glob("*/memory/feedback_*.md"):
             try:
-                if seen_pattern.search(fb.read_text(encoding="utf-8", errors="replace")):
-                    recurring_count += 1
+                text = fb.read_text(encoding="utf-8", errors="replace")
             except OSError:
-                pass
+                continue
+            if seen_pattern.search(text) and not resolved_pattern.search(text):
+                recurring_count += 1
 
     sample = []
     for p in pending[:3]:
