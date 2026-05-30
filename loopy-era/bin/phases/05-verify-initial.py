@@ -3,7 +3,7 @@
 
 Definition of l6_blocker_count for our setup:
   pending_count          (unprocessed fix:/feat: signals)
-+ recurring_count        (feedback patterns Seen >= 2)
++ recurring_count        (feedback patterns Seen >= 2, excl. promoted & non-promotable)
 + qa_evidence_failures   (.qa-evidence.json verdicts that are not PASS in tracked projects — best-effort)
 = l6_blocker_count
 
@@ -57,6 +57,11 @@ def main() -> int:
     # makes recurring permanent and the stopping_threshold unreachable.
     # (Must stay identical to 03-self-improve-trigger.py.)
     resolved_pat = re.compile(r"승격\s*완료|승격됨")
+    # Exclude patterns explicitly declared NON-promotable ("grep 비대상" /
+    # "패턴 아님") in their HARD 훅 후보 section — they have no grep-detectable
+    # signature, can never become a HARD hook, and would otherwise be permanent
+    # blockers. (Must stay identical to 03-self-improve-trigger.py.)
+    not_promotable_pat = re.compile(r"grep[^\n]*비대상|패턴\s*아님")
     recurring_count = 0
     mem_dir = pathlib.Path.home() / ".claude/projects"
     if mem_dir.exists():
@@ -65,7 +70,9 @@ def main() -> int:
                 text = fb.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            if seen_pat.search(text) and not resolved_pat.search(text):
+            if (seen_pat.search(text)
+                    and not resolved_pat.search(text)
+                    and not not_promotable_pat.search(text)):
                 recurring_count += 1
 
     qa_fail = count_qa_evidence_failures()

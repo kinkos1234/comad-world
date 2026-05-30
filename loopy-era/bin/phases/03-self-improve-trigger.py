@@ -36,6 +36,12 @@ def main() -> int:
     # they are enforced and no longer open blockers. Keep identical to the
     # metric definition in 05-verify-initial.py.
     resolved_pattern = re.compile(r"승격\s*완료|승격됨")
+    # Also exclude patterns a feedback file explicitly declares NON-promotable in
+    # its "HARD 훅 후보" section ("grep 비대상" / "패턴 아님") — e.g. build/deploy
+    # config issues with no grep-detectable signature. They can never become a
+    # HARD hook, so counting them would keep l6_blocker_count permanently > 0
+    # (same class of defect as the resolved-pattern exclusion). Keep identical to 05.
+    not_promotable_pattern = re.compile(r"grep[^\n]*비대상|패턴\s*아님")
     mem_dir = home / ".claude" / "projects"
     if mem_dir.exists():
         for fb in mem_dir.glob("*/memory/feedback_*.md"):
@@ -43,7 +49,9 @@ def main() -> int:
                 text = fb.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            if seen_pattern.search(text) and not resolved_pattern.search(text):
+            if (seen_pattern.search(text)
+                    and not resolved_pattern.search(text)
+                    and not not_promotable_pattern.search(text)):
                 recurring_count += 1
 
     sample = []
