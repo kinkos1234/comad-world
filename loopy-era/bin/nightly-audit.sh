@@ -45,6 +45,7 @@ PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단
 - launchd cron 건강: ~/.comad/loopy-era/logs/ 와 brain/ear 로그에 반복 에러/미발화
 - 백로그: dream(~/.claude/.comad-sleep-state.json)·pending 신호(~/.claude/.comad/pending)·decisions 큐 누적
 - loopy-era state.json: metric 정체/이상
+- 공개 페이지 동기화(doc-drift): comad-world 에서 'bash scripts/check-pages-sync.sh' 실행(timestamp 비교, push 아님). 'stale' 뜨면 — 사용자-노출 feature/version/README 변경이면 결정으로, 단순 내부 plumbing fix 누적이면 스킵(판단).
 
 규칙:
 1. 진짜 '결정'(사람이 선택해야 하는 항목)만. 자동 해결 가능/사소하면 올리지 마라.

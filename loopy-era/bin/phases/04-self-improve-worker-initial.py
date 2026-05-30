@@ -103,10 +103,12 @@ def main() -> int:
         return 1
 
     prompt = (
-        "다음은 한 git fix/feat 커밋의 raw JSON 입니다. "
-        "이 커밋이 보여주는 일반화 가능한 실수 패턴이 있는지 분석해 주세요. "
-        "있다면 한 줄 요약으로, 없다면 'NONE' 한 단어로 답하세요. "
-        "추가 prose 없이 한 줄만.\n\n"
+        "다음은 한 git fix/feat 커밋의 raw JSON 입니다. 일반화 가능한 실수 패턴을 "
+        "분석해 아래 JSON 한 줄로만 답하세요 (다른 텍스트 절대 금지):\n"
+        '{"pattern": "<일반화 가능한 실수 패턴 한 줄, 없으면 NONE>", '
+        '"general": <true=다른 프로젝트에도 적용|false=이 프로젝트 특수>, '
+        '"hard_candidate": <true=반복되면 자동 차단 훅 만들 가치 있음, 아니면 false>, '
+        '"reason": "<한 줄 근거>"}\n\n'
         f"{json.dumps(obj, ensure_ascii=False, indent=2)[:2000]}"
     )
 
@@ -129,8 +131,19 @@ def main() -> int:
                           "output": {"reason": "llm-dispatch timeout 180s"}}))
         return 1
 
-    summary = (result.stdout or "").strip().splitlines()
-    summary_line = summary[-1].strip() if summary else ""
+    # R3a: structured analysis (pattern / generality / hard-candidate).
+    raw_last = (result.stdout or "").strip().splitlines()
+    raw_last = raw_last[-1].strip() if raw_last else ""
+    try:
+        analysis = json.loads(raw_last)
+        if not isinstance(analysis, dict):
+            analysis = {"pattern": raw_last}
+    except (json.JSONDecodeError, ValueError):
+        analysis = {"pattern": raw_last}  # fallback: treat line as the pattern
+    pattern = (analysis.get("pattern") or "").strip()
+    summary_line = "" if pattern.upper() == "NONE" else pattern
+    is_general = bool(analysis.get("general"))
+    is_hard_candidate = bool(analysis.get("hard_candidate"))
 
     extracted_by = os.environ.get("COMAD_LOOPY_LLM", "auto")
     kb = kb_persist_pattern(
@@ -141,12 +154,13 @@ def main() -> int:
         extracted_by=extracted_by,
     )
 
-    status = "ok" if result.returncode == 0 and summary_line else "fail"
+    # success = the LLM responded (analysis done) — a NONE pattern is still a
+    # valid, complete analysis, so it must count as ok (else it never archives).
+    status = "ok" if (result.returncode == 0 and raw_last) else "fail"
 
     # Drain the queue: a successfully-analyzed signal moves to _processed/ so
-    # pending self-clears. pending is a work-queue, not a defect count — leaving
-    # analyzed signals in place made l6_blocker_count plateau. On failure the
-    # signal stays for retry next tick. [loopy l6_blocker fix 2026-05-30]
+    # pending self-clears (work-queue, not a defect count). On failure it stays
+    # for retry next tick. [loopy l6_blocker fix 2026-05-30]
     archived = False
     if status == "ok":
         try:
@@ -157,6 +171,27 @@ def main() -> int:
         except OSError:
             archived = False
 
+    # R3a (A+C): phase04 stays light, but a genuine *generalizable + HARD-worthy*
+    # pattern is escalated as a DECISION (promote?) — heavy cross-cutting analysis
+    # is the nightly-audit's job. Deduped (source+title), low urgency, soft-fail.
+    escalated = None
+    if summary_line and is_general and is_hard_candidate:
+        try:
+            sys.path.insert(0, str(pathlib.Path.home() / ".claude/hooks/lib"))
+            import decisions as _dec
+            escalated = _dec.record_decision(
+                source="loopy-phase04",
+                title=f"패턴 후보: {summary_line[:80]}",
+                detail=(f"commit {(obj.get('commit') or '')[:12]} "
+                        f"({(obj.get('subject') or '')[:90]}) — "
+                        f"{(analysis.get('reason') or '')[:120]}"),
+                options=["comad-promote로 HARD 승격", "feedback 메모리만 기록",
+                         "무시(특수 케이스)"],
+                urgency="low",
+            )
+        except Exception:
+            escalated = None
+
     out = {
         "status": status,
         "output": {
@@ -165,11 +200,15 @@ def main() -> int:
             "commit": (obj.get("commit") or "")[:12],
             "subject": (obj.get("subject") or "")[:120],
             "pattern_summary": summary_line[:300],
+            "general": is_general,
+            "hard_candidate": is_hard_candidate,
+            "escalated_decision": escalated,
             "llm_provider": extracted_by,
             "llm_exit": result.returncode,
             "kb": kb,
         },
-        "summary": f"analyzed 1 signal: {summary_line[:80]}" if summary_line else "no LLM output",
+        "summary": (f"analyzed 1 signal: {summary_line[:80]}"
+                    if summary_line else "analyzed 1 signal: no pattern (NONE)"),
     }
     print(json.dumps(out, ensure_ascii=False))
     return 0 if out["status"] == "ok" else 1
