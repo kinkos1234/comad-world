@@ -34,13 +34,12 @@ LINES=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get
 DAYS=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('dream_check',{}).get('days_since_dream','?'))" "$STATE" 2>/dev/null)
 echo "dream_pending=true (lines=$LINES, days_since_dream=$DAYS)"
 
-# Mutex: if ccd/cdx active, defer (we run at 03:15 so usually idle, but guard anyway)
-if [ -f "$ACTIVE_BOT" ]; then
-  ACTIVE_PID=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('pid',''))" "$ACTIVE_BOT" 2>/dev/null || echo "")
-  if [ -n "$ACTIVE_PID" ] && kill -0 "$ACTIVE_PID" 2>/dev/null; then
-    echo "active bot pid=$ACTIVE_PID — skipping auto-dream this cycle"
-    exit 0
-  fi
+# Activity-based mutex: defer only if the active bot is *actually executing*
+# (CPU-busy), not merely alive — ccc/ccd are persistent daemons that otherwise
+# block this forever (the real reason the dream backlog never drained).
+if python3 "$(dirname "$0")/bot-busy.py"; then
+  echo "active bot is BUSY (CPU active) — skipping auto-dream this cycle"
+  exit 0
 fi
 
 # Headless claude with comad-sleep agent
@@ -55,6 +54,6 @@ PROMPT="comad-sleep agent를 실행해 메모리를 정리해줘. dream_pending=
 # `claude -p` is non-interactive single-prompt mode.
 # --dangerously-skip-permissions because hooks would otherwise block in headless context.
 TIMEOUT_MIN=15
-( claude -p --dangerously-skip-permissions "$PROMPT" 2>&1 || echo "claude exited rc=$?" ) | tail -50
+( claude -p --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?" ) | tail -50
 
 echo "=== $(date -Iseconds) auto-dream done ==="

@@ -143,16 +143,19 @@ def step_extract() -> dict:
         try:
             r = run([sys.executable, str(extract), "--source", str(md),
                      "--regex-only", "--scope", "global"], timeout=30)
-            if r.returncode != 0:
-                failed += 1
-                continue
             try:
                 obj = json.loads((r.stdout or "").strip().splitlines()[-1])
-                extracted += int(obj.get("extracted") or 0)
-                if obj.get("status") == "noop":
-                    skipped += 1
             except (json.JSONDecodeError, IndexError):
-                pass
+                obj = {}
+            status = obj.get("status")
+            # extract-facts exits non-zero (rc=2) on the idempotent "already
+            # extracted" skip — that is NOT a failure. Classify by status, not rc.
+            if status in ("skip", "noop"):
+                skipped += 1
+            elif status == "ok":
+                extracted += int(obj.get("extracted") or 0)
+            else:
+                failed += 1  # genuine error (unknown/missing status)
         except (subprocess.TimeoutExpired, OSError):
             failed += 1
     return {"status": "ok", "extracted": extracted,

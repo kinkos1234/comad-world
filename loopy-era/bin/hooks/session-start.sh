@@ -26,4 +26,18 @@ if status == "uninitialized" or it == 0:
 flag = "✅" if stopping else "⏳"
 print(f"💡 loopy-era: iter={it} {flag} l6_blocker={metric} status={status}")
 PY
+
+# R3 — surface the decision-escalation queue (autonomous work raises *decisions*,
+# not raw output; they wait here for human judgment). decisions.py lives in the
+# claude-config hooks/lib. Stays silent when the queue is empty.
+DEC="$HOME/.claude/hooks/lib/decisions.py"
+if [ -f "$DEC" ]; then
+  N=$(python3 "$DEC" count 2>/dev/null || echo 0)
+  if [ "${N:-0}" -gt 0 ] 2>/dev/null; then
+    TOP=$(python3 "$DEC" list 2>/dev/null | head -1)
+    echo "🧭 ${N} pending decision(s) — ${TOP}"
+    echo "   review: python3 ~/.claude/hooks/lib/decisions.py list  ·  resolve <id>"
+  fi
+fi
+
 exit 0

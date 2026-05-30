@@ -282,11 +282,39 @@ EOF
 </plist>
 EOF
 
-        for label in com.comad.loopy-era com.comad.kb-sleep com.comad.auto-dream; do
+        cat > "$LA_DIR/com.comad.nightly-audit.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.comad.nightly-audit</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>$ROOT_DIR/loopy-era/bin/nightly-audit.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key>
+    <string>$HOME</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>4</integer><key>Minute</key><integer>0</integer></dict>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>$HOME/.comad/loopy-era/logs/nightly-audit.stdout.log</string>
+  <key>StandardErrorPath</key><string>$HOME/.comad/loopy-era/logs/nightly-audit.stderr.log</string>
+  <key>ProcessType</key><string>Background</string>
+</dict>
+</plist>
+EOF
+
+        for label in com.comad.loopy-era com.comad.kb-sleep com.comad.auto-dream com.comad.nightly-audit; do
             launchctl unload "$LA_DIR/$label.plist" 2>/dev/null || true
             launchctl load "$LA_DIR/$label.plist"
         done
-        info "loopy-era harness installed (3 LaunchAgents loaded)"
+        info "loopy-era harness installed (4 LaunchAgents loaded)"
     else
         echo "  Skipping loopy-era. To install later: re-run install.sh"
     fi

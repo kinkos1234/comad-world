@@ -141,10 +141,27 @@ def main() -> int:
         extracted_by=extracted_by,
     )
 
+    status = "ok" if result.returncode == 0 and summary_line else "fail"
+
+    # Drain the queue: a successfully-analyzed signal moves to _processed/ so
+    # pending self-clears. pending is a work-queue, not a defect count — leaving
+    # analyzed signals in place made l6_blocker_count plateau. On failure the
+    # signal stays for retry next tick. [loopy l6_blocker fix 2026-05-30]
+    archived = False
+    if status == "ok":
+        try:
+            processed_dir = pending_dir / "_processed"
+            processed_dir.mkdir(parents=True, exist_ok=True)
+            sig.rename(processed_dir / sig.name)
+            archived = True
+        except OSError:
+            archived = False
+
     out = {
-        "status": "ok" if result.returncode == 0 and summary_line else "fail",
+        "status": status,
         "output": {
             "processed_signal": sig.name,
+            "archived": archived,
             "commit": (obj.get("commit") or "")[:12],
             "subject": (obj.get("subject") or "")[:120],
             "pattern_summary": summary_line[:300],
