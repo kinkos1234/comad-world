@@ -17,7 +17,7 @@ jobs:
     name: No orphan duplicates
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: eye — no root-level YAML that shadows config/
         run: |
@@ -86,8 +86,8 @@ jobs:
     name: comad.config.yaml matches schema
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - run: pip install pyyaml
@@ -97,8 +97,8 @@ jobs:
     name: Loaders in sync with JSON Schema (ADR 0002 PR 4)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - run: pip install pyyaml
@@ -110,7 +110,7 @@ jobs:
     name: No build artifacts in git
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Reject tracked __pycache__ / node_modules / .next / tsbuildinfo
         run: |
           fail=0
