@@ -1,0 +1,15 @@
+{
+  "tier":1,"run":3,"change":"PIVOT: brain as SOURCE-RETRIEVAL INDEX — real Articles(title/date/url/summary)+genealogy only; Claims downgraded to hedged 'unverified hints, do not assert'",
+  "map":{"q1":"A=baseline,B=treatment-v3","q2":"A=treatment-v3,B=baseline","q3":"A=baseline,B=treatment-v3","q4":"A=treatment-v3,B=baseline"},
+  "scores":{
+    "q1_alignment":{"baseline":7.0,"treatment_v3":9.0,"winner":"treatment_v3"},
+    "q2_moe":{"baseline":6.5,"treatment_v3":8.75,"winner":"treatment_v3"},
+    "q3_attention":{"baseline":6.75,"treatment_v3":6.25,"winner":"baseline"},
+    "q4_rag":{"baseline":7.5,"treatment_v3":8.25,"winner":"treatment_v3"}
+  },
+  "totals":{"baseline_mean":6.94,"treatment_v3_mean":8.06,"lift":1.125,"treatment_winrate":"3/4"},
+  "verdict":"POSITIVE. Real, substantial lift. Source-index mode (real articles + hedged unverified claims) wins recency+citation WITHOUT the grounding penalty that killed claim-injection.",
+  "trajectory":{"run1_inject_claims":0.06,"run2_claims_with_cite":-0.31,"run3_source_index":1.125},
+  "caveat":"N=4 (small). q3 still lost via borderline sources (arxiv 2605.18753/tiny-vllm distrusted). Effect large enough to validate direction; more Q for tighter CI.",
+  "tier1_conclusion":"comad-recall as SOURCE-RETRIEVAL INDEX validated (+1.13). NOT a claims oracle. Dormant verification pipeline (0/19686 verified) logged as separate brain improvement."
+}

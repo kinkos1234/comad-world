@@ -1,0 +1,21 @@
+{
+  "tier": 1, "run": 1, "mechanism": "comad-recall (brain GraphRAG knowledge pack injection)",
+  "method": "blind A/B, order-randomized, independent LLM judge, 4 criteria",
+  "map": {"q1":"A=baseline,B=treatment","q2":"A=treatment,B=baseline","q3":"A=baseline,B=treatment","q4":"A=treatment,B=baseline"},
+  "scores": {
+    "q1_alignment": {"baseline":8.0,"treatment":7.5,"winner":"baseline"},
+    "q2_moe":       {"baseline":7.25,"treatment":8.0,"winner":"treatment"},
+    "q3_attention": {"baseline":7.25,"treatment":8.0,"winner":"treatment"},
+    "q4_rag_control":{"baseline":8.5,"treatment":7.75,"winner":"baseline"}
+  },
+  "criterion_means": {
+    "grounding":  {"baseline":8.75,"treatment":6.75,"delta":-2.0},
+    "specificity":{"baseline":9.0, "treatment":8.25,"delta":-0.75},
+    "recency":    {"baseline":7.75,"treatment":8.75,"delta":1.0},
+    "citation":   {"baseline":5.5, "treatment":7.5, "delta":2.0}
+  },
+  "totals": {"baseline_mean":7.75,"treatment_mean":7.8125,"lift":0.0625,"treatment_winrate":"2/4"},
+  "verdict": "FLAT lift overall. Brain wins recency(+1.0)+citation(+2.0), loses grounding(-2.0: judges distrust hyper-specific unverifiable claims). Net wash.",
+  "insight": "Brain helps on recency/niche/citation, NOT well-known general knowledge (model already strong). Specificity reads as 'unverifiable' UNLESS presented WITH source URLs.",
+  "fix": ["recall must attach source URL to each fact (convert specificity->verifiable grounding)","trigger brain selectively: recency-sensitive/niche/project queries, not general knowledge"]
+}

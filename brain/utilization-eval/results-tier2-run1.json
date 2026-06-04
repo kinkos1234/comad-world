@@ -1,0 +1,10 @@
+{
+  "tier":2,"run":1,"mechanism":"ear/brain hot-cluster → eye headless(main.py) auto-simulation → foresight report",
+  "cluster":"AI 코딩 에이전트·프런티어 모델 경쟁 (Claude Code 24·Codex 19·GPT-5.5 14·Gemini 10, 최근14일)",
+  "eye_pipeline":"실행됨: 추출→그래프(eye Neo4j 7687/changeme)→5분석공간×5렌즈(손자/탈레브/카너먼/메도우즈/스미스)→772줄 45KB 리포트",
+  "critical_bug":"eye 전역 추출캐시(data/extraction/ontology.json)가 seed-content 로 키잉 안 됨 → '배치 1/1 캐시 히트' → 코딩에이전트 seed에 이전 MCU 테스트의 stale 온톨로지 반환. 추출 엔티티 전부 마블(인피니티사가·시크릿워즈·캉·닥터둠·어벤져스). 전체 분석·렌즈·전략권고가 마블 영화 대상.",
+  "compounding":"캐시 고쳐도 추출이 weak local qwen3.5:9b → hallucination 위험. brain은 Claude-API 추출.",
+  "baseline_claude":"같은 클러스터 30초 분석 → 날카로운 실insight(비용=채택천장, 하네스 상품화, 격납=조달기준, Wasmer 10-20x, 사용량거버넌스 예측). 매우 우수.",
+  "verdict":"eye 현 아키텍처는 NO — 캐시 오염+weak LLM 으로 garbage(마블 분석). Claude baseline 대비 lift 압도적 음수. 'eye가 테스트 후 안 돌아간' 이유의 구체적 증거.",
+  "pivot":["A) 캐시버그 수정+강제 재추출(여전히 weak qwen)","B) brain→eye 브리지: brain의 Claude-추출 서브그래프를 eye에 먹임(pending docker-compose 결정)","C) 추천: eye CONCEPT(10렌즈 전략foresight)만 살려 Claude가 brain 클러스터에 직접 적용 — baseline이 이미 우수, eye 무거운 broken 파이프라인 폐기"]
+}

@@ -1,0 +1,62 @@
+{
+  "N": 10,
+  "treatment_mean": 7.925,
+  "baseline_mean": 6.1,
+  "lift": 1.825,
+  "winrate": "8/10",
+  "ties": 1,
+  "lift_recency_sensitive": 3.12,
+  "lift_timeless": 0.25,
+  "per_q": {
+    "q1": {
+      "base": 7.0,
+      "treat": 9.0,
+      "d": 2.0
+    },
+    "q2": {
+      "base": 6.5,
+      "treat": 8.75,
+      "d": 2.25
+    },
+    "q3": {
+      "base": 6.75,
+      "treat": 6.25,
+      "d": -0.5
+    },
+    "q4": {
+      "base": 7.5,
+      "treat": 8.25,
+      "d": 0.75
+    },
+    "q5": {
+      "base": 6.0,
+      "treat": 8.5,
+      "d": 2.5
+    },
+    "q6": {
+      "base": 5.25,
+      "treat": 6.75,
+      "d": 1.5
+    },
+    "q7": {
+      "base": 7.25,
+      "treat": 7.25,
+      "d": 0.0
+    },
+    "q8": {
+      "base": 5.75,
+      "treat": 7.0,
+      "d": 1.25
+    },
+    "q9": {
+      "base": 5.5,
+      "treat": 9.0,
+      "d": 3.5
+    },
+    "q10": {
+      "base": 3.5,
+      "treat": 8.5,
+      "d": 5.0
+    }
+  }
+}

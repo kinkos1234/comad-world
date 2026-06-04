@@ -1,0 +1,14 @@
+{
+  "tier":1,"run":2,"change":"recall attaches source URL per claim + agent instructed to cite inline",
+  "map":{"q1":"A=treatment-v2,B=baseline","q2":"A=baseline,B=treatment-v2","q3":"A=treatment-v2,B=baseline","q4":"A=baseline,B=treatment-v2"},
+  "scores":{
+    "q1_alignment":{"baseline":7.5,"treatment_v2":6.25,"winner":"baseline"},
+    "q2_moe":{"baseline":5.0,"treatment_v2":8.5,"winner":"treatment_v2"},
+    "q3_attention":{"baseline":7.75,"treatment_v2":5.0,"winner":"baseline"},
+    "q4_rag_control":{"baseline":8.5,"treatment_v2":7.75,"winner":"baseline"}
+  },
+  "totals":{"baseline_mean":7.19,"treatment_v2_mean":6.875,"lift":-0.31,"treatment_winrate":"1/4"},
+  "verdict":"WORSE. Citations BACKFIRED — judges scrutinized brain citations(RVPO,arxiv 2605.18753,apple.com/research) and flagged as fabrication-shaped, crushing grounding(4/10).",
+  "root_cause":"brain Claim layer is UNVERIFIED: 0/19686 claims verified=TRUE. confidence is extractor LLM self-rating, not verification. Injecting them as facts = injecting unverified LLM extractions.",
+  "pivot":"DO NOT inject brain Claims as authoritative facts. Use brain as a SOURCE-RETRIEVAL INDEX (real ear-curated Articles + URLs + genealogy), let model reason over real sources. Separately: brain's verification pipeline (verified field) is dormant — real brain gap to fix."
+}

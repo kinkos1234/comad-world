@@ -1,0 +1,14 @@
+{
+  "tier":2,"approach":"C — eye의 10렌즈 foresight 컨셉을 Claude×brain클러스터로 포팅(comad-foresight), eye 깨진 파이프라인 폐기",
+  "run1_eye_broken":{"verdict":"eye 캐시버그로 마블 분석 garbage, lift 압도적 음수"},
+  "run2_lens_vs_baseline":{
+    "treatment":"Claude가 10렌즈(손자·스미스·탈레브·카너먼·메도우즈·데카르트·마키아벨리·클라우제비츠·헤겔·다윈) 프레임워크를 실재 클러스터에 적용",
+    "baseline":"같은 클러스터 plain Claude 분석(렌즈 구조 없음)",
+    "judge1":{"baseline":7.25,"treatment":8.25,"winner":"treatment"},
+    "judge2":{"baseline":6.75,"treatment":8.5,"winner":"treatment"},
+    "treatment_mean":8.375,"baseline_mean":7.0,"lift":1.375,"winrate":"2/2"
+  },
+  "verdict":"C 검증됨 — 렌즈 프레임워크가 plain 분석 대비 +1.375 lift. 차별점: 10렌즈 체계적 교차검증 + 놓친 행위자(CFO/조달) 발굴 + 확률보정 예측. eye 대비: 빠름(~40s), 실재 추출(기사 자체), garbage 없음.",
+  "deliverable":"comad-foresight 스킬: cluster.sh(brain hot클러스터 탐지+기사팩) + references/lenses.md(10렌즈 포팅) + Claude 적용. eye 무거운 파이프라인 폐기.",
+  "next":"자동화 옵션 — launchd 주간: hot클러스터 탐지 → 렌즈 foresight → Discord (ci-healer 패턴). dry_run 우선."
+}
