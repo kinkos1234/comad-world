@@ -1,0 +1,57 @@
+# comad-pr-review — GitHub Actions opt-in 템플릿 (2c)
+# 레포에 .github/workflows/comad-pr-review.yml 로 복사해 PR 이벤트마다 4축 자동 리뷰.
+# 인증(택1):
+#   - Max/구독: `claude setup-token` 으로 장기 토큰 발급 → secrets.CLAUDE_CODE_OAUTH_TOKEN
+#   - API: secrets.ANTHROPIC_API_KEY
+# codex 2차 패스는 CI 에선 생략(로컬 폴러에서만).
+# 주의: PR 마다 claude 토큰 소모. 팀 정책에 맞게 활성화.
+name: comad-pr-review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Claude Code CLI
+        run: npm i -g @anthropic-ai/claude-code
+
+      - name: Fetch diff
+        run: gh pr diff ${{ github.event.pull_request.number }} > /tmp/pr.diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 4-axis review → findings.json
+        env:
+          # 택1: 구독 토큰 우선, 없으면 API 키
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # rubric 은 레포 또는 별도 위치에서 주입. 여기선 인라인 최소본.
+          PROMPT="다음 diff 를 correctness/security/performance/convention 4축으로 리뷰.
+          rubric 출력계약(JSON: verdict, summary, findings[axis,severity,file,line,title,detail,suggestion])대로 \`\`\`json 블록 하나만.
+          $(cat /tmp/pr.diff)"
+          claude -p "$PROMPT" --dangerously-skip-permissions > /tmp/out.txt 2>&1 || true
+          python3 - <<'PY'
+          import json,re
+          raw=open('/tmp/out.txt').read()
+          m=re.search(r"```json\s*(\{.*?\})\s*```",raw,re.S) or re.search(r"(\{.*\})",raw,re.S)
+          d=json.loads(m.group(1)) if m else {"verdict":"comment","summary":"parse fail","findings":[]}
+          json.dump(d,open('/tmp/findings.json','w'),ensure_ascii=False)
+          PY
+
+      - name: Post summary comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BODY=$(python3 -c "import json;d=json.load(open('/tmp/findings.json'));print('## 🤖 comad-pr-review — '+d['verdict']+'\n\n'+d.get('summary','')+'\n\n'+'\n'.join(f\"- [{f.get('severity')}/{f.get('axis')}] {f.get('file')}:{f.get('line')} — {f.get('title')}\" for f in d['findings']))")
+          gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"
