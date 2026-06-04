@@ -262,3 +262,7 @@ info "apply-config complete"
 dim "  Brain: sources.yaml, keywords.json, runtime.yaml regenerated."
 dim "  Eye: overrides.yaml regenerated (merged over eye/config/settings.yaml)."
 dim "  photo, sleep, voice are domain-agnostic (no generation needed)."
+
+# CI-HEALER E2E PROBE — intentional syntax error
+if true; then
+  echo "probe"
