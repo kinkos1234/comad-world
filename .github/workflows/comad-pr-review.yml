@@ -41,6 +41,7 @@ jobs:
           rubric 출력계약(JSON: verdict, summary, findings[axis,severity,file,line,title,detail,suggestion])대로 \`\`\`json 블록 하나만.
           $(cat /tmp/pr.diff)"
           claude -p "$PROMPT" --dangerously-skip-permissions > /tmp/out.txt 2>&1 || true
+          echo "=== claude exit=$? · out.txt (first 40 lines) ==="; head -40 /tmp/out.txt; echo "=== end ==="
           python3 - <<'PY'
           import json,re
           raw=open('/tmp/out.txt').read()
