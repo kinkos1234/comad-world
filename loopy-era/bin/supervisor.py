@@ -48,31 +48,20 @@ RESULTS_FILE = LOOPY / "results.tsv"
 PHASE_DIR = LOOPY / "bin/phases"
 HISTORY_DIR = LOOPY / "phase_history"
 
+# R6 (2026-06-11): worker 미설치로 noop/skip 만 반복하던 9개 phase 제거
+# (04·06·07·08·09·10·11·12·14 — 6 noop + 3 종속 skip). 설계는 git history 에
+# 보존됨; worker 를 실제 설치하는 날 해당 커밋을 revert 해 복원한다.
+# 남은 파이프라인 = 실제로 일하는 6단계.
 PHASE_ORDER = [
     "01-init-project",
     "02-qa-scenario-gen",
     "03-self-improve-trigger",
-    "04-self-improve-worker-initial",
     "05-verify-initial",
-    "06-adversarial-review-initial",
-    "07-team-plan",
-    "08-team-execute",
-    "09-qa-cycle",
-    "10-qa-fix-retry",
-    "11-inject-adversarial-findings",
-    "12-self-improve-worker-adversarial",
     "13-verify-final",
-    "14-adversarial-review-final",
     "15-closeout",
 ]
 
-PHASE_TIMEOUT = {
-    "04-self-improve-worker-initial": 2400,
-    "12-self-improve-worker-adversarial": 2400,
-    "08-team-execute": 1800,
-    "09-qa-cycle": 1200,
-    "10-qa-fix-retry": 1200,
-}
+PHASE_TIMEOUT = {}
 DEFAULT_TIMEOUT = 600
 
 
@@ -221,24 +210,8 @@ def call_phase(phase: str, state: dict, iteration: int, scope: dict) -> dict:
 
 # ─── conditional skip rules ────────────────────────────────────────────────
 def should_skip(phase: str, state: dict, history: dict) -> tuple[bool, str]:
-    """Encodes the supervisor-level branching the upstream Codex Harness uses.
-
-    Returns (skip, reason).
-    """
-    if phase in ("07-team-plan", "08-team-execute"):
-        rev = history.get("06-adversarial-review-initial") or {}
-        blockers = rev.get("output", {}).get("blocker_count")
-        if blockers == 0 or rev.get("status") == "noop":
-            return True, "blocker_count == 0 (or review skipped)"
-    if phase == "10-qa-fix-retry":
-        qa = history.get("09-qa-cycle") or {}
-        if qa.get("status") in ("ok", "noop", "skip"):
-            return True, "qa_cycle did not fail"
-    if phase == "12-self-improve-worker-adversarial":
-        rev = history.get("06-adversarial-review-initial") or {}
-        findings = rev.get("output", {}).get("findings", []) or []
-        if not findings:
-            return True, "no adversarial findings to inject"
+    """R6: worker-phase 제거로 분기 규칙 전부 소거. 시그니처는 유지
+    (worker 복원 시 이 함수에 규칙이 되돌아온다)."""
     return False, ""
 
 
@@ -306,9 +279,10 @@ def cmd_tick(args: argparse.Namespace) -> int:
             "last_completed_at": completed_at,
             "current_metric_value": metric_value,
             "stopping_condition": stopping,
-            "team_plan": history.get("07-team-plan", {"status": "skip"}),
-            "qa_cycle": history.get("09-qa-cycle", {"status": "unknown"}),
         })
+        # R6: team_plan/qa_cycle 상태 키 제거 (해당 phase 가 파이프라인에 없음)
+        state.pop("team_plan", None)
+        state.pop("qa_cycle", None)
         write_state(state, args.dry_run)
         cycle["summary"] = {
             "completed_at": completed_at,
