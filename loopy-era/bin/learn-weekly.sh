@@ -30,6 +30,7 @@ PROMPT="~/.claude/skills/comad-learn/SKILL.md 를 읽고 그 지침을 그대로
 규칙 요약 (스킬 지침이 우선):
 - 반복 실수 방지 규칙만 memory/feedback_*.md 로 승격. 프로젝트 로직 버그·단순 feat 는 승격하지 않는다.
 - 같은 topic 2회 이상이면 'HARD 훅 후보' 섹션 추가 — 단 훅 생성/활성화는 하지 말고 결정 큐(python3 ~/.claude/hooks/lib/decisions.py add --source learn-weekly ...)에 승인 요청만 올려라.
+- 승격하는 교훈마다 가능하면 '재발 감지 체크'를 함께 만들어라 — grep 패턴, .qa-evidence.json 체크 항목, 또는 hook 테스트 케이스 중 환경에 맞는 것. markdown 교훈은 잊히지만 검증물은 계속 실행된다. 감지 체크를 만들 수 없는 교훈이면 그 이유를 메모리에 한 줄 남겨라.
 - 처리분은 _processed/, 기각분은 _rejected/ 로 이동 (원본 삭제 금지).
 - 끝나면 '처리 N건 / 승격 N건 / 기각 N건 / HARD후보 N건' 한 줄만 출력."
 
