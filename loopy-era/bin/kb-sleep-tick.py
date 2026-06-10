@@ -221,6 +221,9 @@ def days_since(iso: str | None) -> float:
         dt = datetime.datetime.fromisoformat(iso.replace("Z", "+00:00"))
     except ValueError:
         return 999.0
+    if dt.tzinfo is None:
+        # lastRun 이 date-only/naive ISO 인 경우(UTC 가정) — aware 끼리만 빼기 가능
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
     delta = datetime.datetime.now(datetime.timezone.utc) - dt
     return delta.total_seconds() / 86400.0
 
