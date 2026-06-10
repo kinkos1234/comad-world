@@ -38,6 +38,13 @@ fi
 
 BEFORE=$(python3 "$DEC" count 2>/dev/null || echo 0)
 
+# codex CLI 헬스체크 (P2-10): doctor 의 ✗ 항목만 감사 컨텍스트에 주입
+CODEX_HEALTH="(codex CLI 미설치 또는 doctor 실패)"
+if command -v codex >/dev/null 2>&1; then
+  CODEX_FAILS=$(codex doctor 2>/dev/null | grep -E '^\s*[✗x✖]' | head -5 || true)
+  CODEX_HEALTH="${CODEX_FAILS:-이상 없음}"
+fi
+
 PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단(결정)'이 필요한 항목만 골라 결정 큐에 올린다. raw 로그·단순 보고는 올리지 마라.
 
 점검 (간단히, ~5분):
@@ -46,6 +53,7 @@ PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단
 - 백로그: dream(~/.claude/.comad-sleep-state.json)·pending 신호(~/.claude/.comad/pending)·decisions 큐 누적
 - loopy-era state.json: metric 정체/이상
 - 공개 페이지 동기화(doc-drift): comad-world 에서 'bash scripts/check-pages-sync.sh' 실행(timestamp 비교, push 아님). 'stale' 뜨면 — 사용자-노출 feature/version/README 변경이면 결정으로, 단순 내부 plumbing fix 누적이면 스킵(판단).
+- codex CLI 건강 (doctor 실패 항목): $CODEX_HEALTH
 
 규칙:
 1. 진짜 '결정'(사람이 선택해야 하는 항목)만. 자동 해결 가능/사소하면 올리지 마라.
@@ -56,6 +64,7 @@ PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단
 
 지금 점검하고 결정만 큐잉해라."
 
+bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" nightly-audit 2>/dev/null || true
 ( claude -p --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?" ) | tail -30
 
 AFTER=$(python3 "$DEC" count 2>/dev/null || echo 0)

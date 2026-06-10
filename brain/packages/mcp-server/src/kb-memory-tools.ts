@@ -41,6 +41,8 @@ export function registerKbMemoryTools(server: McpServer) {
       kind: z.string().optional().describe("kind 필터: decision/preference/pattern/knowledge/constraint"),
       domain: z.string().optional().describe("ontology.domain 필터"),
     },
+    // readOnlyHint: codex 0.134+ 가 read-only 툴을 병렬 실행할 수 있게 광고
+    { readOnlyHint: true },
     async ({ query, top, scope, kind, domain }) => {
       try {
         const args = ["--json", query];
@@ -65,6 +67,7 @@ export function registerKbMemoryTools(server: McpServer) {
     {
       fact_id: z.number().int().describe("kb_facts.id"),
     },
+    { readOnlyHint: true },
     async ({ fact_id }) => {
       try {
         const out = await runPy("kb-trace.py", ["--json", String(fact_id)]);
@@ -90,6 +93,7 @@ export function registerKbMemoryTools(server: McpServer) {
       relations: z.string().optional()
         .describe("쉼표로 구분된 relation 타입 필터 (예: 'INFLUENCES,SUPPORTS')"),
     },
+    { readOnlyHint: true },
     async ({ id, query, hops, direction, relations }) => {
       try {
         if (id == null && !query) return toolError("provide id or query");
@@ -116,6 +120,7 @@ export function registerKbMemoryTools(server: McpServer) {
     {
       min_scopes: z.number().int().optional().describe("최소 scope 수 (기본 2)"),
     },
+    { readOnlyHint: true },
     async ({ min_scopes }) => {
       try {
         const args = ["--json"];
@@ -135,6 +140,7 @@ export function registerKbMemoryTools(server: McpServer) {
     "comad_kb_stats",
     "Personal memory bank: 그래프 헬스 — active/archived facts, 임베딩 커버리지, kind/scope/domain/relation 분포. 메모리 체계 점검용.",
     {},
+    { readOnlyHint: true },
     async () => {
       try {
         const out = await runPy("kb-stats.py", ["--json"]);
