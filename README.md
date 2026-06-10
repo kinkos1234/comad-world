@@ -99,7 +99,7 @@ zsh brain/scripts/schedule-install.sh      # OS-aware scheduler (below)
 
 All three reuse the existing Claude Max OAuth — no extra API key. Per-platform install details: `brain/scripts/launchd/README.md`.
 
-Full catalog of the 11 scheduled jobs (dependencies, cron expressions, missing-run recovery) lives in [`docs/cron-catalog.md`](docs/cron-catalog.md). A boot-time catch-up agent (`com.comad.cron-catchup`) replays any LaunchAgent that would have fired while the laptop was asleep, so the Monday analysis pipeline still runs even if you opened the lid mid-day.
+Full catalog of the **24 scheduled jobs** (brain pipeline 12 + self-evolution loop 12 — dependencies, cron expressions, missing-run recovery) lives in [`docs/cron-catalog.md`](docs/cron-catalog.md). A boot-time catch-up agent (`com.comad.cron-catchup`) replays any brain-pipeline LaunchAgent that would have fired while the laptop was asleep, so the Monday analysis pipeline still runs even if you opened the lid mid-day. (If a plist ever gets corrupted, recover by re-running `brain/scripts/launchd/install.sh` — never hand-write plists.)
 
 ### Upgrading
 
@@ -393,12 +393,25 @@ echo '{"steps":[
 
 ### loopy-era — Always-On Self-Evolution Harness
 
-Three LaunchAgents that keep the system measuring, learning, and pruning itself without any user prompt.
+A closed self-evolution loop — harvest → analyze → request-approval → reach-the-human → apply → instrument → audit — running on launchd with no user prompt. (R6, 2026-06-11: slimmed to what demonstrably works; design history preserved in git.)
 
-- **`com.comad.loopy-era`** — supervisor.py runs a 15-phase tick every 30 minutes; phase 04 promotes T6 patterns into `kb_facts`, phase 15 records a composite score row to `results.tsv`
+**Measure & score**
+- **`com.comad.loopy-era`** — supervisor.py runs a **6-phase** tick every 30 minutes (init → qa-scenario → trigger → verify → verify-final → closeout); closeout appends a score row to `results.tsv` **plus R6 outcome metrics** `fix_ratio` (7-day fix-commit ratio, lower=better) and `ci_first_pass` (first-attempt CI pass rate, higher=better)
 - **`com.comad.kb-sleep`** — every 2h: extracts new facts from all `~/.claude/projects/*/memory/*.md`, refreshes Ollama embeddings, runs rule-only consolidation, and publishes the meta-changelog to GitHub Pages
-- **`com.comad.auto-dream`** — daily 03:15 KST: if `dream_pending=true` (memory ≥ 3,500 lines OR ≥ 7 days since last dream), invokes the comad-sleep agent via headless `claude -p` (mutex-guarded against `ccd`/`cdx`)
-- **Single SoT for Claude + Codex** — same 5 `comad_kb_*` MCP tools registered in `comad-brain` server, used identically from `claude`, `ccc`, `ccd`, `cdx`
+
+**Learn & apply (human decides, machine does the rest)**
+- **`com.comad.learn-weekly`** — Sun 09:17: analyzes T6-captured commits (comad-learn); SOFT memory promotion is automatic, HARD hook promotion goes to the decision queue; every promoted lesson ships with a recurrence-detection check
+- **`com.comad.evolve-monthly`** — 2nd of month 10:23: comad-evolve Phase 2–5 (analyze → gate → A/B → apply); only A/B-passed items are applied, system-file changes go to the decision queue
+- **`com.comad.decision-digest`** — Mon 08:13: if decisions are pending, posts a digest to Discord (no LLM — direct bot REST)
+
+**Audit & prune**
+- **`com.comad.nightly-audit`** — daily 04:00: self-verifying system audit; escalates *only items needing human judgment* to the decision queue (includes codex doctor health + HARD-hook ROI from `hook-fires.tsv`)
+- **`com.comad.auto-dream`** — daily 03:15 KST: if `dream_pending=true` (memory ≥ 3,500 lines OR ≥ 7 days), invokes the comad-sleep agent headless (activity-based `bot-busy` mutex); dream proposes retirement of 90-day-unreferenced memories via the decision queue — never deletes directly
+- **`com.comad.entropy-audit`** — quarterly (11th of Mar/Jun/Sep/Dec, 09:37): demands 90-day contribution evidence (`memory-usage.tsv`, `hook-fires.tsv`, outcome trend) from every memory, hook, cron and memory subsystem; no evidence → removal/merge candidate in the decision queue. First run 2026-09-11 (cold-start guard)
+
+**Shared foundations**
+- **Single SoT for Claude + Codex** — same 5 `comad_kb_*` MCP tools (read-only ones advertise `readOnlyHint` for parallel execution) registered in `comad-brain` server, used identically from `claude`, `ccc`, `ccd`, `cdx`
+- **Memory boundaries** — four memory subsystems with explicit non-overlapping roles: see [`docs/memory-boundaries.md`](docs/memory-boundaries.md)
 - **Live changelog** — every tick publishes meta-only stats (no body content) to <https://kinkos1234.github.io/memory-log/>
 - **Zero new dependencies** — Python stdlib + local Ollama only
 
@@ -411,6 +424,8 @@ Three LaunchAgents that keep the system measuring, learning, and pruning itself 
 loopy-era/bin/supervisor.py status
 loopy-era/bin/start-harness.sh tick
 loopy-era/bin/kb-sleep-tick.py --no-push
+loopy-era/bin/learn-weekly.sh --dry-run      # gate check without spending a session
+loopy-era/bin/entropy-audit.sh --dry-run
 ```
 
 ### Search — Self-Evolving Reference Discovery

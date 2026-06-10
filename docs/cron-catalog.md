@@ -1,14 +1,16 @@
 # Cron Catalog
 
-코마드월드의 모든 스케줄 작업을 한 곳에서 본다. 현재 macOS `launchd`에 **10개 활성 + 1개 비활성** = 총 11개가 등록되어 있다.
+코마드월드의 모든 스케줄 작업을 한 곳에서 본다. 현재 macOS `launchd`에 **`com.comad.*` 24개**가 등록되어 있다 (brain 파이프라인 12 + 자가발전 루프 12). 마지막 전수 점검: 2026-06-11.
 
 > **크로스플랫폼 진입점**: `brain/scripts/schedule-install.sh` — macOS는 `launchd`, Linux/WSL은 `cron`, Windows는 Task Scheduler로 라우팅. 자세한 설치·보안 주의사항은 [`brain/scripts/launchd/README.md`](../brain/scripts/launchd/README.md) 참고.
+> ⚠️ **plist 복구는 반드시 `brain/scripts/launchd/install.sh` 재실행으로** — 2026-04-30 마이그레이션 때 수기 plist 가 JSON 조각으로 손상돼 5종이 6주간 침묵 언로드된 사고가 있었다 (2026-06-11 복구).
 
 ## 목차
 
 - [A. 일일 수집 파이프라인](#a-일일-수집-파이프라인-07001000-매일) — 매일 07:00–10:00
 - [B. 주간 분석·자동개선 배치](#b-주간-분석자동개선-배치-11001300-월요일) — 매주 월 11:00–13:00
-- [C. 실시간 폴링](#c-실시간-폴링-비활성) — 비활성
+- [C. 실시간 폴링](#c-실시간-폴링) — ear-poll·ci-healer·pr-review
+- [D. 자가발전 루프 (loopy-era 계열)](#d-자가발전-루프-loopy-era-계열) — 2026-06-11 R6 기준
 - [의존성 그래프](#의존성-그래프)
 - [로그 위치](#로그-위치)
 - [주의사항](#주의사항)
@@ -46,14 +48,33 @@
 
 **공용 로그**: 10개 모두 plist-level stdout은 `brain/crawl.log` 또는 `ear/digest.log`로 감. `search-weekly`는 여기에 더해 스크립트 내부에서 `brain/search-weekly.log`에 WARN을 append.
 
-## C. 실시간 폴링 (비활성)
+## C. 실시간 폴링
 
-| 주기 | 라벨 | 상태 |
+| 주기 | 라벨 | 상태 (2026-06-11 실측) |
 |---|---|---|
-| 매 15분 (`StartInterval 900s`) | `com.comad.ear-poll` | **`.plist.disabled`**. Discord Mode B 폴링(REST 기반, 0 IDENTIFY quota). 활성화 조건: `~/.claude/channels/discord2/.env` 존재 |
+| 매 15분 (`StartInterval 900s`) | `com.comad.ear-poll` | **활성** (install.sh 가 등록). Discord Mode B 폴링(REST 기반, 0 IDENTIFY quota). 실행: `/bin/bash ear/poll-ear.sh` |
+| 매 15분 (`StartInterval 900s`) | `com.comad.ci-healer` | **활성, dry_run=false (실모드)**. GH Actions 실패 감지 → headless claude 수정 → 자동 PR (머지는 사람). config: `~/.claude/skills/comad-ci-healer/config.json` |
+| 매 20분 (`StartInterval 1200s`) | `com.comad.pr-review` | **활성, dry_run=false (실모드)**. 신규 PR headSha dedup → 4축 채점 → 인라인+요약 코멘트 |
 
-실행 경로: `/bin/bash ear/poll-ear.sh` · 로그: `ear/launchd-poll-{out,err}.log`
-활성 시 `RunAtLoad=true`라 로드 직후 1회 실행됨에 주의.
+## D. 자가발전 루프 (loopy-era 계열) — 2026-06-11 R6 기준
+
+수확 → 분석 → 승인요청 → 도달 → 적용 → 계측 → 감사의 닫힌 루프. 전부 비정각 분 오프셋(`feedback_cron_offset_safety` 준수).
+
+| 주기 | 라벨 | 역할 |
+|---|---|---|
+| 매 30분 | `com.comad.loopy-era` | supervisor **6-phase** tick (R6에서 15→6 슬림화): init → qa-scenario → trigger → verify → verify-final → closeout(results.tsv + outcome 지표 `fix_ratio`·`ci_first_pass`) |
+| 매 2시간 | `com.comad.kb-sleep` | memory/*.md → kb_facts 추출·임베딩·rule-only consolidate → memory-log 퍼블리시 |
+| 매일 03:15 | `com.comad.auto-dream` | dream_pending 시 comad-sleep 에이전트 headless 실행 (메모리 통합·은퇴 제안) |
+| 매일 04:00 | `com.comad.nightly-audit` | 시스템 자가감사 → 사람 판단 필요 항목만 결정 큐 에스컬레이트. codex doctor·HARD 훅 ROI(hook-fires.tsv) 점검 포함 |
+| 매주 일 09:17 | `com.comad.learn-weekly` | T6 pending 자동 분석(comad-learn). SOFT 승격 자동, HARD 는 결정 큐 승인 요청만. 교훈마다 재발 감지 검증물 동반 생성 |
+| 매주 월 08:13 | `com.comad.decision-digest` | 결정 큐 적체 시 Discord 다이제스트 (LLM 불필요 — 봇 REST 직접 호출) |
+| 매주 월 09:00 | `com.comad.foresight` | brain hot클러스터 → 10렌즈 전략 foresight (**dry_run=true** — Discord 미전송 상태) |
+| 매 6시간 | `com.comad.evolve` | comad-evolve Phase 1 (trend harvest 만) |
+| 매월 2일 10:23 | `com.comad.evolve-monthly` | comad-evolve Phase 2~5 (분석→게이트→A/B→적용). 적용은 A/B 통과분만, 시스템 변경은 결정 큐로 |
+| 분기 11일 09:37 (3·6·9·12월) | `com.comad.entropy-audit` | 90일 기여 증거 감사 — 무참조 메모리·무발화 훅·실작동 0 크론을 결정 큐로. 1회차 2026-09-11 (콜드스타트 가드) |
+
+**계측 파일** (감사의 증거 데이터): `~/.claude/.comad/{memory-usage,hook-fires,sdk-usage,tool-durations}.tsv` + `results.tsv`
+**주의**: D 계열 신규 크론(learn-weekly·evolve-monthly·decision-digest·entropy-audit)은 cron-catchup 의 미발화 캐치업 카탈로그(`comad-crons.json`)에 미등재.
 
 ---
 
@@ -93,15 +114,9 @@
 
 ---
 
-## `ear-poll` 활성화 (비활성 → 활성 전환 시)
+## `ear-poll` 운영 메모
 
-```sh
-ls ~/.claude/channels/discord2/.env || echo "env 파일 먼저 준비 필요"
-mv ~/Library/LaunchAgents/com.comad.ear-poll.plist.disabled \
-   ~/Library/LaunchAgents/com.comad.ear-poll.plist
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.comad.ear-poll.plist
-```
-
+2026-06-11 부터 활성 (install.sh 가 기본 등록). 비활성화가 필요하면 `launchctl bootout gui/$(id -u)/com.comad.ear-poll`.
 일반 설치·제거·상태 조회는 [`brain/scripts/launchd/README.md`](../brain/scripts/launchd/README.md) 참고.
 
 ---
@@ -113,7 +128,9 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.comad.ear-poll.plist
 | `brain/crawl.log` | 9개 (ear-ingest, crawl-arxiv, ingest-geeknews, crawl-blogs, crawl-github, monitor-upstream, evolution-loop, run-benchmark, 그리고 stderr) |
 | `ear/digest.log` | 1개 (ear-digest) |
 | `brain/search-weekly.log` | 1개 (search-weekly, 스크립트 내부 appender) |
-| `ear/launchd-poll-{out,err}.log` | 1개 (ear-poll, 비활성) |
+| `ear/launchd-poll-{out,err}.log` | 1개 (ear-poll) |
+| `~/.comad/loopy-era/logs/*` | D 계열 (supervisor·kb-sleep·auto-dream·nightly-audit·learn-weekly·evolve-monthly·decision-digest·entropy-audit) |
+| `~/.claude/.comad/{ci-healer,pr-review}/logs/` | ci-healer·pr-review |
 
 **관찰**: `brain/crawl.log`는 9개 크론이 공용으로 쓰는 단일 파일 — 로그가 섞여 실패 진단 시 grep으로 라벨 필터링이 필요. 개선 여지.
 
