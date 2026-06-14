@@ -38,7 +38,13 @@ LOG_DIR = HOME / ".comad/loopy-era/logs"
 SITE_REPO = HOME / "Programmer/03-web/kinkos1234.github.io"
 SITE_POSTS = SITE_REPO / "_posts"
 
-DREAM_LINE_THRESHOLD = 3500
+# 2026-06-14: 3500 → 5000 상향 (결정 20260611T190340).
+# md_total_lines() 는 전 메모리 파일(MEMORY.md 인덱스 + 79개 feedback/project) 합계라
+# 정상 휴지 크기(~4100줄)가 이미 3500을 넘어 매일 no-op dream 이 발화하던 문제.
+# 5000으로 올려 라인 트리거를 사실상 비활성화하고 7일 주기를 실 cadence 로 만든다.
+# 주의: 코퍼스는 ~80줄/일로 단조 증가 → 약 11일 후 재교차 가능. 장기적으로는
+# 절대 라인수 대신 "직전 dream 이후 증가분(delta)" 트리거로 바꾸는 게 정석.
+DREAM_LINE_THRESHOLD = 5000
 DREAM_DAYS_THRESHOLD = 7
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
