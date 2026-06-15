@@ -29,20 +29,30 @@ if [ ! -d "$PAGES/.git" ]; then
 fi
 
 # Feature-surface paths inside comad-world whose change implies a page-worthy update.
-SURFACE='VERSION README.md docs brain ear eye photo sleep voice search browse loopy-era presets comad.config.yaml'
+SURFACE=(VERSION README.md docs brain ear eye photo sleep voice search browse loopy-era presets comad.config.yaml)
 
-cw_ts="$(git -C "$CW_ROOT" log -1 --format=%ct -- $SURFACE 2>/dev/null)"
+# Internal implementation subpaths that are NOT public-facing. A commit touching
+# ONLY these must not trip the tripwire — otherwise pure plumbing fixes flag the
+# pages stale even with zero landing/guide surface.
+# (2026-06-15 false-positive fix: 8a81afa, a loopy-era/bin dream-threshold tuning
+#  fix, was flagging the public pages stale though the pages already reflected R6.
+#  Page-worthy changes always touch README/VERSION/docs/module-root, never bin alone.)
+EXCLUDES=(':(exclude,glob)**/bin/**' ':(exclude,glob)**/scripts/**' ':(exclude,glob)**/lib/**' ':(exclude,glob)**/tests/**' ':(exclude,glob)**/__pycache__/**')
+
+cw_ts="$(git -C "$CW_ROOT" log -1 --format=%ct -- "${SURFACE[@]}" "${EXCLUDES[@]}" 2>/dev/null)"
 pg_ts="$(git -C "$PAGES" log -1 --format=%ct -- comad.html comad/guide 2>/dev/null)"
 
 [ -z "$cw_ts" ] && { echo "check-pages-sync: no feature-surface history, skip"; exit 0; }
 [ -z "$pg_ts" ] && pg_ts=0
 
 if [ "$cw_ts" -gt "$pg_ts" ]; then
-  cw_h="$(git -C "$CW_ROOT" log -1 --format='%h %s' -- $SURFACE 2>/dev/null)"
+  cw_h="$(git -C "$CW_ROOT" log -1 --format='%h %s' -- "${SURFACE[@]}" "${EXCLUDES[@]}" 2>/dev/null)"
   echo ""
   echo "⛔ check-pages-sync: comad-world feature surface changed AFTER the public pages."
   echo "   comad-world latest: $cw_h"
   echo "   pages ($PAGES) last touched comad.html/guide: $(git -C "$PAGES" log -1 --format='%h %s · %cr' -- comad.html comad/guide 2>/dev/null)"
+  echo "   page-worthy commits since pages update:"
+  git -C "$CW_ROOT" log --since="@$pg_ts" --format='     • %h %s' -- "${SURFACE[@]}" "${EXCLUDES[@]}" 2>/dev/null | head -10
   echo ""
   echo "   → Update the landing + guide to match, commit & push them, THEN push comad-world:"
   echo "       • $PAGES/comad.html           (landing)"
