@@ -10,13 +10,14 @@ const EAR_DIR = __dirname;
 const ARCHIVE_DIR = path.join(EAR_DIR, 'archive');
 const DIGESTS_DIR = path.join(EAR_DIR, 'digests');
 const TEMPLATE_PATH = path.join(EAR_DIR, 'digest-template.html');
-const LOG_PATH = path.join(EAR_DIR, 'digest.log');
 
+// 로그는 stdout 으로만 — launchd 가 StandardOutPath=digest.log 로 받아쓴다.
+// (appendFileSync + console.log 병행 시 launchd 경유 실행에서 모든 라인이 2중 기록됨
+//  → nightly-audit 이 "중복 실행"으로 오탐. 2026-07-08)
+// 타임스탬프는 KST 로컬 — UTC 는 08:00 KST 발화가 "전날 23:00" 으로 보여 미발화 오탐 유발.
 function log(msg) {
-  const ts = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  const line = `${ts} ${msg}\n`;
-  fs.appendFileSync(LOG_PATH, line);
-  console.log(line.trim());
+  const ts = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' });
+  console.log(`${ts} ${msg}`);
 }
 
 // Target date: yesterday in LOCAL timezone (or pass YYYY-MM-DD as arg).

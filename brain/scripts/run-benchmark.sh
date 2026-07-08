@@ -26,8 +26,11 @@ LATEST=$(ls -t "$DATA_DIR"/benchmark-*.json 2>/dev/null | head -1)
 PREVIOUS=$(ls -t "$DATA_DIR"/benchmark-*.json 2>/dev/null | head -2 | tail -1)
 
 if [[ -n "$LATEST" && -n "$PREVIOUS" && "$LATEST" != "$PREVIOUS" ]]; then
-  NEW_RECALL=$(grep '"entity_recall_avg"' "$LATEST" | grep -o '[0-9.]*')
-  OLD_RECALL=$(grep '"entity_recall_avg"' "$PREVIOUS" | grep -o '[0-9.]*')
+  # grep 파싱 금지 — JSON 에 entity_recall_avg 가 4곳(summary + by_difficulty×3)이라
+  # multiline 값이 되어 아래 산술 비교가 zsh fatal(exit 1)로 죽었음 (2026-07-06 크론.
+  # nightly-audit 이 "Neo4j 접속 실패"로 오진한 실제 원인 — 벤치마크 자체는 성공했었음).
+  NEW_RECALL=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['summary']['entity_recall_avg'])" "$LATEST" 2>/dev/null)
+  OLD_RECALL=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['summary']['entity_recall_avg'])" "$PREVIOUS" 2>/dev/null)
 
   if [[ -n "$NEW_RECALL" && -n "$OLD_RECALL" ]]; then
     echo "  Recall: $OLD_RECALL → $NEW_RECALL" >> "$LOG"
