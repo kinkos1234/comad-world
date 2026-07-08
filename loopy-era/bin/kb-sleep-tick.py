@@ -38,13 +38,11 @@ LOG_DIR = HOME / ".comad/loopy-era/logs"
 SITE_REPO = HOME / "Programmer/03-web/kinkos1234.github.io"
 SITE_POSTS = SITE_REPO / "_posts"
 
-# 2026-06-14: 3500 → 5000 상향 (결정 20260611T190340).
-# md_total_lines() 는 전 메모리 파일(MEMORY.md 인덱스 + 79개 feedback/project) 합계라
-# 정상 휴지 크기(~4100줄)가 이미 3500을 넘어 매일 no-op dream 이 발화하던 문제.
-# 5000으로 올려 라인 트리거를 사실상 비활성화하고 7일 주기를 실 cadence 로 만든다.
-# 주의: 코퍼스는 ~80줄/일로 단조 증가 → 약 11일 후 재교차 가능. 장기적으로는
-# 절대 라인수 대신 "직전 dream 이후 증가분(delta)" 트리거로 바꾸는 게 정석.
-DREAM_LINE_THRESHOLD = 5000
+# 2026-07-08: 절대 라인수(5000) → 증가분(delta) 트리거 전환 (feedback_monotonic_threshold_trigger).
+# 코퍼스는 ~80줄/일 단조 증가라 절대 임계치는 교차 후 상시참이 됨 (3500→5000 상향도
+# ~11일 뒤 재교차 예정이었음). 직전 dream(lastRun) 시점 라인수를 baseline 으로 저장하고
+# "dream 이후 증가분 ≥ DELTA" 로 판정. 7일 주기가 실 cadence, delta 는 폭증 시 조기 발화용.
+DREAM_LINE_DELTA = 500
 DREAM_DAYS_THRESHOLD = 7
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -237,11 +235,20 @@ def days_since(iso: str | None) -> float:
 def update_dream_pending(state: dict, lines: int) -> dict:
     last_run = state.get("lastRun")
     days = days_since(last_run)
-    pending = (lines >= DREAM_LINE_THRESHOLD) or (days >= DREAM_DAYS_THRESHOLD)
+    # baseline = 직전 dream 시점의 라인수. dream 이 돌면 lastRun 이 갱신되므로
+    # lastRun 변화를 감지해 baseline 을 현재값으로 재설정한다.
+    # (전환 첫 tick 도 여기로 떨어져 delta=0 에서 시작 — 7일 주기가 cadence 를 이어받음)
+    base = state.get("dream_baseline") or {}
+    if base.get("lastRun") != last_run:
+        base = {"lastRun": last_run, "lines": lines}
+    delta = max(0, lines - int(base.get("lines", lines)))
+    pending = (delta >= DREAM_LINE_DELTA) or (days >= DREAM_DAYS_THRESHOLD)
+    state["dream_baseline"] = base
     state["dream_pending"] = bool(pending)
     state["dream_check"] = {
         "lines": lines,
-        "line_threshold": DREAM_LINE_THRESHOLD,
+        "delta_since_dream": delta,
+        "delta_threshold": DREAM_LINE_DELTA,
         "days_since_dream": round(days, 1),
         "days_threshold": DREAM_DAYS_THRESHOLD,
         "checked_at": now_utc_iso(),
@@ -292,7 +299,7 @@ ENTRY_TEMPLATE = """## {kst} (tick #{tick_no})
 
 **메모리 임계치**
 
-- `.md` 총 라인: **{md_lines}** / threshold {line_th} → {dream_flag}
+- `.md` 총 라인: **{md_lines}** (dream 후 +{delta}) / delta threshold {line_th} → {dream_flag}
 - 마지막 dream: **{days_since_dream}일 전** / threshold {day_th}일
 
 {recent_block}
@@ -311,7 +318,7 @@ def render_recent_block(recent: list[dict]) -> str:
 
 def render_entry(prev: dict, now: dict, tick_no: int,
                  extract_r: dict, embed_r: dict, cons_r: dict,
-                 md_lines: int, days_since_dream: float,
+                 md_lines: int, delta_since_dream: int, days_since_dream: float,
                  recent: list[dict]) -> str:
     d_active = now["active_facts"] - prev.get("active_facts", 0)
     d_rel = now["relations"] - prev.get("relations", 0)
@@ -326,7 +333,7 @@ def render_entry(prev: dict, now: dict, tick_no: int,
     cons_brief = (f"{cons_r.get('candidates', 0)} candidates "
                  f"({cons_r.get('buckets', 0)} buckets)")
 
-    dream_flag = ("🌙 **dream pending**" if md_lines >= DREAM_LINE_THRESHOLD
+    dream_flag = ("🌙 **dream pending**" if delta_since_dream >= DREAM_LINE_DELTA
                   else "✅ ok")
 
     return ENTRY_TEMPLATE.format(
@@ -335,7 +342,7 @@ def render_entry(prev: dict, now: dict, tick_no: int,
         prev_rel=prev.get("relations", 0), now_rel=now["relations"], d_rel=d_rel,
         prev_emb=prev.get("embeddings", 0), now_emb=now["embeddings"], d_emb=d_emb,
         extract_brief=extract_brief, embed_brief=embed_brief, cons_brief=cons_brief,
-        md_lines=md_lines, line_th=DREAM_LINE_THRESHOLD, dream_flag=dream_flag,
+        md_lines=md_lines, delta=delta_since_dream, line_th=DREAM_LINE_DELTA, dream_flag=dream_flag,
         days_since_dream=round(days_since_dream, 1), day_th=DREAM_DAYS_THRESHOLD,
         recent_block=render_recent_block(recent),
     )
@@ -479,10 +486,11 @@ def main() -> int:
     md_lines = md_total_lines()
     state = update_dream_pending(state, md_lines)
     days_since_dream = state["dream_check"]["days_since_dream"]
+    delta_since_dream = state["dream_check"]["delta_since_dream"]
 
     # Render + publish entry
     entry = render_entry(prev, now, tick_no, extract_r, embed_r, cons_r,
-                        md_lines, days_since_dream, recent)
+                        md_lines, delta_since_dream, days_since_dream, recent)
     publish_r = append_post(now_utc_date(), entry)
     log(f"publish: {publish_r.get('status')} {publish_r.get('path', '')}")
 
