@@ -14,6 +14,13 @@ set -euo pipefail
 
 [ "${COMAD_NIGHTLY_AUDIT:-1}" = "0" ] && exit 0
 
+# codex 등 npm -g 바이너리는 nvm node bin 아래에 있어 launchd 기본 PATH 에 없음
+# (2026-07-12 "codex 2차 소실" 결정은 이 PATH 누락 오탐 — 헬스체크·감사 프롬프트 모두 오염됨)
+for _nvm_bin in "$HOME"/.nvm/versions/node/*/bin; do
+  [ -d "$_nvm_bin" ] && case ":$PATH:" in *":$_nvm_bin:"*) ;; *) PATH="$PATH:$_nvm_bin" ;; esac
+done
+export PATH
+
 LOG_DIR="$HOME/.comad/loopy-era/logs"
 LOG="$LOG_DIR/nightly-audit.log"
 ACTIVE_BOT="$HOME/.comad/active-bot.json"
