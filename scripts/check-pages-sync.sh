@@ -37,6 +37,10 @@ SURFACE=(VERSION README.md docs brain ear eye photo sleep voice search browse lo
 # (2026-06-15 false-positive fix: 8a81afa, a loopy-era/bin dream-threshold tuning
 #  fix, was flagging the public pages stale though the pages already reflected R6.
 #  Page-worthy changes always touch README/VERSION/docs/module-root, never bin alone.)
+# 원칙 (2026-07-27 결정 20260726T190332): 사적 크론(구직 모니터링 등)·bin 유틸은
+# 공개 표면이 아니다 — bin-only 변경은 의도적으로 감지 제외. 단, 신규 *공개 기능* 크론은
+# docs/cron-catalog.md 에 등록해야 하며(등록하면 docs/ 변경으로 자동 감지됨),
+# README 는 하드코딩 숫자 대신 카탈로그를 단일 진실원으로 가리킨다.
 EXCLUDES=(':(exclude,glob)**/bin/**' ':(exclude,glob)**/scripts/**' ':(exclude,glob)**/lib/**' ':(exclude,glob)**/tests/**' ':(exclude,glob)**/__pycache__/**')
 
 cw_ts="$(git -C "$CW_ROOT" log -1 --format=%ct -- "${SURFACE[@]}" "${EXCLUDES[@]}" 2>/dev/null)"

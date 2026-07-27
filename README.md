@@ -99,7 +99,7 @@ zsh brain/scripts/schedule-install.sh      # OS-aware scheduler (below)
 
 All three reuse the existing Claude Max OAuth — no extra API key. Per-platform install details: `brain/scripts/launchd/README.md`.
 
-Full catalog of the **24 scheduled jobs** (brain pipeline 12 + self-evolution loop 12 — dependencies, cron expressions, missing-run recovery) lives in [`docs/cron-catalog.md`](docs/cron-catalog.md). A boot-time catch-up agent (`com.comad.cron-catchup`) replays any brain-pipeline LaunchAgent that would have fired while the laptop was asleep, so the Monday analysis pipeline still runs even if you opened the lid mid-day. (If a plist ever gets corrupted, recover by re-running `brain/scripts/launchd/install.sh` — never hand-write plists.)
+Full catalog of the **scheduled jobs** (brain pipeline + self-evolution loop — dependencies, cron expressions, missing-run recovery; the catalog is the single source of truth for the count) lives in [`docs/cron-catalog.md`](docs/cron-catalog.md). A boot-time catch-up agent (`com.comad.cron-catchup`) replays any brain-pipeline LaunchAgent that would have fired while the laptop was asleep, so the Monday analysis pipeline still runs even if you opened the lid mid-day. (If a plist ever gets corrupted, recover by re-running `brain/scripts/launchd/install.sh` — never hand-write plists.)
 
 ### Upgrading
 
