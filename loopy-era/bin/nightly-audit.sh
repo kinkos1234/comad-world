@@ -17,7 +17,9 @@ set -euo pipefail
 # codex 등 npm -g 바이너리는 nvm node bin 아래에 있어 launchd 기본 PATH 에 없음
 # (2026-07-12 "codex 2차 소실" 결정은 이 PATH 누락 오탐 — 헬스체크·감사 프롬프트 모두 오염됨)
 for _nvm_bin in "$HOME"/.nvm/versions/node/*/bin; do
-  [ -d "$_nvm_bin" ] && case ":$PATH:" in *":$_nvm_bin:"*) ;; *) PATH="$PATH:$_nvm_bin" ;; esac
+  # nvm bin 을 PATH 앞에 — 뒤에 붙이면 node/npm 은 /usr/local 이 이겨 codex doctor
+  # install/updates ✗ 재발 (결정 20260721T190206, 옵션1 nvm 단일화 확정 2026-07-27)
+  [ -d "$_nvm_bin" ] && case ":$PATH:" in *":$_nvm_bin:"*) ;; *) PATH="$_nvm_bin:$PATH" ;; esac
 done
 export PATH
 
