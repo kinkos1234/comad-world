@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""13 verify_final — re-measure l6_blocker_count after self-improve cycle.
+"""13 verify_final — self-improve 사이클 후 하네스 점수를 다시 잰다.
 
 Same logic as 05-verify-initial; supervisor compares the two for stopping
 condition.

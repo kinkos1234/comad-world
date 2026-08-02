@@ -265,9 +265,17 @@ def cmd_tick(args: argparse.Namespace) -> int:
             metric_value = verify_initial.get("output", {}).get("metric_value")
 
         threshold = state.get("stopping_threshold", 0)
+        # 지표가 늘 "낮을수록 좋음"인 것은 아니다. 하네스 5축 점수처럼 높을수록 좋은
+        # 지표를 쓰려면 방향이 필요하다 (2026-08-02). 기존 상태 파일에는 이 키가 없으므로
+        # 없으면 예전 동작(at_most)을 그대로 쓴다.
+        direction = state.get("stopping_direction", "at_most")
         stopping = False
         try:
-            stopping = metric_value is not None and float(metric_value) <= float(threshold)
+            if metric_value is not None:
+                if direction == "at_least":
+                    stopping = float(metric_value) >= float(threshold)
+                else:
+                    stopping = float(metric_value) <= float(threshold)
         except (TypeError, ValueError):
             pass
 

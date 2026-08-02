@@ -1,97 +1,72 @@
 #!/usr/bin/env python3
-"""05 verify_initial — measure l6_blocker_count.
+"""05 verify_initial — 하네스 5축 점수를 측정한다.
 
-Definition of l6_blocker_count for our setup:
-  pending_count          (unprocessed fix:/feat: signals)
-+ recurring_count        (feedback patterns Seen >= 2, excl. promoted & non-promotable)
-+ qa_evidence_failures   (.qa-evidence.json verdicts that are not PASS in tracked projects — best-effort)
-= l6_blocker_count
+2026-08-02 사용자 결정으로 지표를 바꿨다.
+
+예전 지표 `l6_blocker_count` 는 pending(=포착된 fix:/feat: 커밋 수) 을 더하고 있어서
+**일하면 올라가는** 값이었다. 주 1회 learn-weekly 가 pending 을 비울 때만 떨어지는
+톱니파였고, 정지 조건(0)에 도달할 경로가 루프 밖에 있었다. 3,860회를 도달 불가능한
+목표에 대고 돌린 셈이다.
+
+지금 지표는 harness-report 의 composite score (0-100, 높을수록 좋음):
+  HARD 커버리지 30 · pending 처리율 30 · 반복패턴 20 · 2차리뷰 10 · evolve 활동 10
+커밋한다고 올라가지 않고, "좋아지고 있나"에 직접 답한다.
 
 Stdout: {status, output:{metric_name, metric_value, breakdown}}
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import pathlib
-import re
 import sys
 
+HARNESS = (
+    pathlib.Path.home() / ".claude" / "skills" / "harness-report" / "bin" / "harness-report.py"
+)
 
-def count_qa_evidence_failures() -> int:
-    base = pathlib.Path.home() / "Programmer"
-    if not base.exists():
-        return 0
-    n = 0
-    try:
-        # Best effort: only check 01-comad / 06-comad_codex / direct subdirs of Programmer
-        for repo_root in (base / "01-comad", base / "06-comad_codex"):
-            if not repo_root.exists():
-                continue
-            for qa in repo_root.rglob(".qa-evidence.json"):
-                # Skip backups
-                if ".bak" in str(qa):
-                    continue
-                try:
-                    obj = json.loads(qa.read_text(encoding="utf-8"))
-                    verdict = (obj.get("verdict") or "").upper()
-                    if verdict and verdict != "PASS":
-                        n += 1
-                except (OSError, json.JSONDecodeError):
-                    pass
-    except OSError:
-        pass
-    return n
+
+def load_harness():
+    spec = importlib.util.spec_from_file_location("harness_report", HARNESS)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"harness-report 로드 실패: {HARNESS}")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["harness_report"] = mod
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def main() -> int:
-    payload = json.loads(sys.stdin.read() or "{}")
-    loopy = pathlib.Path(payload.get("loopy_dir",
-                                     str(pathlib.Path.home() / ".comad/loopy-era")))
-    pending_dir = loopy / "pending"
-    pending_count = sum(1 for _ in pending_dir.glob("*.json")) if pending_dir.exists() else 0
+    json.loads(sys.stdin.read() or "{}")  # payload 는 쓰지 않지만 규약상 소비한다
 
-    seen_pat = re.compile(r"Seen\s+([2-9]|[1-9]\d+)\s*회")
-    # A pattern already promoted to a HARD hook ("승격 완료"/"승격됨") is enforced
-    # by that hook and is no longer an OPEN blocker. Excluding it keeps
-    # l6_blocker_count reachable to 0 — otherwise append-only feedback memory
-    # makes recurring permanent and the stopping_threshold unreachable.
-    # (Must stay identical to 03-self-improve-trigger.py.)
-    resolved_pat = re.compile(r"승격\s*완료|승격됨")
-    # Exclude patterns explicitly declared NON-promotable ("grep 비대상" /
-    # "패턴 아님") in their HARD 훅 후보 section — they have no grep-detectable
-    # signature, can never become a HARD hook, and would otherwise be permanent
-    # blockers. (Must stay identical to 03-self-improve-trigger.py.)
-    not_promotable_pat = re.compile(r"grep[^\n]*비대상|패턴\s*아님")
-    recurring_count = 0
-    mem_dir = pathlib.Path.home() / ".claude/projects"
-    if mem_dir.exists():
-        for fb in mem_dir.glob("*/memory/feedback_*.md"):
-            try:
-                text = fb.read_text(encoding="utf-8", errors="replace")
-            except OSError:
-                continue
-            if (seen_pat.search(text)
-                    and not resolved_pat.search(text)
-                    and not not_promotable_pat.search(text)):
-                recurring_count += 1
+    try:
+        hr = load_harness()
+        # measure() 는 results.tsv 에 쓰지 않는다 — 기록은 harness-report 자신의 몫
+        m = hr.measure(notes="loopy-era verify")
+        score = float(m["score"])
+        breakdown = {
+            "hard": f"{m['hard_count']}/{m['hard_target']}",
+            "pending": f"{m['pending_processed']}/{m['pending_total']}",
+            "recurring": m["recurring"],
+            "second_opinion": m["second_opinion"],
+            "evolve_applied": m["evolve_applied"],
+        }
+    except Exception as e:  # 측정 실패를 0점으로 흘리면 루프가 영원히 안 멈춘다 — 명시적으로 알린다
+        print(json.dumps({
+            "status": "error",
+            "summary": f"하네스 점수 측정 실패: {e}",
+        }, ensure_ascii=False))
+        return 1
 
-    qa_fail = count_qa_evidence_failures()
-
-    metric = pending_count + recurring_count + qa_fail
-    out = {
+    print(json.dumps({
         "status": "ok",
         "output": {
-            "metric_name": "l6_blocker_count",
-            "metric_value": metric,
-            "breakdown": {
-                "pending_count": pending_count,
-                "recurring_count": recurring_count,
-                "qa_evidence_failures": qa_fail,
-            },
+            "metric_name": "harness_score",
+            "metric_value": score,
+            "breakdown": breakdown,
         },
-        "summary": f"l6_blocker_count={metric} (p={pending_count} r={recurring_count} q={qa_fail})",
-    }
-    print(json.dumps(out, ensure_ascii=False))
+        "summary": f"harness_score={score} ({breakdown})",
+    }, ensure_ascii=False))
     return 0
 
 
