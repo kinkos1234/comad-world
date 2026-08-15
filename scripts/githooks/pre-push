@@ -8,5 +8,11 @@
 # COMAD_SKIP_PAGES_SYNC=1 or `git push --no-verify`.
 set -uo pipefail
 DIR="$(git rev-parse --show-toplevel 2>/dev/null)/scripts"
-[ -x "$DIR/check-pages-sync.sh" ] && exec "$DIR/check-pages-sync.sh"
-exit 0
+rc=0
+# 1) 시각 기준 — comad-world feature surface 가 페이지보다 새로우면 stale.
+[ -x "$DIR/check-pages-sync.sh" ] && { "$DIR/check-pages-sync.sh" || rc=1; }
+# 2) 개수 기준 — 가이드가 적어 둔 훅·스킬·규칙 수가 실측과 다르면 stale.
+#    (1) 은 comad-world 커밋만 보므로 ~/.claude 쪽 증가를 못 잡는다. 2026-06~08 에
+#    랜딩이 두 달 멈춰 있었는데도 (1) 은 계속 통과했다 — 그 구멍을 (2) 가 메운다.
+[ -x "$DIR/check-pages-counts.sh" ] && { "$DIR/check-pages-counts.sh" || rc=1; }
+exit "$rc" 
