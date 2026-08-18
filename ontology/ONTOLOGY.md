@@ -21,7 +21,7 @@ FastCampus "온톨로지 기반 AI 에이전트 구축" 커리큘럼 P2 상당 (
 | `rule` | `~/.claude/rules/*.md` | 승격된 HARD 규칙 |
 | `decision` | `~/.claude/.comad/decisions/*.json` + `_resolved/` | HITL 결정큐 |
 | `script` | cron 커맨드가 가리키는 skill/hook 밖 파일 | .sh/.py/.mjs/.js/.ts — 크론 커버리지용 |
-| `client` / `deliverable` | `~/.claude/.comad/ontology/deliverables.json` | **납품 축 (Phase 4)** — 프라이빗 SoT, 레포 미커밋. 링크: `delivered_to`·`bundles`(계보)·`governed_by` |
+| `client` / `deliverable` / `product` | `~/.claude/.comad/ontology/deliverables.json` | **납품 축 (Phase 4)** — 프라이빗 SoT, 레포 미커밋. 링크: `delivered_to`·`bundles`(계보)·`governed_by`·`instance_of`(기능 원형) |
 
 ## 링크 타입 (v0.1, 3종)
 - `references` — 메모리 본문의 `[[wikilink]]` (하이픈/언더스코어 정규화)
@@ -70,6 +70,10 @@ onto.py act <id> [args] [--yes]  # 액션 디스패치 (effect/approval 강제 +
 "내부 컴포넌트 수정 시 영향받는 납품물"(bundles 역질의, select-shop-kit↔skill:sales 실사례) ·
 "후속 대기 납품물"(state=awaiting-followup). 신규 납품 시 deliverables.json 에 항목 추가 →
 재빌드. memory 대상은 -/_ 정규화로 리졸브된다.
+**같은 기능을 여러 의뢰인에게 납품하는 패턴**(사용자 교정 2026-08-18): deliverable 에
+`product: <원형-slug>` 를 달면 `product:` 객체와 `instance_of` 링크가 자동 생성된다 —
+"이 기능 쓰는 의뢰인 전부" = `show product:<slug>`. 실례: slot-machine 원형 ←
+sig-slot-machine(슬롯 의뢰인) · sig-hunter(헌터 의뢰인, 데스 단일테마 사본).
 
 ## 운영
 - 재빌드: 수동 `onto.py build` / `act sys.ontology.build` + **nightly-audit 이 매일 자동 재빌드** (2026-08-18 편입)

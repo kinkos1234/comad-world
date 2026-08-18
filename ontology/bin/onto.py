@@ -241,6 +241,12 @@ def scan_deliverables(add, objs):
             DELIVERABLES_JSON, body, state=dv.get("state", ""), client=dv.get("client") or "")
         if dv.get("client"):
             links.append((oid, f"client:{dv['client']}", "delivered_to", dv.get("state", "")))
+        if dv.get("product"):  # 기능 원형 — 의뢰인별 다중 납품을 한 product 로 묶는다
+            pid = f"product:{dv['product']}"
+            if pid not in objs:
+                add("product", dv["product"], dv["product"],
+                    "기능 원형 — 의뢰인별 납품 인스턴스의 공통 조상", DELIVERABLES_JSON, "")
+            links.append((oid, pid, "instance_of", "deliverables.json"))
         for lt, key in (("bundles", "bundles"), ("governed_by", "governed_by")):
             for t in dv.get(key, []):
                 rt_ = resolve_target(t)
