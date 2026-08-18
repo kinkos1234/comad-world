@@ -21,6 +21,7 @@ FastCampus "온톨로지 기반 AI 에이전트 구축" 커리큘럼 P2 상당 (
 | `rule` | `~/.claude/rules/*.md` | 승격된 HARD 규칙 |
 | `decision` | `~/.claude/.comad/decisions/*.json` + `_resolved/` | HITL 결정큐 |
 | `script` | cron 커맨드가 가리키는 skill/hook 밖 파일 | .sh/.py/.mjs/.js/.ts — 크론 커버리지용 |
+| `client` / `deliverable` | `~/.claude/.comad/ontology/deliverables.json` | **납품 축 (Phase 4)** — 프라이빗 SoT, 레포 미커밋. 링크: `delivered_to`·`bundles`(계보)·`governed_by` |
 
 ## 링크 타입 (v0.1, 3종)
 - `references` — 메모리 본문의 `[[wikilink]]` (하이픈/언더스코어 정규화)
@@ -62,6 +63,13 @@ onto.py act <id> [args] [--yes]  # 액션 디스패치 (effect/approval 강제 +
   연방 라우팅(운영=레지스트리 · 기사/claim=brain MCP · 행 상세=액션) → 변경은 카탈로그 경유.
 - **brain(Neo4j) 은 레지스트리에 흡수하지 않는다** — 기사·claim 그래프는 다른 세계.
   에이전트 레벨에서 `mcp__knowledge__comad_brain_*` 로 연방 질의한다.
+
+## 납품 축 (Phase 4, 2026-08-18)
+프리랜서 납품 유닛을 1급 객체로: 고객 6·납품물 12 시딩(프로젝트 메모리 기반, 실명 미기록 고객은
+역할 라벨만 — 추측 금지). 핵심 질의 3종 검증됨 — "고객 X 에게 나간 것 전부"(delivered_to 역링크) ·
+"내부 컴포넌트 수정 시 영향받는 납품물"(bundles 역질의, select-shop-kit↔skill:sales 실사례) ·
+"후속 대기 납품물"(state=awaiting-followup). 신규 납품 시 deliverables.json 에 항목 추가 →
+재빌드. memory 대상은 -/_ 정규화로 리졸브된다.
 
 ## 운영
 - 재빌드: 수동 `onto.py build` / `act sys.ontology.build` + **nightly-audit 이 매일 자동 재빌드** (2026-08-18 편입)

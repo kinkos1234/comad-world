@@ -16,6 +16,7 @@ RULE_DIR = f"{HOME}/.claude/rules"
 DEC_DIR = f"{HOME}/.claude/.comad/decisions"
 DB_DIR = f"{HOME}/.claude/.comad/ontology"
 DB = f"{DB_DIR}/registry.db"
+DELIVERABLES_JSON = f"{DB_DIR}/deliverables.json"
 AUDIT = f"{DB_DIR}/audit.jsonl"
 ACTIONS_JSON = os.path.normpath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "actions.json"))
@@ -203,7 +204,54 @@ def scan(with_shop=True):
             domain=a.get("domain", ""), effect=a["effect"], approval=a["approval"])
 
     extra_links = scan_shop(add) if with_shop else []
+    extra_links += scan_deliverables(add, objs)
     return objs, bodies, extra_links
+
+
+def scan_deliverables(add, objs):
+    """납품 축 (Phase 4) — 프라이빗 SoT deliverables.json 의 client/deliverable 를 적재.
+    링크: delivered_to(납품물→고객) · bundles(납품물→내부 컴포넌트 계보) ·
+    governed_by(납품물→적용 규칙). bundles/governed_by 대상이 레지스트리에 없으면 경고."""
+    try:
+        with open(DELIVERABLES_JSON, encoding="utf-8") as f:
+            d = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[deliv] deliverables.json 없음/파손 — 스킵: {e}", file=sys.stderr)
+        return []
+    # memory 대상은 -/_ 정규화로 리졸브 (frontmatter name 이 파일명과 다른 경우)
+    norm = {o["id"].replace("-", "_").lower(): o["id"] for o in objs.values()}
+
+    def resolve_target(t):
+        if t in objs:
+            return t
+        return norm.get(t.replace("-", "_").lower())
+
+    links, missing = [], []
+    for c in d.get("clients", []):
+        body = json.dumps(c, ensure_ascii=False)
+        add("client", c["id"], c.get("label", c["id"]),
+            f"{c.get('channel', '')} {c.get('note', '')}".strip(),
+            DELIVERABLES_JSON, body)
+    for dv in d.get("deliverables", []):
+        oid = f"deliverable:{dv['id']}"
+        body = json.dumps(dv, ensure_ascii=False)
+        st = f"[{dv.get('state', '?')}·{dv.get('version', '') or '-'}]"
+        add("deliverable", dv["id"], dv.get("title", dv["id"]),
+            f"{st} {dv.get('url', '')} {dv.get('note', '')}".strip(),
+            DELIVERABLES_JSON, body, state=dv.get("state", ""), client=dv.get("client") or "")
+        if dv.get("client"):
+            links.append((oid, f"client:{dv['client']}", "delivered_to", dv.get("state", "")))
+        for lt, key in (("bundles", "bundles"), ("governed_by", "governed_by")):
+            for t in dv.get(key, []):
+                rt_ = resolve_target(t)
+                if rt_ or t.startswith(("client:", "deliverable:")):
+                    links.append((oid, rt_ or t, lt, "deliverables.json"))
+                else:
+                    missing.append(f"{oid} -{lt}-> {t}")
+    if missing:
+        print(f"[deliv] 미등록 대상 {len(missing)}건: " + "; ".join(missing[:5]), file=sys.stderr)
+    print(f"[deliv] client {len(d.get('clients', []))} · deliverable {len(d.get('deliverables', []))} · 링크 {len(links)}")
+    return links
 
 
 def scan_shop(add):

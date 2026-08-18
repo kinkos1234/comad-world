@@ -19,7 +19,13 @@ sqlite3 ~/.claude/.comad/ontology/registry.db "SELECT v FROM meta WHERE k='built
 2. `show <slug>` — 객체 상세 + in/out 링크. 모호하면 후보 목록이 나옴 → id 로 재질의
 3. `links <slug> --depth 2` — 이웃 그래프 BFS ("걸린 것 전부"는 이걸로)
 
-객체 id 체계: `type:slug` — memory/skill/agent/cron/hook/rule/decision/action + shop-brand/shop-vendor/shop-product/shop-po
+객체 id 체계: `type:slug` — memory/skill/agent/cron/hook/rule/decision/action/script + shop-* + **client/deliverable(납품 축)**
+
+## 1b. 납품 축 질의 (프리랜서 유닛)
+- "고객 X 에게 나간 것 전부" → `show client:<id>` (delivered_to 역링크)
+- "이 스킬/스크립트 고치면 영향받는 납품물" → links 의 `bundles` 역링크
+- "후속 대기 중" → `search --type deliverable awaiting` 또는 sqlite `json_extract(extra,'$.state')`
+- 신규 납품·상태 변경은 SoT `~/.claude/.comad/ontology/deliverables.json` 편집 → `build` (고객 실명은 파일에만, 레포·공개 문서에 올리지 않는다)
 
 ## 2. 연방 라우팅 — 어느 저장소에 물을 것인가
 - **운영 도메인** (스킬·크론·훅·메모리·결정·규칙·액션·OFFCUT 관계) → 이 레지스트리
