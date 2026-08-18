@@ -31,15 +31,25 @@ FastCampus "온톨로지 기반 AI 에이전트 구축" 커리큘럼 P2 상당 (
 - 코드: `comad-world/ontology/bin/onto.py` (python3 stdlib only)
 - DB: `~/.claude/.comad/ontology/registry.db` (SQLite + FTS5, 미커밋 상태 파일)
 
+## Kinetic 층 — 액션 카탈로그 (Phase 2, 2026-08-18)
+`ontology/actions.json` 이 단일 진실원. 액션 = 8번째 객체 타입(`action:`)으로 레지스트리에 적재된다.
+
+- **effect**: `read`(즉시 실행) / `write` / `destructive`
+- **approval**: `none` / `confirm`(`--yes` 필요) / `hitl`(결정큐에 승인요청 생성, 직접 실행 안 함) / `gate`(전용 훅이 강제 — 카탈로그는 문서화, 디스패처는 실행 거부)
+- **링크**: `executes`(액션→실행 스크립트가 속한 skill/hook) · `gated_by`(액션→강제 훅)
+- **감사로그**: 모든 디스패치 시도(차단 포함)가 `~/.claude/.comad/ontology/audit.jsonl` 에 append
+- 에이전트 계약: 상태 변경은 카탈로그 액션 경유가 원칙 — 임의 스크립트 직접 호출은 카탈로그 등재 후
+
 ## CLI
 ```
-onto.py build            # 전 소스 스캔 → 레지스트리 재빌드
-onto.py stats            # 타입별 객체/링크 수
-onto.py search <q>       # FTS 전문 검색 [--type T]
-onto.py show <slug>      # 객체 상세 + in/out 링크
-onto.py links <slug>     # 링크 그래프 BFS [--depth N]
+onto.py build              # 전 소스 스캔 → 레지스트리 재빌드
+onto.py stats              # 타입별 객체/링크 수
+onto.py search <q>         # FTS 전문 검색 [--type T]
+onto.py show <slug>        # 객체 상세 + in/out 링크
+onto.py links <slug>       # 링크 그래프 BFS [--depth N]
+onto.py actions [domain]   # 액션 카탈로그 목록
+onto.py act <id> [args] [--yes]  # 액션 디스패치 (effect/approval 강제 + 감사로그)
 ```
 
 ## 다음 페이즈
-- Phase 2 (Kinetic): 액션 카탈로그 — 훅·스크립트를 타입드 액션으로 선언, 승인필요 액션은 결정큐 연결
-- Phase 3 (Agent): 크로스도메인 질의 에이전트 + brain/Notion(OFFCUT) 소스 연결
+- Phase 3 (Agent): 크로스도메인 질의 에이전트 + brain(Neo4j)·OFFCUT(Notion) 소스 연결

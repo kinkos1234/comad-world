@@ -1,0 +1,100 @@
+{
+  "_doc": "comad 액션 카탈로그 v0.1 (Kinetic 층). effect: read|write|destructive. approval: none(즉시)|confirm(--yes 필요)|hitl(결정큐 생성, 직접 실행 안 함)|gate(전용 훅이 강제, 카탈로그는 문서화). executor null = 수동/게이트 전용.",
+  "actions": [
+    {
+      "id": "shop.product.find", "title": "상품 검색 (SKU·이름)", "domain": "shop",
+      "targets": ["notion:상품·재고"], "effect": "read", "approval": "none",
+      "executor": ["python3", "~/.claude/skills/sales/scripts/notion_sales.py", "find-product"],
+      "args": "<검색어>"
+    },
+    {
+      "id": "shop.product.add", "title": "상품 등록 (+qty 시 사입입고 자동)", "domain": "shop",
+      "targets": ["notion:상품·재고", "notion:재고이동"], "effect": "write", "approval": "confirm",
+      "executor": ["python3", "~/.claude/skills/sales/scripts/notion_sales.py", "add-product"],
+      "args": "<입력.json>"
+    },
+    {
+      "id": "shop.stock.move", "title": "재고이동 기록 (append-only 원장)", "domain": "shop",
+      "targets": ["notion:재고이동"], "effect": "write", "approval": "confirm",
+      "executor": ["python3", "~/.claude/skills/sales/scripts/notion_sales.py", "add-move"],
+      "args": "<입력.json>", "audit": "원장 자체가 append-only 감사로그"
+    },
+    {
+      "id": "shop.stock.restock", "title": "사입입고 (재고이동 생성)", "domain": "shop",
+      "targets": ["notion:재고이동"], "effect": "write", "approval": "confirm",
+      "executor": ["python3", "~/.claude/skills/sales/scripts/notion_sales.py", "restock"],
+      "args": "<product_page_id> <추가수량> [단가]"
+    },
+    {
+      "id": "shop.sale.add", "title": "매출 기록 (원가 스냅샷·멱등키)", "domain": "shop",
+      "targets": ["notion:매출대장"], "effect": "write", "approval": "confirm",
+      "executor": ["python3", "~/.claude/skills/sales/scripts/notion_sales.py", "add-sale"],
+      "args": "<입력.json>",
+      "idempotency": "input_key = dc:<discord_msg_id> | csv:<sha8>:<행> — 중복 자동 스킵"
+    },
+    {
+      "id": "shop.orders.existing", "title": "기존 주문 조회", "domain": "shop",
+      "targets": ["notion:주문"], "effect": "read", "approval": "none",
+      "executor": ["python3", "~/.claude/skills/sales/scripts/notion_sales.py", "existing-orders"],
+      "args": "[일수=90]"
+    },
+    {
+      "id": "shop.sales.range", "title": "기간 매출 조회", "domain": "shop",
+      "targets": ["notion:매출대장"], "effect": "read", "approval": "none",
+      "executor": ["python3", "~/.claude/skills/sales/scripts/notion_sales.py", "sales-range"],
+      "args": "<YYYY-MM-DD> <YYYY-MM-DD>"
+    },
+    {
+      "id": "shop.brief", "title": "아침 브리핑 생성 (텍스트만, 전송 없음)", "domain": "shop",
+      "targets": ["notion:*"], "effect": "read", "approval": "none",
+      "executor": ["python3", "~/.claude/skills/shop-report/scripts/shop_brief.py", "brief"]
+    },
+    {
+      "id": "shop.closeout", "title": "마감 리포트 생성 (텍스트만, 전송 없음)", "domain": "shop",
+      "targets": ["notion:*"], "effect": "read", "approval": "none",
+      "executor": ["python3", "~/.claude/skills/shop-report/scripts/shop_brief.py", "closeout"]
+    },
+    {
+      "id": "sys.decision.list", "title": "결정큐 조회", "domain": "system",
+      "targets": ["decision"], "effect": "read", "approval": "none",
+      "executor": ["python3", "~/.claude/hooks/lib/decisions.py", "list"]
+    },
+    {
+      "id": "sys.decision.add", "title": "결정큐 항목 생성 (HITL 채널)", "domain": "system",
+      "targets": ["decision"], "effect": "write", "approval": "none",
+      "executor": ["python3", "~/.claude/hooks/lib/decisions.py", "add"],
+      "args": "--source S --title T [--detail D --urgency U --option O...]",
+      "note": "쓰기지만 approval=none — 이 액션 자체가 승인을 '요청'하는 채널이라 자기승인 불요"
+    },
+    {
+      "id": "sys.decision.resolve", "title": "결정큐 항목 해소", "domain": "system",
+      "targets": ["decision"], "effect": "write", "approval": "confirm",
+      "executor": ["python3", "~/.claude/hooks/lib/decisions.py", "resolve"],
+      "args": "<id> [메모]"
+    },
+    {
+      "id": "sys.discord.post", "title": "comad 채널 봇 메시지 전송", "domain": "system",
+      "targets": ["discord:1484388701030060093"], "effect": "write", "approval": "confirm",
+      "executor": ["/Users/jhkim/Programmer/01-comad/comad-world/loopy-era/bin/discord-post.sh"],
+      "args": "<text>", "note": "외부 유출 경로 — untrusted-content-egress 규칙 적용 대상"
+    },
+    {
+      "id": "sys.ontology.build", "title": "온톨로지 레지스트리 재빌드", "domain": "system",
+      "targets": ["*"], "effect": "write", "approval": "none",
+      "executor": ["python3", "/Users/jhkim/Programmer/01-comad/comad-world/ontology/bin/onto.py", "build"],
+      "note": "DB 는 캐시라 쓰기지만 무해·멱등 — approval=none"
+    },
+    {
+      "id": "sys.fs.destroy", "title": "파괴적 파일·저장소 연산 (rm -rf, git reset --hard, DROP …)", "domain": "system",
+      "targets": ["*"], "effect": "destructive", "approval": "gate", "executor": null,
+      "gated_by": ["hook:pre-tool-use/destroy-gate"],
+      "note": "직접 실행 전용. 훅이 차단 시 approve-destroy.<sha256(cmd)[:16]> 터치로 명령 단위 승인"
+    },
+    {
+      "id": "sys.git.push", "title": "git push (QA·구조 게이트 경유)", "domain": "system",
+      "targets": ["repo:*"], "effect": "write", "approval": "gate", "executor": null,
+      "gated_by": ["hook:pre-tool-use/qa-gate-before-push", "hook:pre-tool-use/push-structural-gate", "hook:pre-tool-use/no-env-commit"],
+      "note": "UI 변경 시 .qa-evidence.json verdict=PASS 필요"
+    }
+  ]
+}

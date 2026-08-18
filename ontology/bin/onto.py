@@ -16,6 +16,9 @@ RULE_DIR = f"{HOME}/.claude/rules"
 DEC_DIR = f"{HOME}/.claude/.comad/decisions"
 DB_DIR = f"{HOME}/.claude/.comad/ontology"
 DB = f"{DB_DIR}/registry.db"
+AUDIT = f"{DB_DIR}/audit.jsonl"
+ACTIONS_JSON = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "actions.json"))
 HOOK_EVENTS = ["pre-tool-use", "post-tool-use", "stop", "user-prompt-submit"]
 BODY_CAP = 100_000
 
@@ -172,7 +175,23 @@ def scan():
                 f"[{status}·{dec.get('urgency','?')}] {dec.get('detail','')[:200]}",
                 path, body, status=status, source=dec.get("source", ""))
 
+    # action (카탈로그 — Kinetic 층)
+    for a in load_actions():
+        exe = " ".join(a.get("executor") or ["(manual)"])
+        add("action", a["id"], a["title"],
+            f"[{a['effect']}·{a['approval']}] {exe} {a.get('args', '')}".strip(),
+            ACTIONS_JSON, json.dumps(a, ensure_ascii=False),
+            domain=a.get("domain", ""), effect=a["effect"], approval=a["approval"])
+
     return objs, bodies
+
+
+def load_actions():
+    try:
+        with open(ACTIONS_JSON, encoding="utf-8") as f:
+            return json.load(f)["actions"]
+    except (OSError, json.JSONDecodeError, KeyError):
+        return []
 
 
 WIKILINK = re.compile(r"\[\[([A-Za-z0-9_-]+)\]\]")
@@ -229,6 +248,23 @@ def extract_links(objs, bodies):
                     if tok.startswith(sd):
                         links.append((o["id"], sid, "runs", tok))
                         break
+
+    # action 링크 — executes(실행 스크립트가 속한 skill/hook) · gated_by(강제 훅)
+    for o in objs.values():
+        if o["type"] != "action":
+            continue
+        a = json.loads(bodies[o["id"]])
+        for h in a.get("gated_by", []):
+            if h in objs:
+                links.append((o["id"], h, "gated_by", "actions.json"))
+        for tok in (a.get("executor") or []):
+            tok = os.path.expanduser(tok.replace("$HOME", HOME))
+            if tok in hook_paths:
+                links.append((o["id"], hook_paths[tok], "executes", tok))
+            for sd, sid in skill_dirs.items():
+                if tok.startswith(sd):
+                    links.append((o["id"], sid, "executes", tok))
+                    break
 
     # dedupe (src,dst,type)
     seen, out = set(), []
@@ -370,10 +406,58 @@ def links_bfs(key, depth):
             frontier.append((nxt, lv + 1))
 
 
+def audit_log(action_id, args, result):
+    os.makedirs(DB_DIR, exist_ok=True)
+    with open(AUDIT, "a", encoding="utf-8") as f:
+        f.write(json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                            "action": action_id, "args": args, "result": result},
+                           ensure_ascii=False) + "\n")
+
+
+def actions_cmd(domain=None):
+    for a in load_actions():
+        if domain and a.get("domain") != domain:
+            continue
+        tag = f"{a['effect']}·{a['approval']}"
+        print(f"{a['id']:24} [{tag:18}] {a['title']}")
+
+
+def act(action_id, extra_args, yes=False):
+    """카탈로그 액션 디스패처 — effect/approval 을 강제하고 전 시도를 감사로그에 남긴다."""
+    acts = {a["id"]: a for a in load_actions()}
+    if action_id not in acts:
+        sys.exit(f"카탈로그에 없는 액션: {action_id} — `onto.py actions` 로 확인")
+    a = acts[action_id]
+    if a["approval"] == "gate" or not a.get("executor"):
+        audit_log(action_id, extra_args, "manual-only")
+        sys.exit(f"[gate] 문서화 전용 액션 — 직접 실행하고 게이트 훅"
+                 f"({', '.join(a.get('gated_by', []))})을 통과할 것")
+    if a["approval"] == "hitl":
+        import subprocess
+        r = subprocess.run(["python3", f"{HOME}/.claude/hooks/lib/decisions.py", "add",
+                            "--source", "ontology-act", "--title", f"승인 요청: {a['title']}",
+                            "--detail", f"action={action_id} args={extra_args}"],
+                           capture_output=True, text=True)
+        audit_log(action_id, extra_args, "hitl-queued")
+        sys.exit(f"[hitl] 결정큐에 승인 요청 생성됨 — 실행 안 함\n{r.stdout}")
+    if a["effect"] != "read" and a["approval"] == "confirm" and not yes:
+        audit_log(action_id, extra_args, "blocked-no-confirm")
+        sys.exit(f"[confirm] 쓰기 액션 (대상 {a.get('targets')}) — --yes 붙여 재실행")
+    import subprocess
+    cmd = [os.path.expanduser(t.replace("$HOME", HOME)) for t in a["executor"]] + extra_args
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    audit_log(action_id, extra_args, f"exit={r.returncode}")
+    if r.stdout:
+        print(r.stdout, end="")
+    if r.stderr:
+        print(r.stderr, file=sys.stderr, end="")
+    sys.exit(r.returncode)
+
+
 def main():
     args = sys.argv[1:]
     if not args:
-        sys.exit(__doc__ + "\nusage: onto.py build|stats|search <q> [--type T]|show <slug>|links <slug> [--depth N]")
+        sys.exit(__doc__ + "\nusage: onto.py build|stats|search|show|links|actions [domain]|act <id> [args] [--yes]")
     cmd = args[0]
     if cmd == "build":
         build()
@@ -385,6 +469,12 @@ def main():
         search(q, otype)
     elif cmd == "show":
         show(args[1])
+    elif cmd == "actions":
+        actions_cmd(args[1] if len(args) > 1 else None)
+    elif cmd == "act":
+        yes = "--yes" in args
+        rest = [a for a in args[2:] if a != "--yes"]
+        act(args[1], rest, yes)
     elif cmd == "links":
         depth = int(args[args.index("--depth") + 1]) if "--depth" in args else 2
         links_bfs(args[1], depth)
