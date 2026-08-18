@@ -63,7 +63,7 @@ PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단
 - comad-world 레포(~/Programmer/01-comad/comad-world): 미커밋 변경·실패 흔적·최근 커밋 이상
 - launchd cron 건강: ~/.comad/loopy-era/logs/ 와 brain/ear 로그에 반복 에러/미발화
 - 백로그: dream(~/.claude/.comad-sleep-state.json)·pending 신호(~/.claude/.comad/pending)·decisions 큐 누적
-- loopy-era state.json: metric 정체/이상
+- loopy-era state.json: metric 정체/이상. **주의: harness score 는 2026-08-16 에 v2(결과 중심)로 전환됨 — 그 시점의 90→34 급락은 채점식 교체이지 회귀가 아니다(2026-08-18 규명 완료, results.tsv 의 score_v1 이 옛 활동량 점수). score 와 score_v1 을 섞어 비교하지 말 것.**
 - 공개 페이지 동기화(doc-drift): comad-world 에서 'bash scripts/check-pages-sync.sh' 실행(timestamp 비교, push 아님). 'stale' 뜨면 — 사용자-노출 feature/version/README 변경이면 결정으로, 단순 내부 plumbing fix 누적이면 스킵(판단).
 - codex CLI 건강 (doctor 실패 항목): $CODEX_HEALTH
 - HARD 훅 ROI (~/.claude/.comad/hook-fires.tsv): 승격 4주+ 지난 훅이 발화 0회면서 해당 실수가 커밋에 재발했으면 '패턴 수정 필요' 결정으로. 발화 0 + 재발 0 은 성공(보고 불요).
