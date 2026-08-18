@@ -20,6 +20,8 @@ AUDIT = f"{DB_DIR}/audit.jsonl"
 ACTIONS_JSON = os.path.normpath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "actions.json"))
 HOOK_EVENTS = ["pre-tool-use", "post-tool-use", "stop", "user-prompt-submit"]
+SHOP_DBS = {"brands": "shop-brand", "vendors": "shop-vendor",
+            "products": "shop-product", "po": "shop-po"}
 BODY_CAP = 100_000
 
 
@@ -50,8 +52,8 @@ def frontmatter(text):
     return fm
 
 
-def scan():
-    """전 소스를 스캔해 (objects, bodies) 를 돌려준다."""
+def scan(with_shop=True):
+    """전 소스를 스캔해 (objects, bodies, extra_links) 를 돌려준다."""
     objs = {}   # id -> dict
     bodies = {} # id -> full text (링크 추출·FTS 용)
 
@@ -183,7 +185,61 @@ def scan():
             ACTIONS_JSON, json.dumps(a, ensure_ascii=False),
             domain=a.get("domain", ""), effect=a["effect"], approval=a["approval"])
 
-    return objs, bodies
+    extra_links = scan_shop(add) if with_shop else []
+    return objs, bodies, extra_links
+
+
+def scan_shop(add):
+    """OFFCUT Notion 4 DB (브랜드·거래처·상품·PO) — relation 을 링크로 추출.
+    네트워크·토큰 실패 시 경고만 내고 스킵한다 (오프라인 빌드 허용)."""
+    try:
+        sys.path.insert(0, f"{HOME}/.claude/skills/sales/scripts")
+        import notion_sales as ns
+    except Exception as e:
+        print(f"[shop] notion helper 로드 실패 — 스킵: {e}", file=sys.stderr)
+        return []
+    page_map, rel_rows, seen = {}, [], {}
+    for key, otype in SHOP_DBS.items():
+        try:
+            rows = ns.query_all(ns.DB[key])
+        except Exception as e:
+            print(f"[shop] {key} 조회 실패 — 스킵: {e}", file=sys.stderr)
+            continue
+        for pg in rows:
+            title, flat, rels = "", {}, []
+            for name, pr in pg["properties"].items():
+                try:
+                    if pr["type"] == "title":
+                        title = ns.plain(pr)
+                    elif pr["type"] == "relation":
+                        rels.append((name, [r["id"] for r in pr["relation"]]))
+                    else:
+                        v = ns.plain(pr)
+                        if v not in (None, "", []):
+                            flat[name] = v
+                except Exception:
+                    pass
+            if not title:
+                continue
+            slug = title
+            n = seen.get((otype, slug), 0)
+            seen[(otype, slug)] = n + 1
+            if n:  # 동명 행 (옵션 분리 등) — 접미사로 유일화
+                slug = f"{title} #{n + 1}"
+            oid = f"{otype}:{slug}"
+            page_map[pg["id"]] = oid
+            body = json.dumps(flat, ensure_ascii=False)
+            add(otype, slug, title, body[:250], "", body, notion_id=pg["id"])
+            rel_rows.append((oid, rels))
+    links = []
+    for oid, rels in rel_rows:
+        for name, ids in rels:
+            for rid in ids:
+                dst = page_map.get(rid)
+                if dst and dst != oid:
+                    links.append((oid, dst, "relates", name))
+    print(f"[shop] {sum(1 for k in seen)}종 {len(page_map)}행, relation {len(links)}건")
+    return links
 
 
 def load_actions():
@@ -197,8 +253,8 @@ def load_actions():
 WIKILINK = re.compile(r"\[\[([A-Za-z0-9_-]+)\]\]")
 
 
-def extract_links(objs, bodies):
-    links = []  # (src, dst, type, evidence)
+def extract_links(objs, bodies, seed=None):
+    links = list(seed or [])  # (src, dst, type, evidence)
     mem_by_slug = {o["slug"]: o["id"] for o in objs.values() if o["type"] == "memory"}
     mem_norm = {s.replace("-", "_"): i for s, i in mem_by_slug.items()}
 
@@ -278,8 +334,8 @@ def extract_links(objs, bodies):
 
 def build():
     os.makedirs(DB_DIR, exist_ok=True)
-    objs, bodies = scan()
-    links = extract_links(objs, bodies)
+    objs, bodies, extra = scan(with_shop="--no-shop" not in sys.argv)
+    links = extract_links(objs, bodies, seed=extra)
     con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.executescript("""

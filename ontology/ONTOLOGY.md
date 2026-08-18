@@ -51,5 +51,17 @@ onto.py actions [domain]   # 액션 카탈로그 목록
 onto.py act <id> [args] [--yes]  # 액션 디스패치 (effect/approval 강제 + 감사로그)
 ```
 
-## 다음 페이즈
-- Phase 3 (Agent): 크로스도메인 질의 에이전트 + brain(Neo4j)·OFFCUT(Notion) 소스 연결
+## Agent 층 — 질의 에이전트 + 소스 연방 (Phase 3, 2026-08-18)
+- **OFFCUT(Notion) 소스 연결**: `scan_shop()` 이 브랜드·거래처·상품·PO 4개 DB 를
+  `shop-*` 객체로 적재하고 Notion relation 을 `relates` 링크로 추출한다.
+  실패 시 경고 후 스킵 (오프라인 빌드는 `--no-shop`). 행 단위 집계(매출 합계 등)는
+  레지스트리가 아니라 카탈로그 read 액션으로 — 레지스트리는 관계 스냅샷만 든다.
+- **질의 에이전트 = `/onto` 스킬** (`~/.claude/skills/onto/`, 벤더 사본 `ontology/skill/`):
+  LLM 이 에이전트이고 스킬이 그 계약이다 — 신선도 확인 → search/show/links 플로우 →
+  연방 라우팅(운영=레지스트리 · 기사/claim=brain MCP · 행 상세=액션) → 변경은 카탈로그 경유.
+- **brain(Neo4j) 은 레지스트리에 흡수하지 않는다** — 기사·claim 그래프는 다른 세계.
+  에이전트 레벨에서 `mcp__knowledge__comad_brain_*` 로 연방 질의한다.
+
+## 운영
+- 재빌드: 수동 `onto.py build` 또는 `act sys.ontology.build`. (옵션: nightly-audit 편입 대기)
+- 감사로그: `~/.claude/.comad/ontology/audit.jsonl`
