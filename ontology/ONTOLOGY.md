@@ -74,6 +74,10 @@ onto.py act <id> [args] [--yes]  # 액션 디스패치 (effect/approval 강제 +
 `product: <원형-slug>` 를 달면 `product:` 객체와 `instance_of` 링크가 자동 생성된다 —
 "이 기능 쓰는 의뢰인 전부" = `show product:<slug>`. 실례: slot-machine 원형 ←
 sig-slot-machine(슬롯 의뢰인) · sig-hunter(헌터 의뢰인, 데스 단일테마 사본).
+**products[] 명시 선언**(전수 검토 2026-08-18): 아직 납품 안 된 영업 가능 유닛도 원형으로
+등록한다 — `{id, title, implemented_in(참조 구현 deliverable), sellable, note}` →
+`implemented_in` 링크. "영업 가능 유닛 목록" = `extra.sellable=1` 질의. one-k 처럼 한
+서비스 안의 기능 일부만 떼어 파는 경우가 이 경로다 (라이브 감지·게시판 미러·OCR 티어).
 
 ## 운영
 - 재빌드: 수동 `onto.py build` / `act sys.ontology.build` + **nightly-audit 이 매일 자동 재빌드** (2026-08-18 편입)

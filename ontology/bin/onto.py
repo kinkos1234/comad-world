@@ -254,6 +254,16 @@ def scan_deliverables(add, objs):
                     links.append((oid, rt_ or t, lt, "deliverables.json"))
                 else:
                     missing.append(f"{oid} -{lt}-> {t}")
+    # products[] — 명시 선언된 기능 원형 (deliverable.product 자동 생성과 병합)
+    for pr in d.get("products", []):
+        pid = f"product:{pr['id']}"
+        add("product", pr["id"], pr.get("title", pr["id"]),
+            f"{'[영업가능] ' if pr.get('sellable') else ''}{pr.get('note', '')}".strip(),
+            DELIVERABLES_JSON, json.dumps(pr, ensure_ascii=False),
+            sellable=bool(pr.get("sellable")))
+        impl = pr.get("implemented_in")
+        if impl:
+            links.append((pid, f"deliverable:{impl}", "implemented_in", "deliverables.json"))
     if missing:
         print(f"[deliv] 미등록 대상 {len(missing)}건: " + "; ".join(missing[:5]), file=sys.stderr)
     print(f"[deliv] client {len(d.get('clients', []))} · deliverable {len(d.get('deliverables', []))} · 링크 {len(links)}")

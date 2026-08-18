@@ -25,6 +25,7 @@ sqlite3 ~/.claude/.comad/ontology/registry.db "SELECT v FROM meta WHERE k='built
 - "고객 X 에게 나간 것 전부" → `show client:<id>` (delivered_to 역링크)
 - "이 스킬/스크립트 고치면 영향받는 납품물" → links 의 `bundles` 역링크
 - "이 기능 납품받은 의뢰인 전부" → `show product:<slug>` (instance_of 역링크 — 같은 원형의 의뢰인별 사본)
+- "외부 영업 가능한 유닛 전부" → sqlite `type='product' AND json_extract(extra,'$.sellable')=1`
 - "후속 대기 중" → `search --type deliverable awaiting` 또는 sqlite `json_extract(extra,'$.state')`
 - 신규 납품·상태 변경은 SoT `~/.claude/.comad/ontology/deliverables.json` 편집 → `build` (고객 실명은 파일에만, 레포·공개 문서에 올리지 않는다)
 
