@@ -20,6 +20,7 @@ FastCampus "온톨로지 기반 AI 에이전트 구축" 커리큘럼 P2 상당 (
 | `hook` | `~/.claude/hooks/<event>/*` | stem 단위 (sh+py 래퍼 묶음) |
 | `rule` | `~/.claude/rules/*.md` | 승격된 HARD 규칙 |
 | `decision` | `~/.claude/.comad/decisions/*.json` + `_resolved/` | HITL 결정큐 |
+| `script` | cron 커맨드가 가리키는 skill/hook 밖 파일 | .sh/.py/.mjs/.js/.ts — 크론 커버리지용 |
 
 ## 링크 타입 (v0.1, 3종)
 - `references` — 메모리 본문의 `[[wikilink]]` (하이픈/언더스코어 정규화)
@@ -63,5 +64,6 @@ onto.py act <id> [args] [--yes]  # 액션 디스패치 (effect/approval 강제 +
   에이전트 레벨에서 `mcp__knowledge__comad_brain_*` 로 연방 질의한다.
 
 ## 운영
-- 재빌드: 수동 `onto.py build` 또는 `act sys.ontology.build`. (옵션: nightly-audit 편입 대기)
+- 재빌드: 수동 `onto.py build` / `act sys.ontology.build` + **nightly-audit 이 매일 자동 재빌드** (2026-08-18 편입)
+- 액션 `forbid_args`: 선언된 금지 인자(예: cafe24.pull 의 `--apply`)는 디스패처가 차단하고 감사에 남긴다
 - 감사로그: `~/.claude/.comad/ontology/audit.jsonl`

@@ -130,6 +130,23 @@ def scan(with_shop=True):
             add("cron", slug, label, f"[{sched}] {cmd}"[:300], path, cmd,
                 schedule=sched, command=cmd)
 
+    # script — cron 커맨드가 가리키는 skill/hook 밖 스크립트 (레포 산개분)
+    for o in list(objs.values()):
+        if o["type"] != "cron":
+            continue
+        cmd = json.loads(o["extra"]).get("command", "") if o["extra"] else ""
+        for tok in cmd.split():
+            t = os.path.expanduser(tok.replace("$HOME", HOME))
+            if not (os.path.isfile(t) and os.path.splitext(t)[1] in (".sh", ".py", ".mjs", ".js", ".ts")):
+                continue
+            if t.startswith(SKILL_DIR) or t.startswith(HOOK_DIR):
+                continue
+            slug = os.path.basename(t)
+            prev = objs.get(f"script:{slug}")
+            if prev and prev["path"] != t:  # 동명 스크립트 — 부모 디렉터리로 유일화
+                slug = "/".join(t.split("/")[-2:])
+            add("script", slug, slug, t.replace(HOME, "~"), t, read(t))
+
     # hook (event 디렉터리, stem 단위로 sh/py 래퍼 묶음)
     for ev in HOOK_EVENTS:
         d = f"{HOOK_DIR}/{ev}"
@@ -291,6 +308,7 @@ def extract_links(objs, bodies, seed=None):
     skill_dirs = {f"{SKILL_DIR}/{o['slug']}/": o["id"]
                   for o in objs.values() if o["type"] == "skill"}
     hook_paths = {o["path"]: o["id"] for o in objs.values() if o["type"] == "hook"}
+    script_paths = {o["path"]: o["id"] for o in objs.values() if o["type"] == "script"}
     for o in objs.values():
         if o["type"] != "cron":
             continue
@@ -299,6 +317,8 @@ def extract_links(objs, bodies, seed=None):
             tok = tok.replace("$HOME", HOME).replace("~", HOME)
             if tok in hook_paths:
                 links.append((o["id"], hook_paths[tok], "runs", tok))
+            elif tok in script_paths:
+                links.append((o["id"], script_paths[tok], "runs", tok))
             else:
                 for sd, sid in skill_dirs.items():
                     if tok.startswith(sd):
@@ -488,6 +508,10 @@ def act(action_id, extra_args, yes=False):
         audit_log(action_id, extra_args, "manual-only")
         sys.exit(f"[gate] 문서화 전용 액션 — 직접 실행하고 게이트 훅"
                  f"({', '.join(a.get('gated_by', []))})을 통과할 것")
+    bad = [x for x in extra_args if x in (a.get("forbid_args") or [])]
+    if bad:
+        audit_log(action_id, extra_args, f"forbidden-args:{bad}")
+        sys.exit(f"[forbid] {bad} 는 이 액션에서 금지 — {a.get('note', '')}")
     if a["approval"] == "hitl":
         import subprocess
         r = subprocess.run(["python3", f"{HOME}/.claude/hooks/lib/decisions.py", "add",

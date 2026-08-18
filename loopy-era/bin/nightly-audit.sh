@@ -54,6 +54,9 @@ if command -v codex >/dev/null 2>&1; then
   CODEX_HEALTH="${CODEX_FAILS:-이상 없음}"
 fi
 
+# 온톨로지 레지스트리 야간 재빌드 — 실패해도 감사는 진행 (Notion 불가 시 스캐너가 자체 스킵)
+python3 "$HOME/Programmer/01-comad/comad-world/ontology/bin/onto.py" build 2>&1 | tail -1 || echo "[nightly] onto build 실패"
+
 PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단(결정)'이 필요한 항목만 골라 결정 큐에 올린다. raw 로그·단순 보고는 올리지 마라.
 
 점검 (간단히, ~5분):
