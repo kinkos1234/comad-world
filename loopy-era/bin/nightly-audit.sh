@@ -66,7 +66,7 @@ PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단
 - loopy-era state.json: metric 정체/이상. **주의: harness score 는 2026-08-16 에 v2(결과 중심)로 전환됨 — 그 시점의 90→34 급락은 채점식 교체이지 회귀가 아니다(2026-08-18 규명 완료, results.tsv 의 score_v1 이 옛 활동량 점수). score 와 score_v1 을 섞어 비교하지 말 것.**
 - 공개 페이지 동기화(doc-drift): comad-world 에서 'bash scripts/check-pages-sync.sh' 실행(timestamp 비교, push 아님). 'stale' 뜨면 — 사용자-노출 feature/version/README 변경이면 결정으로, 단순 내부 plumbing fix 누적이면 스킵(판단).
 - codex CLI 건강 (doctor 실패 항목): $CODEX_HEALTH
-- HARD 훅 ROI (~/.claude/.comad/hook-fires.tsv): 승격 4주+ 지난 훅이 발화 0회면서 해당 실수가 커밋에 재발했으면 '패턴 수정 필요' 결정으로. 발화 0 + 재발 0 은 성공(보고 불요).
+- HARD 훅 ROI (~/.claude/.comad/hook-fires.tsv): 승격 4주+ 지난 훅이 발화 0회면서 해당 실수가 커밋에 재발했으면 '패턴 수정 필요' 결정으로. 발화 0 + 재발 0 은 성공(보고 불요). **추가 관점(2026-08-19)**: 발화 0 이 오래 지속되는데 그 훅이 감시하는 행위 자체는 빈번하다면 — 성공이 아니라 기준이 느슨할 가능성도 판단하라 (예: claim-done informational 비율이 100%에 수렴하면 deploy 판정 패턴 재조정 결정으로). '항상 통과하는 게이트는 기준을 바꿔야 한다'.
 
 규칙:
 1. 진짜 '결정'(사람이 선택해야 하는 항목)만. 자동 해결 가능/사소하면 올리지 마라.
