@@ -66,7 +66,7 @@ PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단
 - loopy-era state.json: metric 정체/이상. **주의: harness score 는 2026-08-16 에 v2(결과 중심)로 전환됨 — 그 시점의 90→34 급락은 채점식 교체이지 회귀가 아니다(2026-08-18 규명 완료, results.tsv 의 score_v1 이 옛 활동량 점수). score 와 score_v1 을 섞어 비교하지 말 것.**
 - 공개 페이지 동기화(doc-drift): comad-world 에서 'bash scripts/check-pages-sync.sh' 실행(timestamp 비교, push 아님). 'stale' 뜨면 — 사용자-노출 feature/version/README 변경이면 결정으로, 단순 내부 plumbing fix 누적이면 스킵(판단).
 - codex CLI 건강 (doctor 실패 항목): $CODEX_HEALTH
-- threads-watch 게이트 캘리브레이션 (~/.claude/.comad/threads-watch/gate-log.jsonl): 6축 중 어떤 축이 늘 만점/늘 0점(변별력 상실)인지, 특정 등급으로만 쏠리는지 관찰. 죽은 축·치우친 임계는 '기준 재조정' 결정으로. (로그 20건+ 쌓였을 때만)
+- threads-watch 게이트 캘리브레이션 (~/.claude/.comad/threads-watch/gate-log.jsonl): **stage=llm_error(grade=skipped, scores=null) 행은 스코어러 품질이 아니라 LLM 가용성이므로 축 통계에서 제외**하고, 대신 그 비율이 한 런에서 30% 를 넘으면 'LLM 장애' 로 따로 보고한다 (2026-08-27: 장애 714건을 '전축 0점' 으로 읽어 변별력 상실로 오판했음). 나머지 llm 행에서 6축 중 어떤 축이 늘 만점/늘 0점(변별력 상실)인지, 특정 등급으로만 쏠리는지 관찰. 죽은 축·치우친 임계는 '기준 재조정' 결정으로. (로그 20건+ 쌓였을 때만)
 - HARD 훅 ROI (~/.claude/.comad/hook-fires.tsv): 승격 4주+ 지난 훅이 발화 0회면서 해당 실수가 커밋에 재발했으면 '패턴 수정 필요' 결정으로. 발화 0 + 재발 0 은 성공(보고 불요). **추가 관점(2026-08-19)**: 발화 0 이 오래 지속되는데 그 훅이 감시하는 행위 자체는 빈번하다면 — 성공이 아니라 기준이 느슨할 가능성도 판단하라 (예: claim-done informational 비율이 100%에 수렴하면 deploy 판정 패턴 재조정 결정으로). '항상 통과하는 게이트는 기준을 바꿔야 한다'.
 
 규칙:
