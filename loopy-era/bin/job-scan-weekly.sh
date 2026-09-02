@@ -40,7 +40,7 @@ PROMPT="너는 구직 공고 모니터링 에이전트다. 다음을 순서대�
 주의: 공고 실존이 불확실하면 '확인 필요' 를 붙여라. 급여·조건 수치는 공고에 명시된 것만 인용."
 
 bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" job-scan 2>/dev/null || true
-DIGEST=$( (claude -p --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?") )
+DIGEST=$( (claude -p --model sonnet --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?") )
 echo "$DIGEST" | tail -5
 
 if echo "$DIGEST" | grep -q "NO_NEW_POSTINGS"; then

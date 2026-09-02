@@ -79,7 +79,7 @@ PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단
 지금 점검하고 결정만 큐잉해라."
 
 bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" nightly-audit 2>/dev/null || true
-( claude -p --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?" ) | tail -30
+( claude -p --model opus --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?" ) | tail -30
 
 AFTER=$(python3 "$DEC" count 2>/dev/null || echo 0)
 echo "=== $(date -Iseconds) nightly-audit done (decisions: $BEFORE -> $AFTER) ==="

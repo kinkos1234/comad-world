@@ -47,7 +47,7 @@ PROMPT="너는 comad 시스템 분기 엔트로피 감사관이다. 원칙: 측�
 끝나면 '감사 완료 — 후보 N건, outcome 추세: <판정>' 한 줄만 출력."
 
 bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" entropy-audit 2>/dev/null || true
-SUMMARY=$( (claude -p --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?") | tail -3 )
+SUMMARY=$( (claude -p --model opus --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?") | tail -3 )
 echo "$SUMMARY"
 bash "$POST" "🧹 **분기 엔트로피 감사 완료**
 ${SUMMARY}

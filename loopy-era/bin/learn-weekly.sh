@@ -35,7 +35,7 @@ PROMPT="~/.claude/skills/comad-learn/SKILL.md 를 읽고 그 지침을 그대로
 - 끝나면 '처리 N건 / 승격 N건 / 기각 N건 / HARD후보 N건' 한 줄만 출력."
 
 bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" learn-weekly 2>/dev/null || true
-SUMMARY=$( (claude -p --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?") | tail -3 )
+SUMMARY=$( (claude -p --model opus --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?") | tail -3 )
 echo "$SUMMARY"
 bash "$POST" "📚 **주간 자가학습(learn-weekly) 완료** — pending ${COUNT}건 분석
 ${SUMMARY}" || echo "discord post failed"

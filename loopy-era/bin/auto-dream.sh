@@ -55,6 +55,6 @@ PROMPT="comad-sleep agent를 실행해 메모리를 정리해줘. dream_pending=
 # --dangerously-skip-permissions because hooks would otherwise block in headless context.
 TIMEOUT_MIN=15
 bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" auto-dream 2>/dev/null || true
-( claude -p --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?" ) | tail -50
+( claude -p --model sonnet --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?" ) | tail -50
 
 echo "=== $(date -Iseconds) auto-dream done ==="

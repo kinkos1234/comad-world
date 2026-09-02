@@ -35,7 +35,7 @@ for _nvm_bin in "$HOME"/.nvm/versions/node/*/bin; do
 done
 export PATH
 
-MODEL=""
+MODEL="${COMAD_LOOPY_MODEL:-sonnet}"   # 2026-09-02: 채점·분류·추출 워커 기본 sonnet. 상속 금지 — 인터랙티브 /model 이 크론을 흔들었음(7일간 sonnet-4-6/opus-4-7/fable-5 혼재).
 while (($#)); do
   case "$1" in
     --model) MODEL="$2"; shift 2 ;;

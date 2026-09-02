@@ -33,7 +33,7 @@ PROMPT="~/.claude/skills/comad-evolve/SKILL.md 를 읽고 그 지침대로 Phase
 - 끝나면 '분석 N건 / 적용 N건 / 기각 N건 / 결정큐 N건' 한 줄만 출력."
 
 bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" evolve-monthly 2>/dev/null || true
-SUMMARY=$( (claude -p --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?") | tail -3 )
+SUMMARY=$( (claude -p --model opus --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?") | tail -3 )
 echo "$SUMMARY"
 bash "$POST" "🧬 **월간 자가발전(evolve-monthly) 완료** — raw ${COUNT}건 처리
 ${SUMMARY}" || echo "discord post failed"
