@@ -92,7 +92,7 @@ ${content.slice(0, 4000)}
   try {
     writeFileSync(tmpFile, prompt);
 
-    const proc = Bun.spawn(["sh", "-c", `cat "${tmpFile}" | claude -p --model haiku`], {
+    const proc = Bun.spawn(["sh", "-c", `[ -f "$HOME/.claude-headless/ENABLED" ] && export CLAUDE_CONFIG_DIR="$HOME/.claude-headless"; cat "${tmpFile}" | claude -p --model haiku --disable-slash-commands --strict-mcp-config`], {
       stdout: "pipe",
       stderr: "pipe",
       env: { ...process.env, PATH: `${process.env.HOME}/.local/bin:${process.env.HOME}/.bun/bin:${process.env.PATH}` },

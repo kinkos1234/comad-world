@@ -43,7 +43,7 @@ async function synthesizeOllama(prompt: string): Promise<string | null> {
 
 async function synthesizeClaudeCLI(prompt: string, tmpFile: string): Promise<string> {
   writeFileSync(tmpFile, prompt);
-  const proc = Bun.spawn(["sh", "-c", `cat "${tmpFile}" | claude -p`], {
+  const proc = Bun.spawn(["sh", "-c", `[ -f "$HOME/.claude-headless/ENABLED" ] && export CLAUDE_CONFIG_DIR="$HOME/.claude-headless"; cat "${tmpFile}" | claude -p --disable-slash-commands --strict-mcp-config`], {
     stdout: "pipe",
     stderr: "pipe",
     env: { ...process.env, PATH: `${process.env.HOME}/.local/bin:${process.env.HOME}/.bun/bin:${process.env.PATH}` },

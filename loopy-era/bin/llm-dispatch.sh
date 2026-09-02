@@ -72,7 +72,11 @@ case "$PROVIDER" in
       echo "llm-dispatch: claude CLI not found" >&2
       exit 1
     fi
-    ARGS=(-p --dangerously-skip-permissions --output-format text)
+    # 2026-09-02 토큰 최적화: 순수 텍스트→텍스트 호출이라 스킬 목록(1M 모델 기준 최대 40,000자)·MCP 서버 로드가 불필요.
+    # 실측 세션당 ~15k 토큰 절감 + MCP 연결 지연(adobe-photoshop 실패 포함) 제거. 도구/스킬이 필요해지면 이 두 플래그를 빼라.
+    ARGS=(-p --dangerously-skip-permissions --output-format text --disable-slash-commands --strict-mcp-config)
+    # 경량 프로필(~/.claude-headless, CLAUDE.md·rules·memory 없음) — ENABLED 마커가 있을 때만. 로그인 전엔 자동으로 기본 프로필.
+    if [ -f "$HOME/.claude-headless/ENABLED" ]; then export CLAUDE_CONFIG_DIR="$HOME/.claude-headless"; fi
     [ -n "$MODEL" ] && ARGS+=(--model "$MODEL")
     printf '%s' "$PROMPT" | claude "${ARGS[@]}"
     ;;
