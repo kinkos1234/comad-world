@@ -119,6 +119,7 @@ for m in msgs:
     try:
         r = subprocess.run(
             ["claude", "--dangerously-skip-permissions",
+             "--model", "sonnet",  # 2026-09-03: 미지정 시 대화형 /model(fable) 상속 → 고정
              "--mcp-config", no_mcp, "--strict-mcp-config",
              "-p", user_prompt,
              "--append-system-prompt", claude_md],

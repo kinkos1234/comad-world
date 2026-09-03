@@ -55,6 +55,9 @@ PROMPT="comad-sleep agent를 실행해 메모리를 정리해줘. dream_pending=
 # --dangerously-skip-permissions because hooks would otherwise block in headless context.
 TIMEOUT_MIN=15
 bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" auto-dream 2>/dev/null || true
+# 2026-09-03 headless 감사: --model 은 메인 세션만 고정하고 서브에이전트(Agent 툴)는 상위 모델(opus/fable)로
+# 나가던 것을 고정. 검증: 다음 실행의 트랜스크립트 <session>/subagents/*.jsonl 에서 usage.model 확인.
+export CLAUDE_CODE_SUBAGENT_MODEL="${CLAUDE_CODE_SUBAGENT_MODEL:-sonnet}"
 ( claude -p --model sonnet --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?" ) | tail -50
 
 echo "=== $(date -Iseconds) auto-dream done ==="

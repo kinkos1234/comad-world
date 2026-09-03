@@ -22,5 +22,5 @@ MSG="🧭 **주간 결정 다이제스트** — 대기 ${COUNT}건 (T6 미분석
 
 ${LIST}
 
-처리: 세션에서 \"결정 큐 처리하자\" 또는 \`python3 ~/.claude/hooks/lib/decisions.py resolve <id>\`"
+처리: 세션에서 \"결정 큐 처리하자\" 또는 \`python3 ~/.claude/hooks/lib/decisions.py resolve <id> --choose <옵션글자> --note ...\` (선택 없이는 닫히지 않음 · 못 고르면 defer)"
 bash "$POST" "$MSG" && echo "posted ${COUNT} decisions" || echo "post failed"

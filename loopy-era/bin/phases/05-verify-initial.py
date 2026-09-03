@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import pathlib
 import sys
 
@@ -42,6 +43,9 @@ def main() -> int:
     try:
         hr = load_harness()
         # measure() 는 results.tsv 에 쓰지 않는다 — 기록은 harness-report 자신의 몫
+        # 비용 스캔(collect-cost: 전체 트랜스크립트 수백 파일) 은 점수에 안 들어가므로 tick 마다 돌리지
+        # 않는다 — 하루 1회 15-closeout 의 append 때만 잰다 (2026-09-03 headless 감사 §5-4).
+        os.environ.setdefault("HARNESS_SKIP_COST", "1")
         m = hr.measure(notes="loopy-era verify")
         score = float(m["score"])
         breakdown = {

@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# disabled 2026-09-03: learn-weekly is the single learner
+# ─────────────────────────────────────────────────────────────────────────────
+# 이 phase 는 supervisor.PHASE_ORDER 에서 빠졌다. 30분마다 pending 1건을 LLM 요약해
+# kb_facts 에만 쓰고(읽는 코드 0곳) 파일을 _processed 로 옮겨 learn-weekly 가 분석할
+# 대상을 굶겼다(감사 memory-evolve §8-1). 수동 호출돼도 아무것도 옮기지 않도록
+# 아래에서 즉시 skip(exit 2) 한다. 설계 참고용으로 본문은 남긴다.
 """04 self_improve_worker_initial — analyze ONE pending signal via LLM.
 
 Minimal demonstrator for Phase F integration. Picks the oldest unprocessed
@@ -22,6 +28,12 @@ import subprocess
 import sys
 
 KB_DB = pathlib.Path.home() / ".claude/.comad/memory/facts.sqlite"
+
+# disabled 2026-09-03: learn-weekly is the single learner — 수동 호출돼도 즉시 skip(exit 2)
+if __name__ == "__main__":
+    print(json.dumps({"status": "skip",
+                      "reason": "disabled 2026-09-03: learn-weekly is the single learner"}))
+    sys.exit(2)
 
 
 def now_iso() -> str:

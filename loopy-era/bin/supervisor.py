@@ -56,7 +56,9 @@ PHASE_ORDER = [
     "01-init-project",
     "02-qa-scenario-gen",
     "03-self-improve-trigger",
-    "04-self-improve-worker-initial",  # 2026-08-18 재설치 (사용자 ㉡): 틱당 pending 1건 LLM 분석
+    # 04-self-improve-worker-initial — 2026-09-03 제거 (사용자 결정). 30분마다 pending 1건을
+    # LLM 으로 요약해 KB 에만 쓰고(독자 0) 파일을 _processed 로 옮겨 learn-weekly 를 굶겼다
+    # (감사 memory-evolve §8-1). 학습자는 learn-weekly 하나다. 워커 파일은 헤더만 달아 남긴다.
     "05-verify-initial",
     "13-verify-final",
     "15-closeout",

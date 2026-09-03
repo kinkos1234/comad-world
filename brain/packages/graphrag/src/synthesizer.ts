@@ -41,9 +41,11 @@ async function synthesizeOllama(prompt: string): Promise<string | null> {
   }
 }
 
+// --model haiku 고정 (2026-09-03 headless 감사): 미지정 시 대화형 /model(opus/fable) 을 상속했다.
+// 벤치 지표 entity_recall 은 답변 문자열에 기대 엔티티가 포함되는지만 보므로 합성 티어와 무관.
 async function synthesizeClaudeCLI(prompt: string, tmpFile: string): Promise<string> {
   writeFileSync(tmpFile, prompt);
-  const proc = Bun.spawn(["sh", "-c", `[ -f "$HOME/.claude-headless/ENABLED" ] && export CLAUDE_CONFIG_DIR="$HOME/.claude-headless"; cat "${tmpFile}" | claude -p --disable-slash-commands --strict-mcp-config`], {
+  const proc = Bun.spawn(["sh", "-c", `[ -f "$HOME/.claude-headless/ENABLED" ] && export CLAUDE_CONFIG_DIR="$HOME/.claude-headless"; cat "${tmpFile}" | claude -p --model haiku --disable-slash-commands --strict-mcp-config`], {
     stdout: "pipe",
     stderr: "pipe",
     env: { ...process.env, PATH: `${process.env.HOME}/.local/bin:${process.env.HOME}/.bun/bin:${process.env.PATH}` },

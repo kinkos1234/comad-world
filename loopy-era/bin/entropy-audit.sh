@@ -47,6 +47,9 @@ PROMPT="너는 comad 시스템 분기 엔트로피 감사관이다. 원칙: 측�
 끝나면 '감사 완료 — 후보 N건, outcome 추세: <판정>' 한 줄만 출력."
 
 bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" entropy-audit 2>/dev/null || true
+# 2026-09-03 headless 감사: --model 은 메인 세션만 고정하고 서브에이전트(Agent 툴)는 상위 모델(opus/fable)로
+# 나가던 것을 고정. 검증: 다음 실행의 트랜스크립트 <session>/subagents/*.jsonl 에서 usage.model 확인.
+export CLAUDE_CODE_SUBAGENT_MODEL="${CLAUDE_CODE_SUBAGENT_MODEL:-sonnet}"
 SUMMARY=$( (claude -p --model opus --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?") | tail -3 )
 echo "$SUMMARY"
 bash "$POST" "🧹 **분기 엔트로피 감사 완료**

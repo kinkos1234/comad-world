@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -17,6 +18,27 @@ import sys
 
 HARNESS_REPORT = pathlib.Path.home() / ".claude/skills/harness-report/bin/harness-report.py"
 KB_BIN = pathlib.Path.home() / ".claude/skills/comad-memory/bin"
+RESULTS_TSV = pathlib.Path.home() / ".claude/.comad/results.tsv"  # harness-report 의 TSV (SoT)
+
+
+def recorded_today() -> bool:
+    """results.tsv 마지막 행의 ts(UTC) 가 오늘(UTC)이면 True — 하루 1행 게이트 (2026-09-03).
+
+    tick 마다 append 하면 하루 48행이 같은 값으로 쌓이고, 매 행마다 전체 트랜스크립트(수백 파일·
+    1B 토큰) 를 스캔했다(headless 감사 §5-4). COMAD_RESULTS_EVERY_TICK=1 이면 옛 동작."""
+    if os.environ.get("COMAD_RESULTS_EVERY_TICK") == "1":
+        return False
+    try:
+        with RESULTS_TSV.open("rb") as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - 4096))
+            tail = f.read().decode(errors="ignore")
+        last = [ln for ln in tail.splitlines() if ln.strip()][-1]
+        ts = last.split("\t", 1)[0]
+        today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+        return ts[:10] == today
+    except (OSError, IndexError):
+        return False
 
 
 def kb_maintain() -> dict:
@@ -67,11 +89,17 @@ def main() -> int:
 
     # Defer to harness-report.py — it already knows how to compose the TSV row
     # from the global SoT. We pass --notes; it does the measure + append.
-    if HARNESS_REPORT.exists():
+    if HARNESS_REPORT.exists() and recorded_today():
+        out = {
+            "status": "ok",
+            "output": {"row_appended": False, "reason": "1 row/day gate: today's row exists", "kb": kb},
+            "summary": "results.tsv skip (today's row exists)",
+        }
+    elif HARNESS_REPORT.exists():
         try:
             r = subprocess.run(
                 [sys.executable, str(HARNESS_REPORT), "--notes", notes],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True, text=True, timeout=120,  # 하루 1회라 비용 스캔(60s) 여유
             )
             out = {
                 "status": "ok" if r.returncode in (0, 1) else "fail",

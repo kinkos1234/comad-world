@@ -79,7 +79,11 @@ PROMPT="너는 comad 시스템 야간 감사관이다. 목표: 사람의 '판단
 지금 점검하고 결정만 큐잉해라."
 
 bash "$HOME/.claude/.comad/bin/sdk-usage-log.sh" nightly-audit 2>/dev/null || true
-( claude -p --model opus --dangerously-skip-permissions "$PROMPT" < /dev/null 2>&1 || echo "claude exited rc=$?" ) | tail -30
+# 2026-09-03 headless 감사: --model 은 메인 세션만 고정하고 서브에이전트(Agent 툴)는 상위 모델(opus/fable)로
+# 나가던 것을 고정. 검증: 다음 실행의 트랜스크립트 <session>/subagents/*.jsonl 에서 usage.model 확인.
+export CLAUDE_CODE_SUBAGENT_MODEL="${CLAUDE_CODE_SUBAGENT_MODEL:-sonnet}"
+# --add-dir: cwd 가 / (launchd 기본) 이라 감사 범위를 명시 — 프롬프트 뒤에 두어야 variadic 인자에 삼켜지지 않음 (2026-09-03)
+( claude -p --model opus --dangerously-skip-permissions "$PROMPT" --add-dir "$HOME/Programmer/01-comad/comad-world" "$HOME/.comad" "$HOME/.claude" < /dev/null 2>&1 || echo "claude exited rc=$?" ) | tail -30
 
 AFTER=$(python3 "$DEC" count 2>/dev/null || echo 0)
 echo "=== $(date -Iseconds) nightly-audit done (decisions: $BEFORE -> $AFTER) ==="
