@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # nightly-audit — R3b: autonomous nightly system audit.
 #
-# Called by com.comad.nightly-audit LaunchAgent (~04:00 KST daily).
+# Called by com.comad.nightly-audit LaunchAgent (04:41 KST daily — 2026-09-03 04:00→04:41, 사용량 리셋 04:20 이후).
 # Runs a headless `claude -p` agent that audits the comad system + recent
 # activity and escalates ONLY *decisions* (items needing human judgment) to the
 # decision queue (~/.claude/hooks/lib/decisions.py) — never raw findings/logs.

@@ -62,7 +62,7 @@ jobs=(
   "com.comad.monitor-upstream|11|30|1|$PROJECT/brain/scripts/monitor-upstream.sh"
   "com.comad.evolution-loop|12|30|1|$PROJECT/brain/scripts/evolution-loop.sh"
   "com.comad.run-benchmark|13|0|1|$PROJECT/brain/scripts/run-benchmark.sh"
-  "com.comad.ear-ingest|7|0||$BUN run $PROJECT/brain/packages/search/src/ear-ingest.ts --since 1"
+  "com.comad.ear-ingest|7|0||$BUN run $PROJECT/brain/packages/search/src/ear-ingest.ts --since 1 --relevance 필독,추천"
 )
 
 for entry in "${jobs[@]}"; do
